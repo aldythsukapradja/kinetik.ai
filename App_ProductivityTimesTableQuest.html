@@ -39,118 +39,1207 @@ React/TypeScript app scale-up note:
 - It must not access another circle's data.
 - It must store app-specific data in AppRecords using circleId, appId, collection, payloadJson.
 -->
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f7faff">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Times Table Quest">
-  <title>Times Table Quest - Kinetik Polished</title>
-  <script type="application/kinetik-app+json">
-{
-  "appId": "times-table-quest",
-  "name": "Times Table Quest",
-  "shortName": "TQ",
-  "icon": "✖️",
-  "gradient": [
-    "#ffb545",
-    "#ff5d8f"
-  ],
-  "category": "kids",
-  "tagline": "Fast math quests with stars, hearts, and boss rounds.",
-  "about": "A playful multiplication practice app with streaks, gentle feedback, and parent-ready progress.",
-  "audience": "children and parents",
-  "circleTypes": [
-    "family",
-    "friends",
-    "learning",
-    "work"
-  ],
-  "worksWith": [
-    "offline",
-    "standalone",
-    "embedded",
-    "local progress"
-  ],
-  "status": "live",
-  "minMembers": 1
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Times Table Quest</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✖️</text></svg>">
+<style>
+:root {
+  --bg: #F5F5F0;
+  --bg2: #FFFFFF;
+  --bg3: #EEEEE8;
+  --text: #1A1A2E;
+  --text2: #6B6B80;
+  --text3: #9B9BAA;
+  --border: rgba(0,0,0,0.08);
+  --green: #58CC02;
+  --green-bg: #D7FFB8;
+  --green-dark: #3EA000;
+  --red: #FF4B4B;
+  --red-bg: #FFD5D5;
+  --amber: #FF9600;
+  --amber-bg: #FFF0D5;
+  --purple: #CE82FF;
+  --purple-bg: #F0E0FF;
+  --blue: #1CB0F6;
+  --blue-bg: #D6F1FF;
+  --crown1: #58CC02;
+  --crown2: #1CB0F6;
+  --crown3: #CE82FF;
+  --crown4: #FF9600;
+  --crown5: #FF4B4B;
+  --card-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
-  </script>
-  <style>
-    :root{color-scheme:light;--bg:#f5f8ff;--bg2:#edf3ff;--ink:#111827;--muted:#6b7280;--faint:#9ca3af;--panel:rgba(255,255,255,.88);--solid:#fff;--line:rgba(17,24,39,.1);--a:#ffb545;--b:#ff5d8f;--good:#18b978;--warn:#f59e0b;--bad:#ef4444;--shadow:0 22px 58px rgba(35,52,92,.15);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    [data-theme=dark]{color-scheme:dark;--bg:#08101b;--bg2:#101827;--ink:#f8fbff;--muted:#b9c3d2;--faint:#7e8aa2;--panel:rgba(18,26,42,.82);--solid:#111827;--line:rgba(255,255,255,.12);--shadow:0 22px 58px rgba(0,0,0,.35)}
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;width:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink)}body{background:radial-gradient(circle at 12% -8%,color-mix(in srgb,var(--a) 22%,transparent),transparent 34%),radial-gradient(circle at 94% 0%,color-mix(in srgb,var(--b) 18%,transparent),transparent 32%),linear-gradient(180deg,var(--bg),var(--bg2))}button,input{font:inherit}button{border:0;color:inherit;cursor:pointer}h1,h2,h3,p{margin:0}.app{height:100dvh;max-width:780px;margin:0 auto;display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden}.top{padding:calc(12px + env(safe-area-inset-top,0px)) 16px 10px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px}.mark{width:46px;height:46px;border-radius:16px;color:white;display:grid;place-items:center;font-size:12px;font-weight:950;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 16px 32px color-mix(in srgb,var(--a) 24%,transparent)}.title{min-width:0}.title h1{font-size:22px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title p{margin-top:5px;color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.iconbtn{width:42px;height:42px;border-radius:15px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 10px 24px rgba(0,0,0,.06)}.content{min-height:0;overflow-y:auto;overflow-x:hidden;padding:6px 16px 18px;scrollbar-width:none}.content::-webkit-scrollbar,.hscroll::-webkit-scrollbar{display:none}.hero{position:relative;overflow:hidden;border-radius:30px;padding:18px;color:white;background:radial-gradient(circle at 14% 0%,rgba(255,255,255,.34),transparent 31%),linear-gradient(135deg,var(--a),var(--b));box-shadow:var(--shadow)}.hero:after{content:"";position:absolute;right:-42px;bottom:-78px;width:172px;height:172px;border-radius:50%;border:30px solid rgba(255,255,255,.14)}.hero>*{position:relative;z-index:1}.kicker{font-size:11px;letter-spacing:1.8px;font-weight:950;text-transform:uppercase;opacity:.74}.hero h2{margin-top:8px;font-size:29px;line-height:1;letter-spacing:0}.hero p{margin-top:9px;color:rgba(255,255,255,.82);font-size:13px;line-height:1.35;font-weight:750}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:16px}.stat{min-height:62px;padding:10px;border-radius:18px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(14px)}.stat b{font-size:20px}.stat span{display:block;margin-top:6px;color:rgba(255,255,255,.78);font-size:11px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .tabs{position:sticky;top:0;z-index:2;margin:14px 0;padding:4px;border-radius:18px;background:rgba(255,255,255,.64);border:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;backdrop-filter:blur(20px)}[data-theme=dark] .tabs{background:rgba(18,26,42,.74)}.tab{height:40px;border-radius:14px;background:transparent;color:var(--muted);font-size:13px;font-weight:950}.tab.active{color:var(--ink);background:var(--solid);box-shadow:0 8px 18px rgba(0,0,0,.08)}.screen{display:none}.screen.active{display:block;animation:rise .24s ease both}@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.panel{border-radius:28px;background:var(--panel);border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.08);padding:15px;margin-bottom:12px;backdrop-filter:blur(20px)}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.panel h3{font-size:16px}.muted{color:var(--muted);font-size:12px;font-weight:760;line-height:1.35}.chip{display:inline-flex;align-items:center;height:29px;padding:0 10px;border-radius:999px;background:color-mix(in srgb,var(--a) 10%,transparent);border:1px solid color-mix(in srgb,var(--a) 17%,transparent);color:var(--a);font-size:11px;font-weight:950}.grid{display:grid;gap:10px}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.tile,.choice{width:100%;border-radius:22px;background:var(--solid);border:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.06);padding:13px;text-align:left;transition:transform .18s ease,border-color .18s ease}.tile:active,.choice:active,.primary:active,.secondary:active,.iconbtn:active{transform:scale(.98)}.tile b{display:block;font-size:14px;line-height:1.15}.tile span{display:block;margin-top:6px;color:var(--muted);font-size:12px;font-weight:750;line-height:1.3}.visual{min-height:168px;border-radius:26px;background:radial-gradient(circle at 22% 20%,color-mix(in srgb,var(--a) 18%,transparent),transparent 32%),linear-gradient(135deg,color-mix(in srgb,var(--a) 8%,var(--solid)),color-mix(in srgb,var(--b) 8%,var(--solid)));border:1px solid var(--line);display:grid;place-items:center;margin-bottom:13px;overflow:hidden}.visual svg{width:min(250px,82vw);height:150px}.prompt{font-size:24px;line-height:1.08;margin-top:10px}.choices{display:grid;gap:10px;margin-top:14px}.choice{font-size:15px;font-weight:900;min-height:58px;border-width:2px}.choice.selected{border-color:var(--a);background:color-mix(in srgb,var(--a) 9%,var(--solid))}.choice.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--solid))}.choice.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--solid))}.feedback{display:none;margin-top:12px;border-radius:20px;padding:13px;background:color-mix(in srgb,var(--a) 8%,var(--solid));border:1px solid var(--line)}.feedback.show{display:block}.feedback b{font-size:14px}.feedback p{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.35;font-weight:750}.meter{height:9px;border-radius:999px;background:rgba(120,140,160,.16);overflow:hidden;margin-top:10px}.meter i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--a),var(--b));transition:width .28s ease}.hscroll{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none}.appcard{flex:0 0 70%;min-height:150px;color:white;background:linear-gradient(135deg,var(--x),var(--y));border:0}.appicon{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-weight:950}.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}.check{width:34px;height:34px;border-radius:13px;display:grid;place-items:center;background:rgba(120,140,160,.14);border:1px solid var(--line);font-weight:950;color:transparent}.done .check{color:white;background:linear-gradient(135deg,var(--good),var(--a));border-color:transparent}.done .row-label{text-decoration:line-through;color:var(--muted)}.row-label{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.inputrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}.input{height:48px;border-radius:17px;border:1px solid var(--line);padding:0 13px;background:var(--solid);color:var(--ink)}.bottom{padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--bg) 94%,transparent) 35%,var(--bg));backdrop-filter:blur(18px)}.primary,.secondary{min-height:52px;border-radius:18px;font-size:15px;font-weight:950;display:inline-flex;align-items:center;justify-content:center;gap:8px}.primary{color:white;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 16px 32px color-mix(in srgb,var(--a) 24%,transparent)}.primary:disabled{opacity:.5;box-shadow:none}.secondary{min-width:56px;background:var(--panel);border:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.06)}.toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom,0px));transform:translate(-50%,18px);opacity:0;max-width:min(340px,calc(100vw - 32px));padding:12px 14px;border-radius:999px;background:rgba(17,24,39,.92);color:white;font-size:13px;font-weight:850;box-shadow:0 18px 42px rgba(0,0,0,.22);transition:opacity .22s ease,transform .22s ease;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
-    .clock{width:158px;height:158px;border-radius:50%;background:var(--solid);border:8px solid color-mix(in srgb,var(--a) 22%,white);position:relative;box-shadow:0 18px 38px rgba(0,0,0,.13)}.hand{position:absolute;left:50%;top:50%;height:5px;border-radius:999px;background:var(--ink);transform-origin:left center}.hour{width:43px}.minute{width:60px;background:var(--a)}.pin{position:absolute;left:50%;top:50%;width:13px;height:13px;border-radius:50%;background:var(--b);transform:translate(-50%,-50%)}.tick{position:absolute;left:50%;top:50%;font-size:12px;font-weight:950;color:var(--muted)}
-    @media (min-width:720px){.content{padding-inline:24px}.two{grid-template-columns:repeat(3,minmax(0,1fr))}.appcard{flex-basis:38%}}@media (max-width:370px){.top{padding-inline:12px}.hero h2{font-size:25px}.prompt{font-size:22px}.two{grid-template-columns:1fr}.appcard{flex-basis:82%}}@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
-  </style>
+[data-theme="dark"] {
+  --bg: #13111C;
+  --bg2: #1E1B2E;
+  --bg3: #2A2640;
+  --text: #F0F0F5;
+  --text2: #A0A0B8;
+  --text3: #6B6B85;
+  --border: rgba(255,255,255,0.08);
+  --card-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  transition: background .3s, color .3s;
+}
+.screen { display:none; height:100vh; height:100dvh; flex-direction:column; overflow:hidden; }
+.screen.active { display:flex; }
+
+/* ═══ TOPBAR ═══ */
+.topbar {
+  padding: calc(var(--safe-top) + 8px) 20px 8px;
+  display:flex; align-items:center; justify-content:space-between;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 10;
+}
+.topbar-title { font-size:18px; font-weight:700; letter-spacing:-0.3px; }
+.topbar-stats { display:flex; gap:16px; align-items:center; }
+.stat { display:flex; align-items:center; gap:4px; font-size:13px; font-weight:600; }
+.stat-icon { font-size:16px; }
+
+/* ═══ THEME TOGGLE ═══ */
+.theme-toggle {
+  width:44px; height:26px; border-radius:13px;
+  background: var(--bg3); border:1px solid var(--border);
+  position:relative; cursor:pointer; transition: background .3s;
+  flex-shrink:0;
+}
+.theme-toggle::after {
+  content:'☀️'; font-size:14px; line-height:22px; text-align:center;
+  position:absolute; top:1px; left:1px; width:22px; height:22px;
+  background: var(--bg2); border-radius:50%;
+  transition: transform .3s, content .3s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+[data-theme="dark"] .theme-toggle::after { content:'🌙'; transform:translateX(18px); }
+
+/* ═══ SKILL PATH ═══ */
+.path-scroll {
+  flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding: 24px 20px calc(var(--safe-bottom) + 80px);
+}
+.path-container { max-width:400px; margin:0 auto; position:relative; }
+.path-line {
+  position:absolute; left:50%; top:0; bottom:0; width:4px;
+  background: var(--bg3); transform:translateX(-50%);
+  border-radius:2px; z-index:0;
+}
+.skill-node {
+  position:relative; z-index:1;
+  display:flex; align-items:center; gap:16px;
+  margin-bottom:20px; cursor:pointer;
+  transition: transform .15s;
+}
+.skill-node:active { transform:scale(0.97); }
+.skill-node.locked { opacity:0.45; pointer-events:none; }
+.node-circle {
+  width:64px; height:64px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:800;
+  flex-shrink:0; position:relative;
+  border: 4px solid; transition: all .2s;
+}
+.node-circle.crown0 { background:var(--bg3); border-color:var(--border); color:var(--text3); }
+.node-circle.crown1 { background:var(--green-bg); border-color:var(--green); color:var(--green-dark); }
+.node-circle.crown2 { background:var(--blue-bg); border-color:var(--blue); color:#0D8ECF; }
+.node-circle.crown3 { background:var(--purple-bg); border-color:var(--purple); color:#A050DD; }
+.node-circle.crown4 { background:var(--amber-bg); border-color:var(--amber); color:#CC7700; }
+.node-circle.crown5 { background:linear-gradient(135deg,#FFD700,#FFA500); border-color:#FFD700; color:#8B6508; }
+.node-crown {
+  position:absolute; top:-8px; right:-8px;
+  font-size:14px; background:var(--bg2); border-radius:50%;
+  width:24px; height:24px; display:flex; align-items:center; justify-content:center;
+  border:2px solid var(--border); font-weight:700;
+}
+.node-info { flex:1; }
+.node-title { font-size:15px; font-weight:700; margin-bottom:2px; }
+.node-sub { font-size:12px; color:var(--text2); }
+.node-progress { height:4px; background:var(--bg3); border-radius:2px; margin-top:6px; overflow:hidden; }
+.node-progress-fill { height:100%; border-radius:2px; transition:width .4s; }
+.node-start {
+  padding:6px 16px; border-radius:20px; font-size:13px; font-weight:700;
+  border:none; cursor:pointer; flex-shrink:0;
+  transition: transform .1s;
+}
+.node-start:active { transform:scale(0.95); }
+.current-pulse { animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse {
+  0%,100% { box-shadow:0 0 0 0 rgba(88,204,2,0.4); }
+  50% { box-shadow:0 0 0 12px rgba(88,204,2,0); }
+}
+.boss-node .node-circle {
+  width:72px; height:72px; font-size:26px;
+  border-width:5px;
+}
+
+/* ═══ LESSON SCREEN ═══ */
+.lesson-topbar {
+  padding: calc(var(--safe-top) + 8px) 16px 12px;
+  display:flex; align-items:center; gap:12px;
+  background: var(--bg2); border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.lesson-close {
+  width:36px; height:36px; border-radius:50%; border:none;
+  background:var(--bg3); color:var(--text2); font-size:18px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.lesson-progress { flex:1; height:12px; background:var(--bg3); border-radius:6px; overflow:hidden; }
+.lesson-progress-fill { height:100%; background:var(--green); border-radius:6px; transition:width .4s ease; }
+.lesson-hearts { display:flex; gap:3px; flex-shrink:0; }
+.heart { font-size:20px; transition: transform .2s, opacity .3s; }
+.heart.lost { opacity:0.2; transform:scale(0.8); }
+
+.lesson-body {
+  flex:1; display:flex; flex-direction:column;
+  padding:24px 20px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+}
+.question-prompt {
+  font-size:22px; font-weight:700; text-align:center;
+  margin-bottom:8px; line-height:1.3;
+}
+.question-sub {
+  font-size:14px; color:var(--text2); text-align:center;
+  margin-bottom:28px;
+}
+.question-big {
+  font-size:52px; font-weight:800; text-align:center;
+  margin:16px 0 32px; letter-spacing:-1px;
+  color:var(--text);
+}
+
+/* Multiple choice */
+.mc-grid { display:flex; flex-direction:column; gap:10px; max-width:400px; margin:0 auto; width:100%; }
+.mc-option {
+  padding:16px 20px; border-radius:var(--radius-sm); border:2.5px solid var(--border);
+  background:var(--bg2); font-size:18px; font-weight:600; text-align:center;
+  cursor:pointer; transition:all .15s; user-select:none;
+}
+.mc-option:active { transform:scale(0.98); }
+.mc-option.selected { border-color:var(--blue); background:var(--blue-bg); }
+.mc-option.correct { border-color:var(--green); background:var(--green-bg); color:var(--green-dark); }
+.mc-option.wrong { border-color:var(--red); background:var(--red-bg); color:var(--red); }
+
+/* Type answer */
+.type-input-wrap { max-width:300px; margin:0 auto; width:100%; text-align:center; }
+.type-input {
+  width:100%; padding:16px; border-radius:var(--radius-sm);
+  border:2.5px solid var(--border); background:var(--bg2);
+  font-size:32px; font-weight:700; text-align:center;
+  color:var(--text); outline:none; font-family:var(--font);
+  transition: border-color .2s;
+}
+.type-input:focus { border-color:var(--blue); }
+.type-input.correct { border-color:var(--green); background:var(--green-bg); }
+.type-input.wrong { border-color:var(--red); background:var(--red-bg); }
+
+/* Match pairs */
+.match-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:400px; margin:0 auto; width:100%; }
+.match-card {
+  padding:14px 8px; border-radius:var(--radius-sm); border:2.5px solid var(--border);
+  background:var(--bg2); font-size:16px; font-weight:600; text-align:center;
+  cursor:pointer; transition:all .15s; user-select:none; min-height:52px;
+  display:flex; align-items:center; justify-content:center;
+}
+.match-card.selected { border-color:var(--blue); background:var(--blue-bg); }
+.match-card.matched { border-color:var(--green); background:var(--green-bg); color:var(--green-dark); opacity:0.6; pointer-events:none; }
+.match-card.wrong-flash { border-color:var(--red); background:var(--red-bg); }
+
+/* Check button */
+.lesson-footer {
+  padding: 12px 20px calc(var(--safe-bottom) + 12px);
+  background:var(--bg2); border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+.check-btn {
+  width:100%; padding:16px; border-radius:var(--radius-sm); border:none;
+  font-size:16px; font-weight:700; cursor:pointer;
+  transition: all .15s; font-family:var(--font);
+}
+.check-btn:active { transform:scale(0.98); }
+.check-btn.ready { background:var(--green); color:#fff; }
+.check-btn.disabled { background:var(--bg3); color:var(--text3); pointer-events:none; }
+.check-btn.next-correct { background:var(--green); color:#fff; }
+.check-btn.next-wrong { background:var(--red); color:#fff; }
+
+/* Feedback banner */
+.feedback-banner {
+  padding:12px 20px; text-align:center; font-weight:700; font-size:15px;
+  transition: all .3s;
+}
+.feedback-banner.correct { background:var(--green-bg); color:var(--green-dark); }
+.feedback-banner.wrong { background:var(--red-bg); color:var(--red); }
+
+/* ═══ REWARD SCREEN ═══ */
+.reward-screen {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:40px 24px calc(var(--safe-bottom) + 24px); text-align:center; gap:16px;
+}
+.reward-icon { font-size:72px; animation:bounceIn .6s ease; }
+@keyframes bounceIn {
+  0%{transform:scale(0) rotate(-20deg);opacity:0}
+  60%{transform:scale(1.2) rotate(5deg)}
+  100%{transform:scale(1) rotate(0deg);opacity:1}
+}
+.reward-title { font-size:28px; font-weight:800; }
+.reward-stats { display:flex; gap:24px; margin:16px 0; }
+.reward-stat { text-align:center; }
+.reward-stat-val { font-size:28px; font-weight:800; }
+.reward-stat-lab { font-size:12px; color:var(--text2); margin-top:2px; }
+.reward-btn {
+  padding:16px 48px; border-radius:var(--radius-sm); border:none;
+  background:var(--green); color:#fff; font-size:16px; font-weight:700;
+  cursor:pointer; font-family:var(--font); margin-top:8px;
+  transition: transform .1s;
+}
+.reward-btn:active { transform:scale(0.97); }
+
+/* ═══ ONBOARDING ═══ */
+.onboard-screen {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:40px 28px calc(var(--safe-bottom) + 28px); text-align:center; gap:20px;
+}
+.onboard-icon { font-size:80px; }
+.onboard-title { font-size:26px; font-weight:800; line-height:1.2; }
+.onboard-desc { font-size:15px; color:var(--text2); line-height:1.6; max-width:340px; }
+.onboard-features { display:flex; flex-direction:column; gap:12px; width:100%; max-width:320px; text-align:left; }
+.onboard-feat { display:flex; align-items:center; gap:12px; font-size:14px; }
+.onboard-feat-icon { font-size:24px; width:40px; text-align:center; flex-shrink:0; }
+.onboard-btn {
+  padding:16px 48px; border-radius:var(--radius-sm); border:none;
+  background:var(--green); color:#fff; font-size:16px; font-weight:700;
+  cursor:pointer; font-family:var(--font); width:100%; max-width:320px;
+  transition: transform .1s;
+}
+.onboard-btn:active { transform:scale(0.97); }
+
+/* ═══ CONFETTI ═══ */
+.confetti-container { position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:999; overflow:hidden; }
+.confetti-piece {
+  position:absolute; width:10px; height:10px; top:-20px;
+  animation: confettiFall 2.5s ease-in forwards;
+}
+@keyframes confettiFall {
+  0% { transform:translateY(0) rotate(0deg) scale(1); opacity:1; }
+  100% { transform:translateY(100vh) rotate(720deg) scale(0.5); opacity:0; }
+}
+
+/* ═══ STREAK MODAL ═══ */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.5);
+  display:none; align-items:center; justify-content:center;
+  z-index:100; padding:20px;
+}
+.modal-overlay.active { display:flex; }
+.modal-card {
+  background:var(--bg2); border-radius:var(--radius);
+  padding:32px 28px; text-align:center; max-width:340px; width:100%;
+  animation: modalPop .3s ease;
+}
+@keyframes modalPop { 0%{transform:scale(0.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+.modal-icon { font-size:56px; margin-bottom:12px; }
+.modal-title { font-size:22px; font-weight:800; margin-bottom:8px; }
+.modal-desc { font-size:14px; color:var(--text2); margin-bottom:20px; line-height:1.5; }
+.modal-btn {
+  padding:14px 36px; border-radius:var(--radius-sm); border:none;
+  background:var(--green); color:#fff; font-size:15px; font-weight:700;
+  cursor:pointer; font-family:var(--font);
+}
+
+/* ═══ NO HEARTS SCREEN ═══ */
+.no-hearts-screen { text-align:center; padding:60px 28px; }
+.no-hearts-icon { font-size:64px; margin-bottom:16px; }
+.no-hearts-title { font-size:22px; font-weight:800; margin-bottom:8px; }
+.no-hearts-desc { font-size:14px; color:var(--text2); margin-bottom:24px; line-height:1.6; }
+.no-hearts-timer { font-size:28px; font-weight:800; color:var(--red); margin-bottom:24px; }
+.no-hearts-btn {
+  padding:14px 36px; border-radius:var(--radius-sm); border:none;
+  background:var(--bg3); color:var(--text); font-size:15px; font-weight:700;
+  cursor:pointer; font-family:var(--font);
+}
+
+/* ═══ SCROLLBAR ═══ */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+</style>
 </head>
-<body>
-  <main class="app">
-    <header class="top">
-      <div class="mark">TQ</div>
-      <div class="title"><h1>Times Table Quest</h1><p id="circleLine">Standalone circle</p></div>
-      <button class="iconbtn" id="themeBtn" type="button" aria-label="Toggle theme">T</button>
-    </header>
-    <section class="content">
-      <article class="hero"><div class="kicker">Duolingo Math, Khan Academy Kids, Brilliant</div><h2>Fast math quests with stars, hearts, and boss rounds.</h2><p>A playful multiplication practice app with streaks, gentle feedback, and parent-ready progress.</p><div class="stats"><div class="stat"><b id="score">0</b><span>score</span></div><div class="stat"><b id="streak">0</b><span>streak</span></div><div class="stat"><b id="session">0</b><span>sessions</span></div></div></article>
-      <nav class="tabs"><button class="tab active" data-tab="play" type="button">Play</button><button class="tab" data-tab="progress" type="button">Progress</button><button class="tab" data-tab="about" type="button">About</button></nav>
-      <section class="screen active" id="play"></section>
-      <section class="screen" id="progress"></section>
-      <section class="screen" id="about"></section>
-    </section>
-    <footer class="bottom"><button class="primary" id="primary" type="button">Continue</button><button class="secondary" id="next" type="button">Next</button></footer>
-  </main>
-  <div class="toast" id="toast"></div>
-  <script>
-    (function(){
-      "use strict";
-      const App={"appId":"times-table-quest","name":"Times Table Quest","file":"App_TimesTableQuest.html","icon":"TQ","gradient":["#ffb545","#ff5d8f"],"category":"kids","mode":"kids","analog":"Duolingo Math, Khan Academy Kids, Brilliant","tagline":"Fast math quests with stars, hearts, and boss rounds.","about":"A playful multiplication practice app with streaks, gentle feedback, and parent-ready progress.","items":[{"title":"Seven Star Sprint","kind":"Multiply","prompt":"7 x 8 = ?","choices":["54","56","64","58"],"answer":1,"explain":"7 groups of 8 makes 56.","visual":"math"},{"title":"Nine Pattern Gate","kind":"Pattern","prompt":"9 x 6 = ?","choices":["45","54","63","56"],"answer":1,"explain":"Nine times six is 54. The digits add to 9.","visual":"math"},{"title":"Square Boss","kind":"Boss","prompt":"8 x 8 = ?","choices":["56","64","72","48"],"answer":1,"explain":"Eight rows of eight make 64.","visual":"boss"},{"title":"Mixed Quest","kind":"Mixed","prompt":"6 x 7 = ?","choices":["36","40","42","49"],"answer":2,"explain":"Six sevens make 42.","visual":"math"}]};
-      const Config={appId:App.appId,storagePrefix:"kinetik_polished_times_table_quest",collection:App.mode+"_records"};
-      const $=(s)=>document.querySelector(s);const $$=(s)=>Array.from(document.querySelectorAll(s));
-      const fallback={theme:"light",circleId:"standalone_demo",circleType:"family",personId:"standalone_person",memberId:"standalone_person",tab:"play",index:0,selected:null,checked:false,score:0,streak:0,sessions:0,done:{},customItems:[],installed:{},step:0,wheel:0};
-      const state=Object.assign(fallback,readJson(Config.storagePrefix+"_state",{}));state.embedded=isEmbedded();setTheme(state.theme,false);listen();wire();render();
-      function isEmbedded(){try{return window.self!==window.top}catch(e){return true}}
-      const Bridge={send(type,payload){if(!state.embedded||!window.parent||window.parent===window)return;window.parent.postMessage({type,appId:Config.appId,payload},"*")}};
-      function listen(){window.addEventListener("message",(event)=>{const msg=event.data||{};if(msg.type!=="INIT_APP")return;const p=msg.payload||{};state.circleId=p.circleId||state.circleId;state.circleType=p.circleType||state.circleType;state.personId=p.personId||p.memberId||state.personId;state.memberId=p.memberId||p.personId||state.memberId;if(p.theme)setTheme(p.theme,true);save();render()})}
-      function wire(){$("#themeBtn").onclick=()=>setTheme(state.theme==="dark"?"light":"dark",true);$$(".tab").forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;save();render()});$("#next").onclick=next;$("#primary").onclick=primary}
-      function render(){$("#circleLine").textContent=(state.embedded?"":"Standalone ")+titleCase(state.circleType)+" circle";$("#score").textContent=state.score;$("#streak").textContent=state.streak;$("#session").textContent=state.sessions;$$(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===state.tab));["play","progress","about"].forEach(id=>$("#"+id).classList.toggle("active",state.tab===id));renderPlay();renderProgress();renderAbout();renderButtons()}
-      function renderPlay(){if(App.mode==="store")return renderStore();if(App.mode==="grocery")return renderGrocery();if(App.mode==="recipe")return renderRecipe();return renderChallenge()}
-      function renderStore(){const featured=(App.items||[]).slice(0,6);$("#play").innerHTML='<div class="hscroll">'+featured.map(item=>'<button class="tile appcard" style="--x:'+item.gradient[0]+';--y:'+item.gradient[1]+'" data-app="'+escAttr(item.appId)+'"><span class="appicon">'+esc(item.icon)+'</span><b>'+esc(item.name)+'</b><span>'+esc(item.tagline)+'</span><span class="chip">'+(state.installed[item.appId]?"OPEN":"GET")+'</span></button>').join("")+'</div><div class="panel" style="margin-top:12px"><div class="panel-head"><div><h3>Browse all apps</h3><p class="muted">Local Kinetik apps discovered from rebuilt manifests.</p></div></div><div class="grid two">'+(App.items||[]).map(item=>'<button class="tile" data-app="'+escAttr(item.appId)+'"><span class="row"><span class="appicon" style="background:linear-gradient(135deg,'+item.gradient[0]+','+item.gradient[1]+')">'+esc(item.icon)+'</span><span><b>'+esc(item.name)+'</b><span>'+esc(item.category)+'</span></span><span class="chip">'+(state.installed[item.appId]?"OPEN":"GET")+'</span></span></button>').join("")+'</div></div>';$$("[data-app]").forEach(btn=>btn.onclick=()=>{const id=btn.dataset.app;state.installed[id]=true;complete(1,"Installed "+id);Bridge.send("OPEN_APP",{appId:id})})}
-      function renderGrocery(){const sections=App.sections||[];$("#play").innerHTML=sections.map((section,idx)=>{const items=idx===0?section.items.concat(state.customItems||[]):section.items;return '<div class="panel"><div class="panel-head"><div><h3>'+esc(section.icon)+' '+esc(section.name)+'</h3><p class="muted">Tap to move items into cart.</p></div><span class="chip">'+items.filter(item=>state.done[section.name+'_'+item]).length+'/'+items.length+'</span></div><div class="grid">'+items.map(item=>row(section.name,item)).join("")+'</div></div>'}).join("")+'<div class="panel"><div class="inputrow"><input class="input" id="addInput" placeholder="Add item"><button class="secondary" id="addBtn">Add</button></div></div>';$$("[data-item]").forEach(b=>b.onclick=()=>{state.done[b.dataset.key]=!state.done[b.dataset.key];complete(1,"Cart updated");render()});$("#addBtn").onclick=()=>{const input=$("#addInput");const text=input.value.trim();if(!text)return;state.customItems.push(text);input.value="";complete(1,"Item added");render()}}
-      function renderRecipe(){const recipe=(App.recipes||[])[state.index%(App.recipes||[]).length];const active=recipe.steps[state.step]||recipe.steps[0];$("#play").innerHTML='<div class="panel"><div class="visual">'+visual("recipe",recipe)+'</div><span class="chip">'+esc(recipe.type)+' / '+recipe.time+' min</span><h2 class="prompt">'+esc(recipe.title)+'</h2><p class="muted">'+esc(recipe.ingredients.join(", "))+'</p></div><div class="panel"><div class="panel-head"><div><h3>Step '+(state.step+1)+'</h3><p class="muted">'+esc(active)+'</p></div><span class="chip">'+(state.step+1)+'/'+recipe.steps.length+'</span></div><div class="meter"><i style="width:'+Math.round((state.step+1)/recipe.steps.length*100)+'%"></i></div></div>'}
-      function renderChallenge(){const item=current();$("#play").innerHTML='<div class="panel"><div class="visual">'+visual(item.visual||App.mode,item)+'</div><span class="chip">'+esc(item.kind)+'</span><h2 class="prompt">'+esc(item.prompt)+'</h2><div class="choices">'+item.choices.map((choice,i)=>'<button class="choice '+choiceClass(i)+'" data-choice="'+i+'">'+esc(choice)+'</button>').join("")+'</div><div class="feedback '+(state.checked?'show':'')+'"><b>'+(state.selected===item.answer?'Correct':'Try this idea')+'</b><p>'+esc(item.explain)+'</p></div></div>';$$("[data-choice]").forEach(btn=>btn.onclick=()=>{if(state.checked)return;state.selected=Number(btn.dataset.choice);save();render()})}
-      function renderProgress(){$("#progress").innerHTML='<div class="panel"><div class="panel-head"><div><h3>Progress</h3><p class="muted">Saved locally for this app and circle.</p></div><span class="chip">'+state.score+' pts</span></div><div class="meter"><i style="width:'+Math.min(100,state.score%101)+'%"></i></div></div><div class="grid two"><div class="tile"><b>'+state.score+'</b><span>Total score</span></div><div class="tile"><b>'+state.streak+'</b><span>Current streak</span></div><div class="tile"><b>'+state.sessions+'</b><span>Sessions</span></div><div class="tile"><b>'+esc(App.analog)+'</b><span>Analog target</span></div></div>'}
-      function renderAbout(){$("#about").innerHTML='<div class="panel"><span class="chip">'+esc(App.mode)+'</span><h2 class="prompt">'+esc(App.name)+'</h2><p class="muted">'+esc(App.about)+'</p></div><div class="panel"><h3>Interaction target</h3><p class="muted">'+esc(App.analog)+'</p></div>'}
-      function renderButtons(){if(App.mode==="store"){$("#primary").textContent="Install featured";$("#next").textContent="Reset"}else if(App.mode==="grocery"){$("#primary").textContent="Finish shop";$("#next").textContent="Clear"}else if(App.mode==="recipe"){$("#primary").textContent="Next step";$("#next").textContent="Recipe"}else{$("#primary").textContent=state.checked?"Continue":"Check";$("#primary").disabled=state.selected==null;$("#next").textContent=App.mode==="spin"?"Spin":"Next"}}
-      function primary(){if(App.mode==="store"){const first=(App.items||[])[0];if(first){state.installed[first.appId]=true;complete(1,"Featured installed");render()}return}if(App.mode==="grocery"){complete(8,"Shopping saved");return}if(App.mode==="recipe"){const recipe=(App.recipes||[])[state.index%(App.recipes||[]).length];if(state.step<recipe.steps.length-1){state.step++;save();render()}else{complete(12,"Cooked saved");next()}return}if(!state.checked){check();return}next()}
-      function check(){const item=current();state.checked=true;if(state.selected===item.answer){complete(10,"Correct")}else{state.streak=0;toast(item.explain);save()}Bridge.send("DATA_CREATE",{collection:Config.collection,payload:record({item:item.title,correct:state.selected===item.answer})});render()}
-      function next(){if(App.mode==="store"){state.installed={};save();render();return}if(App.mode==="grocery"){state.done={};save();render();return}if(App.mode==="recipe"){state.index=(state.index+1)%(App.recipes||[]).length;state.step=0;save();render();return}if(App.mode==="spin"){state.wheel=(state.wheel+137)%360}state.index=(state.index+1)%(App.items||[]).length;state.selected=null;state.checked=false;save();render()}
-      function complete(points,msg){state.score+=points;state.streak+=1;state.sessions+=1;save();toast(msg||"Saved")}
-      function row(section,item){const key=section+"_"+item;return '<button class="tile '+(state.done[key]?'done':'')+'" data-item data-key="'+escAttr(key)+'"><span class="row"><span class="check">OK</span><span class="row-label">'+esc(item)+'</span><span class="muted">'+esc(section)+'</span></span></button>'}
-      function current(){return (App.items||[])[state.index%(App.items||[]).length]}
-      function choiceClass(i){if(state.selected===i&&!state.checked)return"selected";if(state.checked&&i===current().answer)return"correct";if(state.checked&&i===state.selected&&i!==current().answer)return"wrong";return""}
-      function record(extra){return Object.assign({circleId:state.circleId,circleType:state.circleType,appId:Config.appId,ownerPersonId:state.personId,createdAt:new Date().toISOString()},extra||{})}
-      function visual(type,item){if(type==="clock")return clock(item.hour,item.minute);if(type==="spin")return spin();if(type==="bars"||type==="line"||type==="dots"||type==="people")return chart(type);if(type==="chess")return board();if(type==="ladder")return ladder();if(type==="wave")return wave();if(type==="habit")return habit();if(type==="wisdom")return wisdom();return generic(type)}
-      function generic(type){return '<svg viewBox="0 0 260 150"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--a)"/><stop offset="1" stop-color="var(--b)"/></linearGradient></defs><rect x="30" y="26" width="200" height="98" rx="32" fill="url(#g)" opacity=".16"/><circle cx="82" cy="76" r="34" fill="url(#g)" opacity=".88"/><rect x="126" y="48" width="78" height="14" rx="7" fill="url(#g)" opacity=".9"/><rect x="126" y="72" width="56" height="14" rx="7" fill="url(#g)" opacity=".56"/><rect x="126" y="96" width="88" height="14" rx="7" fill="url(#g)" opacity=".34"/></svg>'}
-      function chart(type){return '<svg viewBox="0 0 260 150"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--a)"/><stop offset="1" stop-color="var(--b)"/></linearGradient></defs><rect x="38" y="30" width="184" height="96" rx="24" fill="url(#g)" opacity=".12"/><rect x="60" y="82" width="24" height="28" rx="8" fill="url(#g)"/><rect x="102" y="58" width="24" height="52" rx="8" fill="url(#g)" opacity=".82"/><rect x="144" y="72" width="24" height="38" rx="8" fill="url(#g)" opacity=".62"/><path d="M62 88c28-36 54 10 82-20s42-2 58-28" fill="none" stroke="url(#g)" stroke-width="8" stroke-linecap="round" opacity="'+(type==="line"?".9":".2")+'"/></svg>'}
-      function board(){let s='<svg viewBox="0 0 160 160">';for(let y=0;y<4;y++){for(let x=0;x<4;x++){s+='<rect x="'+(22+x*28)+'" y="'+(22+y*28)+'" width="28" height="28" fill="'+((x+y)%2?'var(--a)':'var(--solid)')+'" opacity="'+((x+y)%2?'.72':'1')+'"/>'}}return s+'<text x="80" y="94" text-anchor="middle" font-size="34" fill="var(--ink)">N</text></svg>'}
-      function ladder(){return '<svg viewBox="0 0 260 150"><path d="M58 120 188 28" stroke="var(--a)" stroke-width="12" stroke-linecap="round"/><path d="M86 126 216 34" stroke="var(--b)" stroke-width="12" stroke-linecap="round"/><path d="M82 104h54M112 82h54M142 60h54" stroke="var(--ink)" stroke-width="8" stroke-linecap="round" opacity=".38"/><circle cx="68" cy="122" r="18" fill="var(--a)"/></svg>'}
-      function spin(){return '<svg viewBox="0 0 180 180"><g style="transform-origin:90px 90px;transform:rotate('+state.wheel+'deg)"><circle cx="90" cy="90" r="68" fill="var(--a)"/><path d="M90 90 90 22A68 68 0 0 1 158 90Z" fill="var(--b)"/><path d="M90 90 158 90A68 68 0 0 1 90 158Z" fill="var(--warn)"/><path d="M90 90 90 158A68 68 0 0 1 22 90Z" fill="var(--good)"/></g><circle cx="90" cy="90" r="22" fill="var(--solid)"/><path d="M90 8 104 34H76Z" fill="var(--ink)"/></svg>'}
-      function wave(){return '<svg viewBox="0 0 260 150"><path d="M40 94c24-42 42 42 68 0s42 42 68 0 28 12 44 0" fill="none" stroke="var(--a)" stroke-width="11" stroke-linecap="round"/><rect x="58" y="38" width="144" height="24" rx="12" fill="var(--b)" opacity=".22"/><circle cx="82" cy="104" r="18" fill="var(--b)"/></svg>'}
-      function habit(){return '<svg viewBox="0 0 260 150"><circle cx="92" cy="78" r="44" fill="var(--good)" opacity=".8"/><path d="M78 78l12 12 28-32" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><rect x="146" y="48" width="58" height="16" rx="8" fill="var(--a)"/><rect x="146" y="76" width="78" height="16" rx="8" fill="var(--b)" opacity=".7"/></svg>'}
-      function wisdom(){return '<svg viewBox="0 0 260 150"><rect x="66" y="26" width="128" height="98" rx="24" fill="var(--solid)" stroke="var(--line)"/><rect x="84" y="48" width="92" height="12" rx="6" fill="var(--a)"/><rect x="84" y="72" width="68" height="12" rx="6" fill="var(--b)" opacity=".72"/><rect x="84" y="96" width="84" height="12" rx="6" fill="var(--warn)" opacity=".56"/></svg>'}
-      function clock(h,m){const hour=((h%12)*30)+(m*.5)-90;const min=(m*6)-90;let ticks="";[12,3,6,9].forEach(n=>{const a=(n===12?-90:n*30-90)*Math.PI/180;const x=79+Math.cos(a)*61;const y=79+Math.sin(a)*61;ticks+='<span class="tick" style="transform:translate(-50%,-50%);left:'+x+'px;top:'+y+'px">'+n+'</span>'});return '<div class="clock">'+ticks+'<span class="hand hour" style="transform:rotate('+hour+'deg)"></span><span class="hand minute" style="transform:rotate('+min+'deg)"></span><span class="pin"></span></div>'}
-      function setTheme(theme,persist){state.theme=theme==="dark"?"dark":"light";document.documentElement.dataset.theme=state.theme;document.querySelector("meta[name='theme-color']").setAttribute("content",state.theme==="dark"?"#08101b":"#f7faff");if(persist)save()}
-      function save(){localStorage.setItem(Config.storagePrefix+"_state",JSON.stringify(state))}
-      function readJson(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
-      function toast(m){const n=$("#toast");n.textContent=m;n.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>n.classList.remove("show"),1500)}
-      function titleCase(v){v=String(v||"");return v.charAt(0).toUpperCase()+v.slice(1)}
-      function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-      function escAttr(v){return esc(v).replace(/\x60/g,"&#096;")}
-    })();
-  </script>
+<body data-theme="light">
+
+<!-- ═══ ONBOARDING ═══ -->
+<div class="screen" id="screen-onboard">
+  <div class="onboard-screen">
+    <div class="onboard-icon">✖️</div>
+    <div class="onboard-title">Times Table Quest</div>
+    <div class="onboard-desc">Master multiplication from ×2 to ×12 with quick, fun challenges. Just a few minutes a day!</div>
+    <div class="onboard-features">
+      <div class="onboard-feat"><div class="onboard-feat-icon">🎯</div><div>Quick lessons — 2-3 minutes each</div></div>
+      <div class="onboard-feat"><div class="onboard-feat-icon">❤️</div><div>5 hearts — mistakes matter!</div></div>
+      <div class="onboard-feat"><div class="onboard-feat-icon">⭐</div><div>Earn XP and climb the crowns</div></div>
+      <div class="onboard-feat"><div class="onboard-feat-icon">🔥</div><div>Build your daily streak</div></div>
+      <div class="onboard-feat"><div class="onboard-feat-icon">🏆</div><div>5 crown levels per times table</div></div>
+    </div>
+    <button class="onboard-btn" onclick="startApp()">Let's go!</button>
+  </div>
+</div>
+
+<!-- ═══ HOME / PATH ═══ -->
+<div class="screen" id="screen-home">
+  <div class="topbar">
+    <div class="topbar-title">✖️ Quest</div>
+    <div class="topbar-stats">
+      <div class="stat" style="color:var(--amber)"><span class="stat-icon">⭐</span><span id="home-xp">0</span></div>
+      <div class="stat" style="color:var(--red)"><span class="stat-icon">🔥</span><span id="home-streak">0</span></div>
+      <div class="stat" style="color:var(--red)"><span class="stat-icon">❤️</span><span id="home-hearts">5</span></div>
+      <div class="theme-toggle" onclick="toggleTheme()"></div>
+    </div>
+  </div>
+  <div class="path-scroll">
+    <div class="path-container">
+      <div class="path-line"></div>
+      <div id="skill-path"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LESSON ═══ -->
+<div class="screen" id="screen-lesson">
+  <div class="lesson-topbar">
+    <button class="lesson-close" onclick="exitLesson()">✕</button>
+    <div class="lesson-progress"><div class="lesson-progress-fill" id="lesson-progress-fill"></div></div>
+    <div class="lesson-hearts" id="lesson-hearts"></div>
+  </div>
+  <div class="lesson-body" id="lesson-body"></div>
+  <div id="feedback-area"></div>
+  <div class="lesson-footer">
+    <button class="check-btn disabled" id="check-btn" onclick="handleCheck()">Check</button>
+  </div>
+</div>
+
+<!-- ═══ REWARD ═══ -->
+<div class="screen" id="screen-reward">
+  <div class="reward-screen">
+    <div class="reward-icon" id="reward-icon">🎉</div>
+    <div class="reward-title" id="reward-title">Lesson complete!</div>
+    <div class="reward-stats" id="reward-stats"></div>
+    <div id="reward-crown-msg" style="font-size:14px;color:var(--text2)"></div>
+    <button class="reward-btn" onclick="goHome()">Continue</button>
+  </div>
+</div>
+
+<!-- ═══ STREAK MODAL ═══ -->
+<div class="modal-overlay" id="streak-modal">
+  <div class="modal-card">
+    <div class="modal-icon" id="streak-modal-icon">🔥</div>
+    <div class="modal-title" id="streak-modal-title">1 day streak!</div>
+    <div class="modal-desc" id="streak-modal-desc">You're on fire! Keep it going tomorrow.</div>
+    <button class="modal-btn" onclick="closeStreakModal()">Awesome!</button>
+  </div>
+</div>
+
+<!-- ═══ CONFETTI ═══ -->
+<div class="confetti-container" id="confetti"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// SOUND ENGINE (Web Audio API - no external files)
+// ═══════════════════════════════════════════════
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function ensureAudio() { if (!audioCtx) audioCtx = new AudioCtx(); }
+
+function playSound(type) {
+  try {
+    ensureAudio();
+    const ctx = audioCtx;
+    if (type === 'correct') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(523, ctx.currentTime);
+      osc.frequency.setValueAtTime(659, ctx.currentTime + 0.08);
+      osc.frequency.setValueAtTime(784, ctx.currentTime + 0.16);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35);
+    } else if (type === 'wrong') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(200, ctx.currentTime);
+      osc.frequency.setValueAtTime(150, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
+    } else if (type === 'tap') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(600, ctx.currentTime);
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.08);
+    } else if (type === 'levelup') {
+      [523,659,784,1047].forEach((f,i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(f, ctx.currentTime + i*0.12);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime + i*0.12);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i*0.12 + 0.3);
+        osc.start(ctx.currentTime + i*0.12); osc.stop(ctx.currentTime + i*0.12 + 0.3);
+      });
+    }
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════
+// STATE / PERSISTENCE
+// ═══════════════════════════════════════════════
+const SKILLS = [
+  { id:2,  label:'×2',  table:2,  boss:false },
+  { id:3,  label:'×3',  table:3,  boss:false },
+  { id:4,  label:'×4',  table:4,  boss:false },
+  { id:'b1', label:'Boss', table:0, boss:true, requires:[2,3,4] },
+  { id:5,  label:'×5',  table:5,  boss:false },
+  { id:6,  label:'×6',  table:6,  boss:false },
+  { id:7,  label:'×7',  table:7,  boss:false },
+  { id:'b2', label:'Boss', table:0, boss:true, requires:[5,6,7] },
+  { id:8,  label:'×8',  table:8,  boss:false },
+  { id:9,  label:'×9',  table:9,  boss:false },
+  { id:10, label:'×10', table:10, boss:false },
+  { id:'b3', label:'Boss', table:0, boss:true, requires:[8,9,10] },
+  { id:11, label:'×11', table:11, boss:false },
+  { id:12, label:'×12', table:12, boss:false },
+  { id:'final', label:'Grand Master', table:0, boss:true, requires:[11,12] },
+];
+
+const DEFAULT_STATE = {
+  xp: 0,
+  streak: 0,
+  lastPlayDate: null,
+  hearts: 5,
+  heartsLostAt: null,
+  skills: {},
+  onboarded: false,
+};
+
+let state;
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('ttq_state');
+    state = s ? { ...DEFAULT_STATE, ...JSON.parse(s) } : { ...DEFAULT_STATE };
+  } catch { state = { ...DEFAULT_STATE }; }
+  regenHearts();
+}
+
+function saveState() {
+  try { localStorage.setItem('ttq_state', JSON.stringify(state)); } catch {}
+}
+
+function getSkillState(id) {
+  if (!state.skills[id]) state.skills[id] = { crown:0, lessonsInCrown:0 };
+  return state.skills[id];
+}
+
+function regenHearts() {
+  if (state.hearts >= 5) return;
+  if (!state.heartsLostAt) return;
+  const elapsed = Date.now() - state.heartsLostAt;
+  const regenCount = Math.floor(elapsed / (4 * 60 * 60 * 1000)); // 4hrs per heart (shortened for testing: use 30000 for 30s)
+  if (regenCount > 0) {
+    state.hearts = Math.min(5, state.hearts + regenCount);
+    if (state.hearts >= 5) state.heartsLostAt = null;
+    else state.heartsLostAt = Date.now() - (elapsed % (4 * 60 * 60 * 1000));
+    saveState();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// STREAK LOGIC
+// ═══════════════════════════════════════════════
+function checkStreak() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (state.lastPlayDate === today) return false;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (state.lastPlayDate === yesterday) {
+    state.streak++;
+  } else if (state.lastPlayDate !== today) {
+    state.streak = 1;
+  }
+  state.lastPlayDate = today;
+  saveState();
+  return true;
+}
+
+// ═══════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════
+function toggleTheme() {
+  const body = document.body;
+  const newTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  body.setAttribute('data-theme', newTheme);
+  try { localStorage.setItem('ttq_theme', newTheme); } catch {}
+  playSound('tap');
+}
+
+function loadTheme() {
+  try {
+    const t = localStorage.getItem('ttq_theme');
+    if (t) document.body.setAttribute('data-theme', t);
+  } catch {}
+}
+
+// ═══════════════════════════════════════════════
+// SCREENS
+// ═══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function startApp() {
+  state.onboarded = true;
+  saveState();
+  goHome();
+}
+
+function goHome() {
+  showScreen('home');
+  renderPath();
+  updateHomeStats();
+}
+
+function updateHomeStats() {
+  document.getElementById('home-xp').textContent = state.xp;
+  document.getElementById('home-streak').textContent = state.streak;
+  document.getElementById('home-hearts').textContent = state.hearts;
+}
+
+// ═══════════════════════════════════════════════
+// SKILL PATH RENDERING
+// ═══════════════════════════════════════════════
+function isSkillUnlocked(skill, idx) {
+  if (idx === 0) return true;
+  if (skill.boss) {
+    return skill.requires.every(id => getSkillState(id).crown >= 1);
+  }
+  const prev = SKILLS[idx - 1];
+  if (prev.boss) {
+    return getSkillState(prev.id).crown >= 1;
+  }
+  return getSkillState(prev.id).crown >= 1;
+}
+
+function renderPath() {
+  const container = document.getElementById('skill-path');
+  container.innerHTML = '';
+  const offsets = [0, 40, -40, 20, -20, 30, -30, 0, 40, -40, 20, -20, 30, -30, 0];
+
+  SKILLS.forEach((skill, idx) => {
+    const ss = getSkillState(skill.id);
+    const unlocked = isSkillUnlocked(skill, idx);
+    const isCurrent = unlocked && ss.crown < 5;
+    const crownClass = 'crown' + Math.min(ss.crown, 5);
+
+    const node = document.createElement('div');
+    node.className = 'skill-node' + (unlocked ? '' : ' locked') + (skill.boss ? ' boss-node' : '');
+    node.style.paddingLeft = (offsets[idx % offsets.length] + 40) + 'px';
+
+    const lessonsNeeded = skill.boss ? 1 : 4;
+    const progressPct = ss.crown >= 5 ? 100 : (ss.lessonsInCrown / lessonsNeeded) * 100;
+    const crownColors = ['var(--text3)','var(--green)','var(--blue)','var(--purple)','var(--amber)','#FFD700'];
+
+    node.innerHTML = `
+      <div class="node-circle ${crownClass} ${isCurrent ? 'current-pulse' : ''}">
+        ${skill.boss ? '👑' : skill.label}
+        ${ss.crown > 0 ? `<div class="node-crown" style="color:${crownColors[ss.crown]}">${ss.crown}</div>` : ''}
+      </div>
+      <div class="node-info">
+        <div class="node-title">${skill.boss ? (skill.id === 'final' ? 'Grand Master' : 'Checkpoint') : skill.label + ' Times Table'}</div>
+        <div class="node-sub">${ss.crown >= 5 ? 'Mastered! ⭐' : (ss.crown === 0 ? (skill.boss ? 'Pass to unlock next section' : 'Start learning') : 'Crown ' + ss.crown + ' of 5')}</div>
+        ${ss.crown < 5 && ss.crown > 0 ? `<div class="node-progress"><div class="node-progress-fill" style="width:${progressPct}%;background:${crownColors[Math.min(ss.crown+1,5)]}"></div></div>` : ''}
+      </div>
+      ${unlocked && ss.crown < 5 ? `<button class="node-start" style="background:${isCurrent ? 'var(--green)' : 'var(--bg3)'};color:${isCurrent ? '#fff' : 'var(--text)'}">Start</button>` : ''}
+    `;
+
+    if (unlocked && ss.crown < 5) {
+      node.onclick = () => startLesson(skill);
+    }
+    container.appendChild(node);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// QUESTION GENERATION
+// ═══════════════════════════════════════════════
+function generateQuestions(skill) {
+  const questions = [];
+  const crown = getSkillState(skill.id).crown;
+  const tables = [];
+
+  if (skill.boss) {
+    skill.requires.forEach(id => {
+      const s = SKILLS.find(sk => sk.id === id);
+      if (s) tables.push(s.table);
+    });
+  } else if (skill.id === 'final') {
+    for (let t = 2; t <= 12; t++) tables.push(t);
+  } else {
+    tables.push(skill.table);
+  }
+
+  const totalQ = skill.boss ? 15 : 12;
+  const allPairs = [];
+  tables.forEach(t => {
+    for (let m = 1; m <= 12; m++) allPairs.push([t, m]);
+  });
+
+  // Shuffle and pick
+  const shuffled = allPairs.sort(() => Math.random() - 0.5);
+  const picked = [];
+  while (picked.length < totalQ) {
+    picked.push(...shuffled);
+  }
+  const selected = picked.slice(0, totalQ);
+
+  // Assign question types based on crown level
+  selected.forEach((pair, i) => {
+    const [a, b] = pair;
+    const answer = a * b;
+    const qTypes = getQuestionTypes(crown, i, totalQ);
+    const type = qTypes[Math.floor(Math.random() * qTypes.length)];
+
+    if (type === 'mc') {
+      const opts = generateMCOptions(answer, a, b);
+      questions.push({ type:'mc', a, b, answer, prompt:`${a} × ${b}`, options:opts });
+    } else if (type === 'type') {
+      questions.push({ type:'type', a, b, answer, prompt:`${a} × ${b}` });
+    } else if (type === 'match') {
+      // Generate 4 pairs for matching
+      const matchPairs = [[a, b]];
+      const used = new Set([`${a}x${b}`]);
+      while (matchPairs.length < 4) {
+        const rp = allPairs[Math.floor(Math.random() * allPairs.length)];
+        const key = `${rp[0]}x${rp[1]}`;
+        if (!used.has(key)) { matchPairs.push(rp); used.add(key); }
+      }
+      questions.push({
+        type:'match',
+        pairs: matchPairs.map(p => ({ q:`${p[0]} × ${p[1]}`, a:String(p[0]*p[1]) }))
+      });
+    } else if (type === 'reverse') {
+      const opts = generateReverseMCOptions(a, b);
+      questions.push({ type:'mc', a, b, answer:b, prompt:`${a} × ? = ${answer}`, options:opts });
+    }
+  });
+
+  return questions;
+}
+
+function getQuestionTypes(crown, qIndex, total) {
+  // Easy-hard-easy curve
+  const pos = qIndex / total;
+  const isWarmup = pos < 0.2;
+  const isCooldown = pos > 0.85;
+
+  if (crown <= 1) {
+    return isWarmup ? ['mc'] : ['mc','mc','mc','match'];
+  } else if (crown === 2) {
+    return isWarmup ? ['mc'] : isCooldown ? ['mc'] : ['mc','mc','type','match'];
+  } else if (crown === 3) {
+    return isWarmup ? ['mc','match'] : isCooldown ? ['mc'] : ['mc','type','type','match','reverse'];
+  } else if (crown === 4) {
+    return isWarmup ? ['mc','type'] : isCooldown ? ['mc','type'] : ['type','type','reverse','match'];
+  } else {
+    return ['type','type','type','reverse'];
+  }
+}
+
+function generateMCOptions(answer, a, b) {
+  const opts = new Set([answer]);
+  const nearby = [answer-1, answer+1, answer-2, answer+2, a*(b-1), a*(b+1), (a-1)*b, (a+1)*b];
+  const filtered = nearby.filter(n => n > 0 && n !== answer);
+  while (opts.size < 4 && filtered.length) {
+    const idx = Math.floor(Math.random() * filtered.length);
+    opts.add(filtered.splice(idx, 1)[0]);
+  }
+  while (opts.size < 4) opts.add(answer + Math.floor(Math.random()*20) - 10 || answer + opts.size);
+  return [...opts].sort(() => Math.random() - 0.5);
+}
+
+function generateReverseMCOptions(a, b) {
+  const opts = new Set([b]);
+  [b-1, b+1, b-2, b+2, b+3].filter(n => n > 0 && n <= 12 && n !== b).forEach(n => opts.add(n));
+  while (opts.size < 4) opts.add(Math.floor(Math.random()*12)+1);
+  return [...opts].sort(() => Math.random() - 0.5);
+}
+
+// ═══════════════════════════════════════════════
+// LESSON ENGINE
+// ═══════════════════════════════════════════════
+let currentSkill = null;
+let questions = [];
+let currentQ = 0;
+let lessonHearts = 5;
+let lessonXP = 0;
+let lessonMistakes = 0;
+let lessonCorrectStreak = 0;
+let selectedAnswer = null;
+let answered = false;
+let mistakeQueue = [];
+let matchState = {};
+
+function startLesson(skill) {
+  if (state.hearts <= 0) {
+    showNoHearts();
+    return;
+  }
+  playSound('tap');
+  currentSkill = skill;
+  lessonHearts = state.hearts;
+  lessonXP = 0;
+  lessonMistakes = 0;
+  lessonCorrectStreak = 0;
+  currentQ = 0;
+  selectedAnswer = null;
+  answered = false;
+  mistakeQueue = [];
+  questions = generateQuestions(skill);
+  showScreen('lesson');
+  renderLessonQ();
+}
+
+function renderLessonQ() {
+  if (currentQ >= questions.length) {
+    if (mistakeQueue.length > 0) {
+      questions.push(mistakeQueue.shift());
+    } else {
+      finishLesson();
+      return;
+    }
+  }
+
+  const q = questions[currentQ];
+  const body = document.getElementById('lesson-body');
+  const progressPct = (currentQ / questions.length) * 100;
+  document.getElementById('lesson-progress-fill').style.width = progressPct + '%';
+  renderHearts();
+  clearFeedback();
+  answered = false;
+  selectedAnswer = null;
+  updateCheckBtn('disabled', 'Check');
+
+  if (q.type === 'mc') {
+    body.innerHTML = `
+      <div class="question-sub">What is</div>
+      <div class="question-big">${q.prompt}</div>
+      <div class="mc-grid">
+        ${q.options.map((o,i) => `<div class="mc-option" data-val="${o}" onclick="selectMC(this, ${o})">${o}</div>`).join('')}
+      </div>
+    `;
+  } else if (q.type === 'type') {
+    body.innerHTML = `
+      <div class="question-sub">Type the answer</div>
+      <div class="question-big">${q.prompt}</div>
+      <div class="type-input-wrap">
+        <input class="type-input" type="number" inputmode="numeric" pattern="[0-9]*"
+          id="type-answer" placeholder="?" autofocus
+          onkeydown="if(event.key==='Enter')handleCheck()"
+          oninput="onTypeInput()">
+      </div>
+    `;
+    setTimeout(() => { const inp = document.getElementById('type-answer'); if(inp) inp.focus(); }, 100);
+  } else if (q.type === 'match') {
+    matchState = { selected:null, matched:0, pairs:q.pairs };
+    const left = q.pairs.map((p,i) => ({ text:p.q, idx:i, side:'q' })).sort(() => Math.random()-0.5);
+    const right = q.pairs.map((p,i) => ({ text:p.a, idx:i, side:'a' })).sort(() => Math.random()-0.5);
+    body.innerHTML = `
+      <div class="question-sub">Match the pairs</div>
+      <div class="match-grid" id="match-grid">
+        ${left.map((l,i) => `
+          <div class="match-card" data-side="q" data-idx="${l.idx}" onclick="selectMatch(this)">${l.text}</div>
+          <div class="match-card" data-side="a" data-idx="${right[i].idx}" onclick="selectMatch(this)">${right[i].text}</div>
+        `).join('')}
+      </div>
+    `;
+    updateCheckBtn('disabled', 'Match all pairs');
+  }
+}
+
+function selectMC(el, val) {
+  if (answered) return;
+  playSound('tap');
+  document.querySelectorAll('.mc-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedAnswer = val;
+  updateCheckBtn('ready', 'Check');
+}
+
+function onTypeInput() {
+  const v = document.getElementById('type-answer')?.value;
+  updateCheckBtn(v ? 'ready' : 'disabled', 'Check');
+  selectedAnswer = v ? parseInt(v) : null;
+}
+
+function selectMatch(el) {
+  if (el.classList.contains('matched')) return;
+  playSound('tap');
+
+  if (!matchState.selected) {
+    document.querySelectorAll('.match-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    matchState.selected = el;
+  } else {
+    const prev = matchState.selected;
+    const prevSide = prev.dataset.side;
+    const elSide = el.dataset.side;
+
+    if (prevSide === elSide) {
+      prev.classList.remove('selected');
+      el.classList.add('selected');
+      matchState.selected = el;
+      return;
+    }
+
+    const prevIdx = parseInt(prev.dataset.idx);
+    const elIdx = parseInt(el.dataset.idx);
+
+    if (prevIdx === elIdx) {
+      // Match!
+      playSound('correct');
+      prev.classList.remove('selected');
+      prev.classList.add('matched');
+      el.classList.add('matched');
+      matchState.selected = null;
+      matchState.matched++;
+      if (matchState.matched >= matchState.pairs.length) {
+        answered = true;
+        lessonXP += 10;
+        lessonCorrectStreak++;
+        setTimeout(() => {
+          showFeedback(true);
+          updateCheckBtn('next-correct', 'Continue');
+        }, 300);
+      }
+    } else {
+      // Wrong
+      playSound('wrong');
+      el.classList.add('wrong-flash');
+      prev.classList.add('wrong-flash');
+      setTimeout(() => {
+        el.classList.remove('wrong-flash');
+        prev.classList.remove('wrong-flash');
+        prev.classList.remove('selected');
+      }, 500);
+      matchState.selected = null;
+      loseHeart();
+    }
+  }
+}
+
+function handleCheck() {
+  const q = questions[currentQ];
+  if (q.type === 'match') {
+    if (answered) { nextQuestion(); }
+    return;
+  }
+
+  if (answered) {
+    nextQuestion();
+    return;
+  }
+  if (selectedAnswer === null) return;
+
+  answered = true;
+  const correct = selectedAnswer === q.answer;
+
+  if (correct) {
+    playSound('correct');
+    lessonXP += 10;
+    lessonCorrectStreak++;
+    if (lessonCorrectStreak >= 3) lessonXP += 2; // streak bonus
+
+    if (q.type === 'mc') {
+      document.querySelectorAll('.mc-option').forEach(o => {
+        if (parseInt(o.dataset.val) === q.answer) o.classList.add('correct');
+        else o.classList.remove('selected');
+      });
+    } else if (q.type === 'type') {
+      document.getElementById('type-answer').classList.add('correct');
+    }
+    showFeedback(true);
+    updateCheckBtn('next-correct', 'Continue');
+  } else {
+    playSound('wrong');
+    lessonMistakes++;
+    lessonCorrectStreak = 0;
+
+    if (q.type === 'mc') {
+      document.querySelectorAll('.mc-option').forEach(o => {
+        if (parseInt(o.dataset.val) === q.answer) o.classList.add('correct');
+        if (o.classList.contains('selected')) o.classList.add('wrong');
+      });
+    } else if (q.type === 'type') {
+      const inp = document.getElementById('type-answer');
+      inp.classList.add('wrong');
+      inp.value = q.answer;
+    }
+    showFeedback(false, q.answer);
+    updateCheckBtn('next-wrong', 'Got it');
+    loseHeart();
+
+    // Mistake recycling: re-add this question later
+    if (q.type !== 'match') {
+      mistakeQueue.push({ ...q });
+    }
+  }
+}
+
+function loseHeart() {
+  lessonHearts--;
+  state.hearts = lessonHearts;
+  if (lessonHearts <= 0) state.heartsLostAt = Date.now();
+  saveState();
+  renderHearts();
+
+  if (lessonHearts <= 0) {
+    setTimeout(() => {
+      finishLesson(true);
+    }, 1200);
+  }
+}
+
+function nextQuestion() {
+  currentQ++;
+  renderLessonQ();
+}
+
+function renderHearts() {
+  const container = document.getElementById('lesson-hearts');
+  container.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const h = document.createElement('span');
+    h.className = 'heart' + (i < lessonHearts ? '' : ' lost');
+    h.textContent = '❤️';
+    container.appendChild(h);
+  }
+}
+
+function showFeedback(correct, correctAnswer) {
+  const area = document.getElementById('feedback-area');
+  if (correct) {
+    const msgs = ['Nice!', 'Correct!', 'Amazing!', 'You got it!', 'Perfect!', 'Brilliant!'];
+    area.innerHTML = `<div class="feedback-banner correct">${msgs[Math.floor(Math.random()*msgs.length)]}</div>`;
+  } else {
+    area.innerHTML = `<div class="feedback-banner wrong">Correct answer: ${correctAnswer}</div>`;
+  }
+}
+
+function clearFeedback() {
+  document.getElementById('feedback-area').innerHTML = '';
+}
+
+function updateCheckBtn(state, text) {
+  const btn = document.getElementById('check-btn');
+  btn.className = 'check-btn ' + state;
+  btn.textContent = text;
+}
+
+function exitLesson() {
+  playSound('tap');
+  goHome();
+}
+
+// ═══════════════════════════════════════════════
+// LESSON COMPLETION
+// ═══════════════════════════════════════════════
+function finishLesson(ranOutOfHearts) {
+  if (ranOutOfHearts) {
+    // Still give partial XP
+    lessonXP = Math.floor(lessonXP * 0.5);
+  }
+
+  // Award XP
+  const bonusXP = lessonMistakes === 0 ? 5 : 0;
+  const totalXP = lessonXP + bonusXP;
+  state.xp += totalXP;
+
+  // Crown progress
+  if (!ranOutOfHearts && currentSkill) {
+    const ss = getSkillState(currentSkill.id);
+    if (ss.crown < 5) {
+      ss.lessonsInCrown++;
+      const needed = currentSkill.boss ? 1 : 4;
+      if (ss.lessonsInCrown >= needed) {
+        ss.crown++;
+        ss.lessonsInCrown = 0;
+      }
+    }
+  }
+
+  // Streak
+  const isNewStreak = checkStreak();
+  saveState();
+
+  // Show reward
+  showScreen('reward');
+  const icon = ranOutOfHearts ? '💔' : (lessonMistakes === 0 ? '⭐' : '🎉');
+  const title = ranOutOfHearts ? 'Out of hearts!' : (lessonMistakes === 0 ? 'Perfect lesson!' : 'Lesson complete!');
+
+  document.getElementById('reward-icon').textContent = icon;
+  document.getElementById('reward-title').textContent = title;
+
+  document.getElementById('reward-stats').innerHTML = `
+    <div class="reward-stat">
+      <div class="reward-stat-val" style="color:var(--amber)">+${totalXP}</div>
+      <div class="reward-stat-lab">XP earned</div>
+    </div>
+    <div class="reward-stat">
+      <div class="reward-stat-val" style="color:var(--red)">${lessonMistakes}</div>
+      <div class="reward-stat-lab">mistakes</div>
+    </div>
+    <div class="reward-stat">
+      <div class="reward-stat-val" style="color:var(--green)">${Math.round((1 - lessonMistakes / questions.length) * 100)}%</div>
+      <div class="reward-stat-lab">accuracy</div>
+    </div>
+  `;
+
+  const ss = currentSkill ? getSkillState(currentSkill.id) : null;
+  const crownMsg = document.getElementById('reward-crown-msg');
+  if (ranOutOfHearts) {
+    crownMsg.textContent = 'Practice more to earn hearts back!';
+  } else if (ss && ss.lessonsInCrown === 0 && ss.crown > 0) {
+    crownMsg.innerHTML = `<span style="font-size:20px">👑</span> Crown ${ss.crown} unlocked!`;
+    playSound('levelup');
+  } else if (ss && ss.crown < 5) {
+    const needed = currentSkill.boss ? 1 : 4;
+    crownMsg.textContent = `${ss.lessonsInCrown}/${needed} lessons to next crown`;
+  } else {
+    crownMsg.textContent = '';
+  }
+
+  if (!ranOutOfHearts && lessonMistakes === 0) {
+    spawnConfetti();
+  }
+
+  if (isNewStreak) {
+    setTimeout(() => showStreakModal(), 1200);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// NO HEARTS
+// ═══════════════════════════════════════════════
+function showNoHearts() {
+  const body = document.getElementById('lesson-body');
+  showScreen('lesson');
+  document.getElementById('lesson-progress-fill').style.width = '0%';
+  renderHearts();
+  document.getElementById('check-btn').style.display = 'none';
+
+  const nextHeart = state.heartsLostAt ? new Date(state.heartsLostAt + 4*60*60*1000) : null;
+  body.innerHTML = `
+    <div class="no-hearts-screen">
+      <div class="no-hearts-icon">💔</div>
+      <div class="no-hearts-title">No hearts left!</div>
+      <div class="no-hearts-desc">Hearts regenerate over time. Come back soon to keep learning!</div>
+      ${nextHeart ? `<div class="no-hearts-timer" id="heart-timer"></div>` : ''}
+      <button class="no-hearts-btn" onclick="goHome();document.getElementById('check-btn').style.display=''">Back to path</button>
+    </div>
+  `;
+
+  if (nextHeart) {
+    const updateTimer = () => {
+      const diff = nextHeart - Date.now();
+      if (diff <= 0) {
+        regenHearts();
+        goHome();
+        return;
+      }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      const el = document.getElementById('heart-timer');
+      if (el) el.textContent = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    };
+    updateTimer();
+    setInterval(updateTimer, 1000);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// CONFETTI
+// ═══════════════════════════════════════════════
+function spawnConfetti() {
+  const container = document.getElementById('confetti');
+  container.innerHTML = '';
+  const colors = ['#58CC02','#FF9600','#CE82FF','#1CB0F6','#FF4B4B','#FFD700'];
+  for (let i = 0; i < 40; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = Math.random() * 0.8 + 's';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    piece.style.width = (6 + Math.random()*8) + 'px';
+    piece.style.height = (6 + Math.random()*8) + 'px';
+    container.appendChild(piece);
+  }
+  setTimeout(() => container.innerHTML = '', 3000);
+}
+
+// ═══════════════════════════════════════════════
+// STREAK MODAL
+// ═══════════════════════════════════════════════
+function showStreakModal() {
+  const modal = document.getElementById('streak-modal');
+  const milestones = [7,30,50,100,200,365];
+  const isMilestone = milestones.includes(state.streak);
+
+  document.getElementById('streak-modal-icon').textContent = isMilestone ? '🏆' : '🔥';
+  document.getElementById('streak-modal-title').textContent = `${state.streak} day streak!`;
+  document.getElementById('streak-modal-desc').textContent = isMilestone
+    ? `Incredible! ${state.streak} days in a row — that's real dedication!`
+    : (state.streak === 1 ? "Great start! Come back tomorrow to keep it going." : `${state.streak} days strong — keep it up!`);
+  modal.classList.add('active');
+}
+
+function closeStreakModal() {
+  document.getElementById('streak-modal').classList.remove('active');
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+loadTheme();
+loadState();
+
+if (!state.onboarded) {
+  showScreen('onboard');
+} else {
+  goHome();
+}
+</script>
 </body>
 </html>
