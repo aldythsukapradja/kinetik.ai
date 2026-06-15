@@ -35,6 +35,7 @@ DO NOT:
 <title>Kinetik — Plans. People. Play.</title>
 <meta name="theme-color" content="#eef2fb">
 <!-- PWA manifest is injected by JS only on http(s); on file:// it would throw a CORS error -->
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kinetik">
@@ -301,10 +302,10 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 #appsBody{display:flex;flex-direction:column;height:100%}
 .apppager{flex:1 1 auto;min-height:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;margin:0 -18px}
 .apppager::-webkit-scrollbar{display:none}
-.apppage{flex:0 0 100%;scroll-snap-align:center;padding:0 18px;overflow:hidden}
+.apppage{flex:0 0 100%;scroll-snap-align:center;padding:0 18px;overflow:hidden;display:flex;flex-direction:column;justify-content:center}
 .appdots{display:flex;gap:6px;justify-content:center;align-items:center;padding:12px 0 2px;flex:0 0 auto}
-.appdots span{width:6px;height:6px;border-radius:50%;background:var(--brd2);transition:all var(--dur1)}
-.appdots span.on{background:var(--dim);width:7px;height:7px}
+.appdots span{width:7px;height:7px;border-radius:50%;background:var(--brd2);opacity:.55;transition:all var(--dur1)}
+.appdots span.on{background:var(--acc);opacity:1;width:9px;height:9px}
 .appgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:6px 2px;align-content:start}
 .appico{display:flex;flex-direction:column;align-items:center;gap:7px;transition:transform var(--dur1) var(--ease)}
 .appico:active{transform:scale(.9)}
@@ -371,7 +372,8 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 .assec span{font-size:12px;color:var(--faint);font-weight:600}
 .asrow{display:flex;gap:13px;overflow-x:auto;padding:0 0 8px;margin:0 -18px 22px;padding-left:18px;padding-right:18px;scrollbar-width:none;scroll-snap-type:x mandatory}
 .asrow::-webkit-scrollbar{display:none}
-.ascard{flex:0 0 150px;scroll-snap-align:start;display:flex;flex-direction:column;gap:9px;cursor:pointer;transition:transform var(--dur1)}
+.ascard{flex:0 0 150px;min-width:0;scroll-snap-align:start;display:flex;flex-direction:column;gap:9px;cursor:pointer;transition:transform var(--dur1)}
+.ascard>*{min-width:0}
 .ascard:active{transform:scale(.96)}
 .ascard .art{aspect-ratio:1.18;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:44px;box-shadow:0 10px 26px rgba(40,55,90,.18),inset 0 1px 0 rgba(255,255,255,.3);position:relative;overflow:hidden}
 .ascard .art:after{content:"";position:absolute;inset:0;background:radial-gradient(110% 80% at 25% 15%,rgba(255,255,255,.25),transparent 55%)}
@@ -1904,32 +1906,50 @@ const Create={type:"memory-line",items:[],
   },
   async addOne(file,isMoment){
     if(!file)return;
-    if(/heic|heif/i.test(file.type||file.name))return Toast.show("HEIC not supported — pick JPEG or PNG");
-    if(file.type.indexOf("video")===0){
+    if((file.type||"").indexOf("video")===0){
       if(!isMoment&&this.items.length)return Toast.show("A video must be posted on its own");
       if(file.size>MAX_VID_MB*1024*1024)return Toast.show("Video too large (max "+MAX_VID_MB+"MB)");
       this.revoke();this.items=[{blob:file,mime:file.type||"video/mp4",fileName:file.name,url:URL.createObjectURL(file),video:true}];
       return;
     }
-    if(!/image\/(jpeg|jpg|png|webp)/i.test(file.type))return Toast.show("Use JPEG, PNG or WebP");
+    /* Treat anything that isn't a video as a photo and let the canvas re-encode it to
+       JPEG. This covers JPEG/PNG/WebP AND iPhone HEIC/HEIF (iOS decodes HEIC in <img>),
+       and an empty file.type (iOS often omits it). compress() rejects truly unreadable
+       files, so the catch is the real format gate. */
+    const looksImage=!file.type||/^image\//i.test(file.type)||/\.(jpe?g|png|webp|heic|heif|gif|bmp)$/i.test(file.name||"");
+    if(!looksImage)return Toast.show("Pick a photo or video");
     if(this.items.some(it=>it.video)){this.revoke();this.items=[];}   /* can't mix video + photos */
     try{const out=await this.compress(file);
       this.items.push({blob:out.blob,mime:"image/jpeg",fileName:(file.name||"photo").replace(/\.\w+$/,"")+".jpg",url:URL.createObjectURL(out.blob),video:false});
-    }catch(e){Toast.show("Couldn't read that image");}
+    }catch(e){
+      /* Decode/encode failed (unusual codec, or the browser deferred the <img> load).
+         Upload the original bytes so the post still goes through, if it's a sane size. */
+      if(file.size&&file.size<=12*1024*1024){
+        this.items.push({blob:file,mime:file.type||"image/jpeg",fileName:file.name||"photo.jpg",url:URL.createObjectURL(file),video:false});
+      }else Toast.show("Couldn't read that image — try a smaller JPEG or PNG");
+    }
   },
-  compress(file){
-    return new Promise((resolve,reject)=>{
-      const img=new Image(),url=URL.createObjectURL(file);
-      img.onload=()=>{
-        let {width:w,height:h}=img;const scale=Math.min(1,MAX_EDGE/Math.max(w,h));
-        w=Math.round(w*scale);h=Math.round(h*scale);
-        const cv=document.createElement("canvas");cv.width=w;cv.height=h;
-        cv.getContext("2d").drawImage(img,0,0,w,h);
-        cv.toBlob(b=>{URL.revokeObjectURL(url);b?resolve({blob:b}):reject(new Error("encode failed"));},"image/jpeg",.82);
-      };
-      img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("decode failed"));};
-      img.src=url;
-    });
+  async compress(file){
+    /* Prefer createImageBitmap: decodes off the main thread, handles iPhone HEIC, and is
+       NOT subject to the lazy-image-load intervention that can stall <img>.onload forever. */
+    let src=null,W=0,H=0,close=null,revoke=null;
+    if(window.createImageBitmap){
+      try{const bmp=await createImageBitmap(file);src=bmp;W=bmp.width;H=bmp.height;close=()=>{try{bmp.close&&bmp.close();}catch(e){}};}catch(e){src=null;}
+    }
+    if(!src){
+      src=await new Promise((resolve,reject)=>{
+        const img=new Image();img.decoding="sync";const url=URL.createObjectURL(file);revoke=()=>URL.revokeObjectURL(url);
+        img.onload=()=>resolve(img);img.onerror=()=>{revoke();reject(new Error("decode failed"));};img.src=url;
+      });
+      W=src.naturalWidth||src.width;H=src.naturalHeight||src.height;
+    }
+    if(!W||!H){if(close)close();if(revoke)revoke();throw new Error("decode failed");}
+    const scale=Math.min(1,MAX_EDGE/Math.max(W,H)),w=Math.max(1,Math.round(W*scale)),h=Math.max(1,Math.round(H*scale));
+    const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+    cv.getContext("2d").drawImage(src,0,0,w,h);
+    if(close)close();if(revoke)revoke();
+    const blob=await new Promise((resolve,reject)=>cv.toBlob(b=>b?resolve(b):reject(new Error("encode failed")),"image/jpeg",.82));
+    return {blob};
   },
   validate(){
     const ok=this.items.length&&this.circleId&&this.textOk();
@@ -2601,8 +2621,7 @@ const Store={view:"list",detailId:null,query:"",cat:"all",
   card(a){
     return `<div class="ascard" onclick="Store.detail('${a.id}')">
       <div class="art" style="background:${this.grad(a)}">${iconInner(a.glyph)}</div>
-      <div class="rw"><span class="ic" style="background:${this.grad(a)}">${iconInner(a.glyph)}</span>
-        <div style="min-width:0"><b>${esc(a.name)}</b><small>${esc(catLabel(a.category))}</small></div>${this.getBtn(a)}</div>
+      <div class="rw"><div style="min-width:0;flex:1"><b>${esc(a.name)}</b><small>${esc(catLabel(a.category))}</small></div>${this.getBtn(a)}</div>
     </div>`;
   },
   listRow(a){
