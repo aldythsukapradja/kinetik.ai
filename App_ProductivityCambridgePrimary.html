@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#eef2fb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Cambridge">
+  <title>Cambridge Primary - Kinetik</title>
+  <script type="application/kinetik-app+json">
+{
+  "appId": "cambridge-primary",
+  "name": "Cambridge Primary",
+  "shortName": "Cambridge",
+  "icon": "📚",
+  "gradient": ["#34d399", "#4f46e5"],
+  "category": "kids",
+  "tagline": "Primary learning, stage by stage.",
+  "about": "A local-first Cambridge Primary learning engine for English 0058, Mathematics 0096, Science 0097, and French via Modern Foreign Language 0064. It tracks objectives, mastery, mistakes, and editable parent-reviewed content.",
+  "audience": "family",
+  "circleTypes": ["family"],
+  "worksWith": ["offline", "standalone", "learning", "future-backend"],
+  "status": "live",
+  "minMembers": 1
+}
+  </script>
+  <style>
+    :root{
+      color-scheme:light;
+      --bg0:#eef2fb;
+      --bg1:#e7edf9;
+      --ink:#0d1426;
+      --muted:rgba(13,20,38,.68);
+      --faint:rgba(13,20,38,.45);
+      --panel:rgba(255,255,255,.72);
+      --panel2:rgba(255,255,255,.88);
+      --soft:rgba(20,40,90,.06);
+      --line:rgba(112,132,184,.25);
+      --accent:#22c8b8;
+      --accent2:#5667f2;
+      --good:#059669;
+      --warn:#d97706;
+      --bad:#e11d48;
+      --shadow:0 24px 70px rgba(53,75,120,.18);
+      --sat:env(safe-area-inset-top,0px);
+      --sab:env(safe-area-inset-bottom,0px);
+      --navh:calc(64px + max(var(--sab),8px));
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+    }
+    html[data-theme="dark"]{
+      color-scheme:dark;
+      --bg0:#05070f;
+      --bg1:#0a1022;
+      --ink:#eef2ff;
+      --muted:rgba(238,242,255,.66);
+      --faint:rgba(238,242,255,.42);
+      --panel:rgba(15,22,44,.64);
+      --panel2:rgba(20,30,58,.78);
+      --soft:rgba(255,255,255,.08);
+      --line:rgba(255,255,255,.13);
+      --shadow:0 24px 80px rgba(0,0,0,.44);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;overflow:hidden}
+    body{
+      min-height:100dvh;
+      color:var(--ink);
+      background:
+        radial-gradient(120% 90% at 82% -10%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 56%),
+        radial-gradient(120% 95% at 0% 100%,color-mix(in srgb,var(--accent2) 15%,transparent),transparent 58%),
+        linear-gradient(170deg,var(--bg1),var(--bg0) 58%,var(--bg1));
+      -webkit-font-smoothing:antialiased;
+    }
+    button,input,select,textarea{font:inherit;color:inherit}
+    button{border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    h1,h2,h3,p{margin:0}
+    h1{font-size:21px;line-height:1;font-weight:850}
+    h2{font-size:22px;line-height:1.08}
+    h3{font-size:15px;line-height:1.2}
+    .app{height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;max-width:980px;margin:0 auto;padding-top:var(--sat);overflow:hidden}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px 9px}
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .mark{width:42px;height:42px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#fff;font-weight:950;box-shadow:0 12px 30px color-mix(in srgb,var(--accent2) 28%,transparent)}
+    .brand p,.small{font-size:12px;color:var(--muted);line-height:1.35}
+    .top-actions{display:flex;align-items:center;gap:8px}
+    .glass{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);backdrop-filter:blur(24px) saturate(1.25);-webkit-backdrop-filter:blur(24px) saturate(1.25)}
+    .card{border-radius:18px;padding:14px}
+    .flat{background:var(--soft);box-shadow:none}
+    .btn{min-height:42px;border-radius:14px;padding:10px 15px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 10px 26px color-mix(in srgb,var(--accent) 28%,transparent);transition:transform .18s}
+    .btn:active,.icon-btn:active,.lesson-card:active,.chip:active{transform:scale(.96)}
+    .btn.secondary{background:var(--soft);color:var(--ink);box-shadow:none;border:1px solid var(--line)}
+    .btn.danger{background:rgba(225,29,72,.12);color:var(--bad);box-shadow:none;border:1px solid rgba(225,29,72,.25)}
+    .icon-btn{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--soft);border:1px solid var(--line);transition:transform .18s;flex:0 0 auto}
+    .icon-btn svg,.nav button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .view{min-height:0;overflow:auto;padding:5px 16px 16px;display:none;-webkit-overflow-scrolling:touch}
+    .view.on{display:block}
+    .view-inner{max-width:760px;margin:0 auto;display:grid;gap:12px}
+    .grid{display:grid;gap:10px}
+    .two{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .three{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .row{display:flex;align-items:center;gap:9px}
+    .between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .muted{color:var(--muted)}
+    .faint{color:var(--faint)}
+    .label{font-size:10.5px;font-weight:850;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+    .chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:800;color:var(--muted);background:var(--soft);border:1px solid transparent;transition:transform .18s}
+    .chip.on{color:var(--ink);background:color-mix(in srgb,var(--accent) 15%,transparent);border-color:color-mix(in srgb,var(--accent) 38%,transparent)}
+    .chip-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+    .chip-row::-webkit-scrollbar{display:none}
+    .hero{position:relative;overflow:hidden;border-radius:22px;padding:17px;min-height:164px;display:grid;align-content:end;gap:8px;color:#fff;background:linear-gradient(135deg,#16a99e,#4f60de)}
+    .hero:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 78% 12%,rgba(255,255,255,.22),transparent 30%),linear-gradient(to top,rgba(0,0,0,.25),transparent 65%)}
+    .hero>*{position:relative}
+    .hero-visual{position:absolute;right:8px;top:6px;width:130px;height:96px;opacity:.42}
+    .hero h2{font-size:24px;max-width:82%;letter-spacing:0}
+    .hero-action{width:max-content;background:rgba(255,255,255,.94);color:#102033;box-shadow:none;border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:10px 18px}
+    .hero-action svg{width:16px;height:16px;fill:currentColor;stroke:none}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .stat{border-radius:17px;padding:10px;background:var(--soft);border:1px solid var(--line);min-width:0}
+    .stat b{display:block;font-size:20px;line-height:1}
+    .stat span{display:block;font-size:10.5px;color:var(--muted);font-weight:800;margin-top:4px}
+    .subject-card,.lesson-card,.profile-card,.mistake-card{border-radius:16px;padding:13px;background:var(--panel2);border:1px solid var(--line);box-shadow:0 8px 24px rgba(40,55,90,.07);transition:transform .18s}
+    .lesson-card{width:100%;text-align:left;display:grid;gap:8px}
+    .lesson-card.mastered{border-color:color-mix(in srgb,var(--good) 44%,var(--line))}
+    .lesson-card.locked{opacity:.55}
+    .lesson-card .meta{display:flex;gap:6px;flex-wrap:wrap}
+    .progress-bar{height:8px;border-radius:999px;background:var(--soft);overflow:hidden;border:1px solid var(--line)}
+    .progress-bar i{display:block;height:100%;width:0;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:999px}
+    .nav{height:var(--navh);display:flex;align-items:stretch;justify-content:center;gap:2px;padding:7px 12px max(var(--sab),8px);background:var(--panel2);border-top:1px solid var(--line);backdrop-filter:blur(26px) saturate(1.45);-webkit-backdrop-filter:blur(26px) saturate(1.45)}
+    .nav button{flex:1;max-width:120px;border-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:850;color:var(--faint)}
+    .nav button.on{color:var(--accent2);background:color-mix(in srgb,var(--accent2) 10%,transparent)}
+    select,input,textarea{width:100%;border:1px solid var(--line);background:var(--soft);border-radius:15px;padding:11px 12px;outline:none;min-height:44px}
+    textarea{resize:vertical;line-height:1.45}
+    select:focus,input:focus,textarea:focus{border-color:color-mix(in srgb,var(--accent2) 48%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent2) 12%,transparent)}
+    .profile-switch{min-width:132px;max-width:180px}
+    .stage-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+    .stage-grid button{min-height:42px;border-radius:15px;background:var(--soft);border:1px solid var(--line);font-weight:850;color:var(--muted)}
+    .stage-grid button.on{color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+    .subject-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+    .subject-card{text-align:left;min-height:94px;display:grid;align-content:space-between}
+    .subject-card.on{outline:2px solid color-mix(in srgb,var(--accent2) 50%,transparent)}
+    .subject-icon{width:38px;height:38px;border-radius:14px;display:grid;place-items:center;color:#fff;font-weight:950;background:linear-gradient(135deg,var(--s1),var(--s2))}
+    .lesson-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .screen{position:fixed;inset:0;z-index:40;display:none;grid-template-rows:auto minmax(0,1fr) auto;background:radial-gradient(120% 80% at 82% -10%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 55%),var(--bg0)}
+    .screen.on{display:grid}
+    .screen-bar{display:flex;align-items:center;gap:10px;padding:calc(10px + var(--sat)) 14px 10px;background:var(--panel);border-bottom:1px solid var(--line);backdrop-filter:blur(24px) saturate(1.25)}
+    .screen-body{min-height:0;overflow:auto;padding:14px;max-width:760px;width:100%;margin:0 auto;display:grid;gap:12px}
+    .lesson-stage{display:grid;gap:12px}
+    .lesson-intro{align-self:start}
+    .lesson-intro h2{font-size:28px}
+    .example-list{display:grid;gap:8px}
+    .objective-list{display:grid;gap:7px}
+    .objective-row{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;border-radius:13px;background:var(--soft);border:1px solid var(--line);padding:9px 10px;font-size:12px;color:var(--muted)}
+    .objective-row b{font-size:11px;color:var(--ink)}
+    .question-card{border-radius:20px;padding:16px;display:grid;gap:13px}
+    .answer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .answer{min-height:58px;border-radius:17px;background:var(--soft);border:1px solid var(--line);padding:12px;text-align:left;font-weight:800}
+    .answer.selected{border-color:var(--accent2);background:color-mix(in srgb,var(--accent2) 12%,transparent)}
+    .answer.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent)}
+    .answer.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 11%,transparent)}
+    .order-bank,.order-answer{display:flex;flex-wrap:wrap;gap:7px;min-height:48px;padding:8px;border-radius:16px;background:var(--soft);border:1px solid var(--line)}
+    .match-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:center}
+    .feedback{min-height:42px;border-radius:17px;padding:11px 13px;background:var(--soft);border:1px solid var(--line);font-size:13px;color:var(--muted)}
+    .feedback.good{color:var(--good);border-color:color-mix(in srgb,var(--good) 38%,var(--line))}
+    .feedback.bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 34%,var(--line))}
+    .sheet-layer{position:fixed;inset:0;z-index:60;display:none}
+    .sheet-layer.on{display:block}
+    .scrim{position:absolute;inset:0;background:rgba(4,7,16,.42);backdrop-filter:blur(3px)}
+    .sheet{position:absolute;left:0;right:0;bottom:0;max-height:86dvh;border-radius:28px 28px 0 0;padding:10px 18px calc(18px + var(--sab));display:grid;gap:12px;overflow:auto}
+    .grab{width:42px;height:5px;border-radius:999px;background:var(--line);margin:2px auto 4px}
+    .toast{position:fixed;z-index:70;left:50%;bottom:calc(var(--navh) + 14px);transform:translate(-50%,150px);opacity:0;pointer-events:none;background:#152033;color:#fff;border-radius:999px;padding:11px 17px;font-size:13px;font-weight:800;box-shadow:0 14px 38px rgba(0,0,0,.25);transition:transform .24s,opacity .24s}
+    .toast.on{transform:translate(-50%,0);opacity:1}
+    .editor{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;min-height:240px}
+    .empty{padding:20px;text-align:center;color:var(--muted)}
+    @media(max-width:720px){
+      .subject-grid{grid-template-columns:repeat(2,1fr)}
+      .lesson-list{grid-template-columns:1fr}
+      .stats{grid-template-columns:repeat(2,1fr)}
+      .hero h2{max-width:100%;font-size:23px}
+      .hero-visual{opacity:.18}
+      .two,.three{grid-template-columns:1fr}
+      .answer-grid{grid-template-columns:1fr}
+    }
+    @media(min-width:768px){
+      .sheet{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 36px));border-radius:28px}
+      .grab{display:none}
+    }
+    @media(prefers-reduced-motion:reduce){
+      *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">CP</div>
+        <div>
+          <h1>Cambridge Primary</h1>
+          <p id="contextLine">Local learning path</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <select id="profileSelect" class="profile-switch" aria-label="Child profile"></select>
+        <button class="icon-btn" id="themeBtn" aria-label="Toggle theme"></button>
+      </div>
+    </header>
+
+    <section class="view on" id="view-today"><div class="view-inner" id="todayBody"></div></section>
+    <section class="view" id="view-path"><div class="view-inner" id="pathBody"></div></section>
+    <section class="view" id="view-practice"><div class="view-inner" id="practiceBody"></div></section>
+    <section class="view" id="view-parent"><div class="view-inner" id="parentBody"></div></section>
+
+    <nav class="nav">
+      <button class="on" data-tab="today"></button>
+      <button data-tab="path"></button>
+      <button data-tab="practice"></button>
+      <button data-tab="parent"></button>
+    </nav>
+  </main>
+
+  <section class="screen" id="lessonScreen">
+    <div class="screen-bar">
+      <button class="icon-btn" id="lessonBack" aria-label="Back"></button>
+      <div style="min-width:0">
+        <h3 id="lessonScreenTitle">Lesson</h3>
+        <p class="small" id="lessonScreenSub">Stage</p>
+      </div>
+    </div>
+    <div class="screen-body" id="lessonBody"></div>
+    <div class="screen-bar">
+      <div class="feedback" id="feedbackBox">Ready.</div>
+      <button class="btn" id="lessonAction">Start</button>
+    </div>
+  </section>
+
+  <div class="sheet-layer" id="sheetLayer">
+    <div class="scrim" id="scrim"></div>
+    <div class="sheet glass">
+      <div class="grab"></div>
+      <div class="between">
+        <h2 id="sheetTitle">Sheet</h2>
+        <button class="chip" id="sheetClose">Close</button>
+      </div>
+      <div id="sheetBody"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved</div>
+
+  <script>
+    "use strict";
+
+    const APP_ID = "cambridge-primary";
+    const STORE_KEY = "kinetik_cambridge_primary_v1";
+    const DAY = () => new Date().toISOString().slice(0,10);
+    const $ = (id) => document.getElementById(id);
+    const $$ = (selector, root=document) => [...root.querySelectorAll(selector)];
+    const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+    const uid = (prefix) => prefix + "_" + Math.random().toString(36).slice(2,9);
+    const norm = (value) => String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();
+    const clone = (value) => JSON.parse(JSON.stringify(value));
+
+    const SUBJECTS = [
+      {id:"english",name:"English",code:"0058",short:"Eng",color:["#14b8a6","#4f46e5"],strands:["Reading","Writing","Speaking and Listening"],source:"https://www.cambridgeinternational.org/programmes-and-qualifications/cambridge-primary/curriculum/english/"},
+      {id:"math",name:"Mathematics",code:"0096",short:"Math",color:["#f59e0b","#ef476f"],strands:["Number","Geometry and Measure","Statistics and Probability","Thinking and Working Mathematically"],source:"https://www.cambridgeinternational.org/programmes-and-qualifications/cambridge-primary/curriculum/mathematics/"},
+      {id:"science",name:"Science",code:"0097",short:"Sci",color:["#22c55e","#0ea5e9"],strands:["Biology","Chemistry","Physics","Earth and Space","Thinking and Working Scientifically","Science in Context"],source:"https://www.cambridgeinternational.org/programmes-and-qualifications/cambridge-primary/curriculum/science/"},
+      {id:"french",name:"French",code:"0064",short:"Fr",color:["#8b5cf6","#06b6d4"],strands:["Listening","Reading","Speaking","Writing","Vocabulary","Grammar","Cultural understanding"],source:"https://www.cambridgeinternational.org/programmes-and-qualifications/cambridge-primary/curriculum/modern-foreign-language/"}
+    ];
+
+    const sourceRef = {
+      programme:"https://www.cambridgeinternational.org/programmes-and-qualifications/cambridge-primary",
+      curriculum:"https://www.cambridgeinternational.org/programmes-and-qualifications/cambridge-primary/curriculum/",
+      stages:"https://help.cambridgeinternational.org/hc/en-gb/articles/360000048218-At-what-age-should-children-start-following-Cambridge-Primary-curriculum-frameworks"
+    };
+
+    function objective(subject, stage, strand, slug, title){
+      return {id:`cp-${subject}-s${stage}-${slug}`, title, strand, cambridgeObjectiveRef:null};
+    }
+    function ex(type, prompt, payload){
+      return {id:uid("ex"), type, prompt, ...payload};
+    }
+    function lesson(data){
+      const subject = SUBJECTS.find((item) => item.id === data.subject);
+      return {
+        programme:"cambridge-primary",
+        subjectCode:subject.code,
+        subject:subject.name,
+        subjectId:subject.id,
+        stage:data.stage,
+        strand:data.strand,
+        unitId:data.unitId,
+        lessonId:data.lessonId,
+        title:data.title,
+        sourceRef:{programme:sourceRef.programme,curriculum:sourceRef.curriculum,subject:subject.source,stages:sourceRef.stages},
+        objectives:data.objectives,
+        explanation:data.explanation,
+        examples:data.examples,
+        exercises:data.exercises,
+        mastery:{passPercent:80,minQuestions:6,reviewBelowPercent:80, ...data.mastery}
+      };
+    }
+
+    const CURRICULUM = [
+      lesson({subject:"english",stage:1,strand:"Reading",unitId:"s1-sentences",lessonId:"cp-english-s1-sentence-signals",title:"Sentence Signals",objectives:[objective("english",1,"Reading","sentence-signals","Recognise simple sentences, capital letters and full stops.")],explanation:"A sentence is a complete thought. In English, a sentence usually starts with a capital letter and ends with a full stop, question mark, or exclamation mark.",examples:["The cat sleeps.","Where is the red bag?","I can jump!"],exercises:[ex("mcq","Which one is a complete sentence?",{options:["runs fast","The dog runs fast.","under the table","blue pencil"],answer:"The dog runs fast."}),ex("truefalse","A sentence should start with a capital letter.",{answer:true}),ex("text","Type the missing capital letter: __ina has a book.",{answers:["K"],hint:"It is the first letter of a name."}),ex("order","Put the words into a sentence.",{items:["The","bird","sings"],answer:["The","bird","sings"]}),ex("mcq","Which mark best ends this question: What is your name",{options:[".","?","!","-"],answer:"?"}),ex("short","Write one short sentence about a toy.",{keywords:["."],sample:"The ball is red."})]}),
+      lesson({subject:"english",stage:2,strand:"Reading",unitId:"s2-story-order",lessonId:"cp-english-s2-story-sequence",title:"Story Sequence",objectives:[objective("english",2,"Reading","story-sequence","Sequence events in a short story using beginning, middle and end.")],explanation:"Stories happen in order. The beginning introduces people and places, the middle shows what happens, and the end shows how it finishes.",examples:["Beginning: Mina finds a map.","Middle: She follows it to a garden.","End: She shares the flowers with her class."],exercises:[ex("mcq","Which event sounds like a beginning?",{options:["They solved the problem.","A boy opened a mysterious box.","Everyone went home happily.","The prize was given."],answer:"A boy opened a mysterious box."}),ex("order","Put the story events in order.",{items:["Sara lost her key.","Sara searched her bag.","Sara found it under a book."],answer:["Sara lost her key.","Sara searched her bag.","Sara found it under a book."]}),ex("mcq","What does the middle of a story usually show?",{options:["The title only","What happens or goes wrong","The page number","A list of spellings"],answer:"What happens or goes wrong"}),ex("truefalse","The ending should help the reader understand how the story finishes.",{answer:true}),ex("text","Complete the phrase: beginning, middle and ___.",{answers:["end","ending"]}),ex("short","Write a one-sentence ending for: The kite flew into a tree.",{keywords:["kite"],sample:"Dad lifted the kite down safely."})]}),
+      lesson({subject:"english",stage:3,strand:"Writing",unitId:"s3-paragraphs",lessonId:"cp-english-s3-paragraph-builder",title:"Paragraph Builder",objectives:[objective("english",3,"Writing","paragraph-main-idea","Write a short paragraph with a main idea and supporting details.")],explanation:"A paragraph groups sentences about one main idea. A strong paragraph has a topic sentence and details that stay on the same subject.",examples:["Topic: Our school garden is useful. Details: It grows herbs, gives shade, and helps us learn about plants."],exercises:[ex("mcq","Which sentence is a good topic sentence?",{options:["Also it is green.","My bicycle is useful for many reasons.","Because yesterday.","Then we left."],answer:"My bicycle is useful for many reasons."}),ex("mcq","Which detail fits: My bicycle is useful.",{options:["It helps me get to the shop.","The moon is bright.","Soup can be hot.","Cats sleep a lot."],answer:"It helps me get to the shop."}),ex("order","Put the paragraph in a sensible order.",{items:["My lunchbox is organised.","Fruit is in one corner.","A sandwich is wrapped in paper."],answer:["My lunchbox is organised.","Fruit is in one corner.","A sandwich is wrapped in paper."]}),ex("truefalse","A paragraph should jump between many unrelated topics.",{answer:false}),ex("text","A sentence that tells the main idea is called a ___ sentence.",{answers:["topic"]}),ex("short","Write a topic sentence about a rainy day.",{keywords:["rain"],sample:"A rainy day can still be fun."})]}),
+      lesson({subject:"english",stage:4,strand:"Reading",unitId:"s4-information-texts",lessonId:"cp-english-s4-information-features",title:"Information Text Features",objectives:[objective("english",4,"Reading","info-text-features","Identify features of information texts and explain how they help readers.")],explanation:"Information texts are written to explain facts. Headings, subheadings, captions, diagrams and glossaries help readers find and understand information quickly.",examples:["A heading names the topic. A caption explains a picture. A glossary explains important words."],exercises:[ex("mcq","Which feature explains a picture?",{options:["Caption","Title page","Dialogue","Rhyme"],answer:"Caption"}),ex("mcq","Which feature helps readers find a section quickly?",{options:["Subheading","Character speech","Ending twist","Verse"],answer:"Subheading"}),ex("truefalse","A glossary can explain technical words.",{answer:true}),ex("text","A labelled picture in a science text is often called a ___.",{answers:["diagram"]}),ex("match","Match the feature to its job.",{pairs:[["Heading","Names the main topic"],["Caption","Explains an image"],["Glossary","Defines words"]]}),ex("short","Name one feature you would expect in an information text about volcanoes.",{keywords:["heading","caption","diagram","glossary","subheading"],sample:"I would expect labelled diagrams."})]}),
+      lesson({subject:"english",stage:5,strand:"Reading",unitId:"s5-inference",lessonId:"cp-english-s5-inference-evidence",title:"Inference From Evidence",objectives:[objective("english",5,"Reading","inference-evidence","Make inferences from a text and support them with evidence.")],explanation:"Inference means working out something the writer does not say directly. Good readers connect clues in the text with what they already know, then give evidence.",examples:["Text: Omar zipped his coat and rubbed his hands. Inference: Omar is cold. Evidence: zipped coat, rubbed hands."],exercises:[ex("mcq","Lina stared at the empty plate and sighed. What can you infer?",{options:["She may still be hungry.","She is painting.","She is swimming.","She lost a pencil."],answer:"She may still be hungry."}),ex("mcq","Which is the best evidence that Omar is nervous?",{options:["His hands shook before the speech.","He likes blue shoes.","The hall had windows.","It was Tuesday."],answer:"His hands shook before the speech."}),ex("truefalse","An inference should be supported by clues from the text.",{answer:true}),ex("text","Complete: inference plus ___ makes a stronger answer.",{answers:["evidence","proof"]}),ex("match","Match clue to inference.",{pairs:[["The ground was wet","It had rained"],["She whispered","She wanted quiet"],["He packed a suitcase","He may be travelling"]]}),ex("short","Infer how Maya feels: Maya held the trophy tightly and smiled at her team.",{keywords:["proud","happy","pleased","excited"],sample:"Maya feels proud because she holds the trophy and smiles."})]}),
+      lesson({subject:"english",stage:6,strand:"Writing",unitId:"s6-arguments",lessonId:"cp-english-s6-balanced-argument",title:"Balanced Argument",objectives:[objective("english",6,"Writing","balanced-argument","Plan and write a balanced argument using reasons on both sides.")],explanation:"A balanced argument considers more than one point of view. It uses clear reasons, evidence and linking phrases before reaching a conclusion.",examples:["For: uniforms save time. Against: uniforms reduce choice. Conclusion: schools should balance comfort and identity."],exercises:[ex("mcq","Which phrase introduces another viewpoint?",{options:["On the other hand","Once upon a time","Suddenly","The end"],answer:"On the other hand"}),ex("mcq","Which sentence belongs in a balanced argument about homework?",{options:["Some learners need practice, but others need rest.","The dragon flew away.","My shoes are black.","I ate breakfast."],answer:"Some learners need practice, but others need rest."}),ex("truefalse","A balanced argument should include only one side.",{answer:false}),ex("order","Order the argument structure.",{items:["Introduce the issue","Give reasons for","Give reasons against","Reach a conclusion"],answer:["Introduce the issue","Give reasons for","Give reasons against","Reach a conclusion"]}),ex("text","A reason supported by facts or examples is called ___.",{answers:["evidence"]}),ex("short","Write one reason for or against longer break times.",{keywords:["because"],sample:"Longer breaks may help pupils focus because they return refreshed."})]}),
+      lesson({subject:"english",stage:5,strand:"Writing",unitId:"s5-persuasion",lessonId:"cp-english-s5-persuasive-opinion",title:"Persuasive Opinion",objectives:[objective("english",5,"Writing","persuasive-opinion","Use persuasive language to support an opinion with reasons.")],explanation:"Persuasive writing tries to convince a reader. It states an opinion, gives reasons, uses examples and chooses words carefully.",examples:["I believe our class should plant herbs because they are useful, easy to grow and good for science learning."],exercises:[ex("mcq","Which sentence states an opinion clearly?",{options:["I believe every class should have a reading corner.","The wall is white.","There are twelve pencils.","The bell rang at ten."],answer:"I believe every class should have a reading corner."}),ex("mcq","Which word can strengthen persuasion?",{options:["certainly","under","triangle","quietly"],answer:"certainly"}),ex("truefalse","A persuasive paragraph should give reasons.",{answer:true}),ex("order","Build a persuasive mini paragraph.",{items:["I think we should save water.","This matters because water is precious.","For example, shorter showers help."],answer:["I think we should save water.","This matters because water is precious.","For example, shorter showers help."]}),ex("text","Complete: I agree ___ school gardens help children learn.",{answers:["that"]}),ex("short","Write one persuasive sentence about reading every day.",{keywords:["because"],sample:"Children should read every day because it grows vocabulary."})]}),
+      lesson({subject:"english",stage:6,strand:"Writing",unitId:"s6-news",lessonId:"cp-english-s6-news-report",title:"News Report Precision",objectives:[objective("english",6,"Writing","news-report-precision","Write precise news reports using key facts and direct quotations.")],explanation:"A news report answers who, what, where, when, why and how. It uses clear facts, neutral language and short quotations from people involved.",examples:["The school science fair opened on Monday in the hall. 'The projects show careful thinking,' said Ms Khan."],exercises:[ex("mcq","Which question is part of the 5Ws?",{options:["Where?","Wonderful?","Whisper?","Wiggle?"],answer:"Where?"}),ex("mcq","Which sentence is most neutral?",{options:["The team won by two points.","The amazing team crushed everyone.","The boring match ended.","The silly players ran."],answer:"The team won by two points."}),ex("truefalse","A direct quotation should show a person's exact words.",{answer:true}),ex("order","Order a simple news opening.",{items:["The library reopened yesterday.","It reopened after three weeks of repairs.","Students visited during morning break."],answer:["The library reopened yesterday.","It reopened after three weeks of repairs.","Students visited during morning break."]}),ex("text","A short exact comment from a person is a ___.",{answers:["quote","quotation"]}),ex("short","Write a neutral headline about a new playground.",{keywords:["playground"],sample:"New playground opens at primary school"})]}),
+
+      lesson({subject:"math",stage:1,strand:"Number",unitId:"s1-number-bonds",lessonId:"cp-math-s1-number-bonds-10",title:"Number Bonds to 10",objectives:[objective("math",1,"Number","number-bonds-10","Recall and use pairs of numbers that make 10.")],explanation:"A number bond is a pair of numbers that make a total. Knowing bonds to 10 helps with addition and subtraction.",examples:["6 + 4 = 10","10 - 7 = 3","2 and 8 make 10"],exercises:[ex("mcq","What number goes with 6 to make 10?",{options:["2","3","4","5"],answer:"4"}),ex("mcq","What is 10 - 8?",{options:["1","2","3","4"],answer:"2"}),ex("truefalse","5 + 5 = 10",{answer:true}),ex("text","Complete: 7 + __ = 10",{answers:["3"]}),ex("match","Match the bond to 10.",{pairs:[["1","9"],["2","8"],["4","6"]]}),ex("short","Write one number bond to 10.",{keywords:["10"],sample:"3 + 7 = 10"})]}),
+      lesson({subject:"math",stage:2,strand:"Number",unitId:"s2-place-value",lessonId:"cp-math-s2-place-value-100",title:"Place Value to 100",objectives:[objective("math",2,"Number","place-value-100","Understand tens and ones in two-digit numbers.")],explanation:"Two-digit numbers are made from tens and ones. In 47, the 4 means 4 tens and the 7 means 7 ones.",examples:["36 = 3 tens and 6 ones","50 = 5 tens and 0 ones"],exercises:[ex("mcq","In 64, what does the 6 mean?",{options:["6 ones","6 tens","60 tens","6 hundreds"],answer:"6 tens"}),ex("mcq","Which number is 3 tens and 8 ones?",{options:["83","38","308","30"],answer:"38"}),ex("truefalse","72 has 7 tens and 2 ones.",{answer:true}),ex("text","Complete: 45 = 4 tens and __ ones.",{answers:["5"]}),ex("match","Match number to tens and ones.",{pairs:[["29","2 tens, 9 ones"],["70","7 tens, 0 ones"],["13","1 ten, 3 ones"]]}),ex("short","Write a two-digit number and describe its tens and ones.",{keywords:["tens","ones"],sample:"58 has 5 tens and 8 ones."})]}),
+      lesson({subject:"math",stage:3,strand:"Number",unitId:"s3-arrays",lessonId:"cp-math-s3-multiplication-arrays",title:"Multiplication Arrays",objectives:[objective("math",3,"Number","multiplication-arrays","Represent multiplication using equal groups and arrays.")],explanation:"An array shows equal rows and columns. 3 rows of 4 objects means 3 x 4 = 12.",examples:["2 rows of 5 = 10","4 columns of 3 = 12"],exercises:[ex("mcq","An array has 4 rows of 5. How many objects?",{options:["9","15","20","45"],answer:"20"}),ex("mcq","Which multiplication matches 3 equal groups of 6?",{options:["3 + 6","3 x 6","6 - 3","36 x 1"],answer:"3 x 6"}),ex("truefalse","5 x 2 and 2 x 5 have the same total.",{answer:true}),ex("text","Complete: 6 x 4 = __",{answers:["24"]}),ex("match","Match multiplication to product.",{pairs:[["3 x 4","12"],["5 x 5","25"],["2 x 8","16"]]}),ex("short","Describe an array for 18.",{keywords:["rows","columns"],sample:"3 rows and 6 columns make 18."})]}),
+      lesson({subject:"math",stage:4,strand:"Number",unitId:"s4-fractions-decimals",lessonId:"cp-math-s4-tenths",title:"Tenths as Fractions and Decimals",objectives:[objective("math",4,"Number","tenths-decimals","Connect tenths as fractions and decimals.")],explanation:"One whole can be split into ten equal parts called tenths. Three tenths can be written as 3/10 or 0.3.",examples:["1/10 = 0.1","7/10 = 0.7"],exercises:[ex("mcq","Which decimal equals 4/10?",{options:["0.04","0.4","4.0","40"],answer:"0.4"}),ex("mcq","Which fraction equals 0.8?",{options:["8/10","8/100","1/8","10/8"],answer:"8/10"}),ex("truefalse","0.5 is five tenths.",{answer:true}),ex("text","Complete: 6/10 = __",{answers:["0.6",".6"]}),ex("match","Match fraction and decimal.",{pairs:[["2/10","0.2"],["9/10","0.9"],["1/10","0.1"]]}),ex("short","Explain what 0.7 means using tenths.",{keywords:["7","tenths"],sample:"0.7 means 7 tenths."})]}),
+      lesson({subject:"math",stage:5,strand:"Number",unitId:"s5-decimals",lessonId:"cp-math-s5-decimal-place-value",title:"Decimal Place Value",objectives:[objective("math",5,"Number","decimal-place-value","Read and compare decimals using place value.")],explanation:"Digits after the decimal point show parts of a whole. In 3.47, 4 is tenths and 7 is hundredths.",examples:["2.35 has 2 ones, 3 tenths, 5 hundredths.","0.6 is greater than 0.56 because 0.60 > 0.56."],exercises:[ex("mcq","In 5.28, what is the value of 2?",{options:["2 ones","2 tenths","2 hundredths","20 ones"],answer:"2 tenths"}),ex("mcq","Which is greatest?",{options:["0.7","0.68","0.59","0.07"],answer:"0.7"}),ex("truefalse","0.40 is equal to 0.4.",{answer:true}),ex("text","Complete: 3.09 has 9 __.",{answers:["hundredths"]}),ex("match","Match decimal to words.",{pairs:[["0.25","twenty-five hundredths"],["0.5","five tenths"],["1.07","one and seven hundredths"]]}),ex("short","Explain why 0.8 is greater than 0.75.",{keywords:["0.80","hundredths"],sample:"0.8 is 0.80, which is 80 hundredths, more than 75 hundredths."})]}),
+      lesson({subject:"math",stage:6,strand:"Number",unitId:"s6-ratio-percent",lessonId:"cp-math-s6-ratio-percent",title:"Ratio and Percent",objectives:[objective("math",6,"Number","ratio-percent","Connect ratios, fractions and percentages in simple contexts.")],explanation:"A ratio compares quantities. Percent means out of 100. If 25 out of 100 squares are shaded, 25% are shaded.",examples:["1:3 means one part to three parts.","50% = 50/100 = 1/2."],exercises:[ex("mcq","What is 25% as a fraction in simplest form?",{options:["1/4","1/2","3/4","1/5"],answer:"1/4"}),ex("mcq","A ratio of red to blue is 2:3. How many total parts?",{options:["1","2","3","5"],answer:"5"}),ex("truefalse","10% means 10 out of 100.",{answer:true}),ex("text","Complete: 75% = __/100",{answers:["75"]}),ex("match","Match percent and fraction.",{pairs:[["50%","1/2"],["25%","1/4"],["10%","1/10"]]}),ex("short","A class has 12 girls and 8 boys. Write the ratio girls:boys.",{keywords:["12:8","3:2"],sample:"12:8, which simplifies to 3:2."})]}),
+      lesson({subject:"math",stage:5,strand:"Geometry and Measure",unitId:"s5-coordinates",lessonId:"cp-math-s5-coordinate-reading",title:"Coordinate Reading",objectives:[objective("math",5,"Geometry and Measure","coordinates-first-quadrant","Read and plot coordinates in the first quadrant.")],explanation:"Coordinates locate a point on a grid. The first number is the x-coordinate across, and the second is the y-coordinate up.",examples:["(3,2) means 3 across and 2 up.","A point on the x-axis has y = 0."],exercises:[ex("mcq","In (5,2), what is the x-coordinate?",{options:["5","2","7","3"],answer:"5"}),ex("mcq","Which point is 4 across and 6 up?",{options:["(6,4)","(4,6)","(10,0)","(2,4)"],answer:"(4,6)"}),ex("truefalse","In (1,7), the 7 tells how far up.",{answer:true}),ex("text","Complete: The point (0,3) is on the __-axis.",{answers:["y","y axis"]}),ex("match","Match coordinate to description.",{pairs:[["(2,5)","2 across, 5 up"],["(6,1)","6 across, 1 up"],["(0,4)","on the y-axis"]]}),ex("short","Describe how to plot (3,4).",{keywords:["3","4","across","up"],sample:"Move 3 across and 4 up."})]}),
+      lesson({subject:"math",stage:6,strand:"Statistics and Probability",unitId:"s6-statistics",lessonId:"cp-math-s6-statistical-investigation",title:"Statistical Investigation",objectives:[objective("math",6,"Statistics and Probability","statistical-investigation","Plan and interpret a simple statistical investigation.")],explanation:"A statistical investigation starts with a question, collects data, organises it and uses evidence to answer the question.",examples:["Question: How do Year 6 pupils travel to school? Data: tally responses. Display: bar chart."],exercises:[ex("mcq","Which is a statistical question?",{options:["How many pupils walk to school?","Is blue a colour?","What is 4 + 4?","Spell table."],answer:"How many pupils walk to school?"}),ex("mcq","Which chart is good for comparing categories?",{options:["Bar chart","Compass","Clock face","Number line only"],answer:"Bar chart"}),ex("truefalse","A conclusion should use the data collected.",{answer:true}),ex("text","A quick mark used for counting responses is a ___.",{answers:["tally","tally mark"]}),ex("match","Match step to job.",{pairs:[["Question","What to find out"],["Data","Information collected"],["Conclusion","Answer from evidence"]]}),ex("short","Write a statistical question for your class.",{keywords:["how many","what","which"],sample:"Which sport is most popular in our class?"})]}),
+
+      lesson({subject:"science",stage:1,strand:"Biology",unitId:"s1-living-things",lessonId:"cp-science-s1-living-nonliving",title:"Living and Non-living",objectives:[objective("science",1,"Biology","living-nonliving","Sort objects as living, once-living or non-living using observable features.")],explanation:"Living things need food or energy, grow, and can produce young. Some things were once living, like wood or paper. Others were never alive, like rocks.",examples:["A plant is living. A wooden pencil was once living. A metal spoon is non-living."],exercises:[ex("mcq","Which is living?",{options:["Plant","Stone","Plastic cup","Metal spoon"],answer:"Plant"}),ex("mcq","Which was once living?",{options:["Wooden chair","Glass bottle","Rock","Coin"],answer:"Wooden chair"}),ex("truefalse","A toy car grows and needs food.",{answer:false}),ex("text","Plants need light, water and ___.",{answers:["air","space","soil"]}),ex("match","Sort the examples.",{pairs:[["Cat","living"],["Paper","once living"],["Brick","non-living"]]}),ex("short","Name one living thing you can see near home.",{keywords:["plant","tree","cat","dog","bird","person"],sample:"A tree is a living thing."})]}),
+      lesson({subject:"science",stage:2,strand:"Chemistry",unitId:"s2-materials",lessonId:"cp-science-s2-material-properties",title:"Material Properties",objectives:[objective("science",2,"Chemistry","material-properties","Describe materials using simple properties and choose materials for a purpose.")],explanation:"Materials have properties. Glass can be transparent, fabric can be flexible, and metal can be strong. We choose materials because of their properties.",examples:["An umbrella needs waterproof material. A window needs transparent material."],exercises:[ex("mcq","Which property is useful for a window?",{options:["Transparent","Soft","Sticky","Stretchy"],answer:"Transparent"}),ex("mcq","Which material is usually waterproof?",{options:["Plastic","Paper tissue","Cotton wool","Bread"],answer:"Plastic"}),ex("truefalse","A raincoat should soak up water quickly.",{answer:false}),ex("text","A material that bends easily is ___.",{answers:["flexible"]}),ex("match","Match material to useful property.",{pairs:[["Glass","transparent"],["Rubber","stretchy"],["Metal","strong"]]}),ex("short","Choose a material for a school bag and say why.",{keywords:["strong","waterproof","flexible"],sample:"Nylon is useful because it is strong and light."})]}),
+      lesson({subject:"science",stage:3,strand:"Biology",unitId:"s3-plants",lessonId:"cp-science-s3-plant-growth",title:"Plant Growth Investigation",objectives:[objective("science",3,"Thinking and Working Scientifically","plant-growth-fair-test","Plan a simple fair test about plant growth.")],explanation:"A fair test changes one thing and keeps other things the same. To test light, keep water, soil and seed type the same.",examples:["Question: Do plants grow taller with more light? Change: amount of light. Measure: plant height."],exercises:[ex("mcq","In a fair test about water, what should change?",{options:["Amount of water","Seed type and pot and light all together","The ruler","The date label"],answer:"Amount of water"}),ex("mcq","What could you measure for plant growth?",{options:["Height","Shoe size","Sound volume","Magnet strength"],answer:"Height"}),ex("truefalse","A fair test should change many things at once.",{answer:false}),ex("text","A prediction says what you think will ___.",{answers:["happen"]}),ex("match","Match investigation word to meaning.",{pairs:[["Variable","Thing that changes"],["Measure","Collect numbers"],["Conclusion","What the results show"]]}),ex("short","Write a fair test question about plants.",{keywords:["plant","grow"],sample:"Do plants grow taller with more light?"})]}),
+      lesson({subject:"science",stage:4,strand:"Physics",unitId:"s4-electricity",lessonId:"cp-science-s4-simple-circuits",title:"Simple Circuits",objectives:[objective("science",4,"Physics","simple-circuits","Identify parts of a simple circuit and explain when a bulb lights.")],explanation:"A simple circuit needs a power source, wires and a component such as a bulb. The circuit must be complete for electricity to flow.",examples:["Battery + wire + bulb + wire back to battery = complete circuit."],exercises:[ex("mcq","What must a circuit be for a bulb to light?",{options:["Complete","Broken","Wet","Hidden"],answer:"Complete"}),ex("mcq","Which is a power source?",{options:["Cell or battery","Plastic ruler","Paper clip only","Notebook"],answer:"Cell or battery"}),ex("truefalse","A gap in the circuit can stop the bulb lighting.",{answer:true}),ex("text","A switch can open and close a ___.",{answers:["circuit"]}),ex("match","Match part to job.",{pairs:[["Battery","Provides energy"],["Wire","Connects parts"],["Bulb","Gives light"]]}),ex("short","Explain why a bulb may not light.",{keywords:["gap","battery","wire","broken","complete"],sample:"There may be a gap so the circuit is not complete."})]}),
+      lesson({subject:"science",stage:5,strand:"Physics",unitId:"s5-sound",lessonId:"cp-science-s5-sound-vibrations",title:"Sound and Vibrations",objectives:[objective("science",5,"Physics","sound-vibrations","Explain that sounds are made by vibrations and can travel through materials.")],explanation:"Sound is made when objects vibrate. The vibrations travel through air or other materials to our ears.",examples:["A drum skin vibrates when hit. A guitar string vibrates when plucked."],exercises:[ex("mcq","Sound is made when objects ___.",{options:["vibrate","freeze","disappear","stop existing"],answer:"vibrate"}),ex("mcq","Which object vibrates to make music?",{options:["Guitar string","Closed book","Still stone","Empty wall"],answer:"Guitar string"}),ex("truefalse","Sound can travel through air.",{answer:true}),ex("text","Louder sounds often have bigger ___.",{answers:["vibrations"]}),ex("match","Match sound source to vibrating part.",{pairs:[["Drum","skin"],["Guitar","string"],["Voice","vocal cords"]]}),ex("short","Describe how a drum makes sound.",{keywords:["vibrate","skin"],sample:"The drum skin vibrates when it is hit."})]}),
+      lesson({subject:"science",stage:6,strand:"Biology",unitId:"s6-food-chains",lessonId:"cp-science-s6-food-webs",title:"Food Chains and Webs",objectives:[objective("science",6,"Biology","food-chains-webs","Use food chains and food webs to describe feeding relationships.")],explanation:"A food chain shows how energy moves from one living thing to another. A food web connects many food chains in a habitat.",examples:["grass -> rabbit -> fox. Grass is a producer, rabbit is a consumer."],exercises:[ex("mcq","What is usually at the start of a food chain?",{options:["Producer","Top predator","Decomposer only","Moon"],answer:"Producer"}),ex("mcq","In grass -> rabbit -> fox, what eats the rabbit?",{options:["Fox","Grass","Sun","Soil"],answer:"Fox"}),ex("truefalse","A food web can contain several connected food chains.",{answer:true}),ex("text","A green plant that makes its own food is a ___.",{answers:["producer"]}),ex("match","Match term to meaning.",{pairs:[["Producer","Makes food"],["Consumer","Eats other organisms"],["Predator","Hunts prey"]]}),ex("short","Write a simple food chain with three organisms.",{keywords:["->"],sample:"leaf -> caterpillar -> bird"})]}),
+      lesson({subject:"science",stage:5,strand:"Biology",unitId:"s5-life-cycles",lessonId:"cp-science-s5-life-cycles-diet",title:"Life Cycles and Diet",objectives:[objective("science",5,"Biology","life-cycles-diet","Compare life cycles and connect balanced diet to healthy growth.")],explanation:"A life cycle shows stages in an organism's life. Humans also need a balanced diet with different food groups for energy, growth and health.",examples:["Flowering plant: seed -> seedling -> adult plant -> flower -> seed. Balanced meals include fruits, vegetables, protein and carbohydrates."],exercises:[ex("mcq","Which stage comes after seed in many plant life cycles?",{options:["Seedling","Adult fox","Rock","Battery"],answer:"Seedling"}),ex("mcq","Which food group helps build and repair the body?",{options:["Protein","Plastic","Sand","Smoke"],answer:"Protein"}),ex("truefalse","A balanced diet means eating only one food every day.",{answer:false}),ex("text","A young plant is called a ___.",{answers:["seedling"]}),ex("match","Match need to reason.",{pairs:[["Carbohydrates","energy"],["Protein","growth and repair"],["Fruit and vegetables","vitamins and fibre"]]}),ex("short","Give one reason humans need a balanced diet.",{keywords:["energy","growth","health","repair"],sample:"A balanced diet gives energy and supports growth."})]}),
+      lesson({subject:"science",stage:6,strand:"Earth and Space",unitId:"s6-earth",lessonId:"cp-science-s6-rock-cycle",title:"Rocks and Earth Processes",objectives:[objective("science",6,"Earth and Space","rocks-earth-processes","Describe how rocks can change through weathering, movement and heating/cooling processes.")],explanation:"Earth materials change over time. Weathering breaks rocks into smaller pieces. Sediments can be pressed together, and some rocks form from cooled molten material.",examples:["Wind and water can wear rocks down. Layers of sediment can form sedimentary rock."],exercises:[ex("mcq","What is weathering?",{options:["Breaking down rocks","Making a circuit","Measuring sound","Plant reproduction"],answer:"Breaking down rocks"}),ex("mcq","Sedimentary rock can form from ___.",{options:["pressed layers of sediment","fresh bread","electric wires","animal fur"],answer:"pressed layers of sediment"}),ex("truefalse","Earth processes can take a very long time.",{answer:true}),ex("text","Small pieces of rock can be called ___.",{answers:["sediment","sediments"]}),ex("match","Match process to description.",{pairs:[["Weathering","breaks rock"],["Erosion","moves sediment"],["Cooling lava","forms igneous rock"]]}),ex("short","Name one natural force that can change rock.",{keywords:["water","wind","ice","heat"],sample:"Water can wear rock away over time."})]}),
+
+      lesson({subject:"french",stage:1,strand:"Vocabulary",unitId:"s1-greetings",lessonId:"cp-french-s1-greetings-colours",title:"Greetings and Colours",objectives:[objective("french",1,"Vocabulary","greetings-colours","Use simple greetings, numbers and colours in French.")],explanation:"French greetings help you start a conversation. Simple colour words help you describe objects.",examples:["Bonjour = hello. Au revoir = goodbye. rouge = red. bleu = blue."],exercises:[ex("listen","Listen and choose the meaning of Bonjour.",{say:"Bonjour",options:["Hello","Goodbye","Please","Blue"],answer:"Hello"}),ex("mcq","What does au revoir mean?",{options:["Goodbye","Hello","Red","Three"],answer:"Goodbye"}),ex("mcq","Which colour is bleu?",{options:["Blue","Green","Yellow","Black"],answer:"Blue"}),ex("truefalse","Bonjour can be used to greet someone.",{answer:true}),ex("text","Type the French word for red.",{answers:["rouge"]}),ex("match","Match French to English.",{pairs:[["un","one"],["deux","two"],["vert","green"]]})]}),
+      lesson({subject:"french",stage:2,strand:"Speaking",unitId:"s2-family-likes",lessonId:"cp-french-s2-family-likes",title:"Family and Likes",objectives:[objective("french",2,"Speaking","family-likes","Use simple phrases about family and likes in French.")],explanation:"You can use J'aime to say I like. Family words help you talk about people at home.",examples:["J'aime le football = I like football. ma soeur = my sister. mon frere = my brother."],exercises:[ex("listen","Listen and choose the meaning of J'aime.",{say:"J'aime",options:["I like","I have","I am","I go"],answer:"I like"}),ex("mcq","What does ma mere mean?",{options:["my mother","my brother","my school","my book"],answer:"my mother"}),ex("mcq","Choose the French for my brother.",{options:["mon frere","ma soeur","mon livre","ma classe"],answer:"mon frere"}),ex("truefalse","J'aime means I like.",{answer:true}),ex("text","Complete: I like = J'___.",{answers:["aime"]}),ex("short","Write a short French sentence saying you like a sport.",{keywords:["j'aime"],sample:"J'aime le tennis."})]}),
+      lesson({subject:"french",stage:3,strand:"Reading",unitId:"s3-food-weather",lessonId:"cp-french-s3-food-weather",title:"Food and Weather",objectives:[objective("french",3,"Reading","food-weather","Understand simple French words for food and weather.")],explanation:"Food and weather words are useful in everyday conversations. Il fait means the weather is.",examples:["Il fait chaud = it is hot. Il pleut = it is raining. une pomme = an apple."],exercises:[ex("listen","Listen and choose the weather.",{say:"Il pleut",options:["It is raining","It is sunny","It is cold","It is windy"],answer:"It is raining"}),ex("mcq","What is une pomme?",{options:["an apple","a chair","a pencil","a song"],answer:"an apple"}),ex("mcq","Il fait froid means ___.",{options:["It is cold","It is hot","It is raining","It is late"],answer:"It is cold"}),ex("truefalse","du pain means bread.",{answer:true}),ex("text","Type the French word for water.",{answers:["eau","l'eau"]}),ex("match","Match French to English.",{pairs:[["fromage","cheese"],["soleil","sun"],["chaud","hot"]]})]}),
+      lesson({subject:"french",stage:4,strand:"Grammar",unitId:"s4-school-time",lessonId:"cp-french-s4-school-day",title:"School Day",objectives:[objective("french",4,"Grammar","school-day","Use simple school vocabulary, time phrases and present tense patterns.")],explanation:"School phrases help you describe your day. J'ai means I have, and a means at when talking about time.",examples:["J'ai maths a neuf heures = I have maths at nine o'clock. Mon ecole est grande = my school is big."],exercises:[ex("listen","Listen and choose the subject.",{say:"J'ai sciences",options:["Science","Maths","Music","Sport"],answer:"Science"}),ex("mcq","What does J'ai anglais mean?",{options:["I have English","I like English","I am English","I go to English"],answer:"I have English"}),ex("mcq","a huit heures means ___.",{options:["at eight o'clock","eight books","after school","at home"],answer:"at eight o'clock"}),ex("truefalse","Mon ecole means my school.",{answer:true}),ex("text","Complete: I have = J'___.",{answers:["ai"]}),ex("short","Write a simple French sentence about a school subject.",{keywords:["j'ai"],sample:"J'ai maths a dix heures."})]}),
+      lesson({subject:"french",stage:5,strand:"Writing",unitId:"s5-opinions",lessonId:"cp-french-s5-opinions-shopping",title:"Opinions and Shopping",objectives:[objective("french",5,"Writing","opinions-shopping","Give opinions and use simple shopping phrases in French.")],explanation:"Opinions make your French more personal. Shopping phrases help you ask for things politely.",examples:["Je voudrais une baguette = I would like a baguette. C'est cher = it is expensive. J'aime parce que... = I like because..."],exercises:[ex("listen","Listen and choose the request.",{say:"Je voudrais une baguette",options:["I would like a baguette","I have a pencil","I am tired","I go home"],answer:"I would like a baguette"}),ex("mcq","What does parce que mean?",{options:["because","but","today","never"],answer:"because"}),ex("mcq","C'est cher means ___.",{options:["It is expensive","It is cold","It is easy","It is green"],answer:"It is expensive"}),ex("truefalse","Je voudrais is a polite way to ask for something.",{answer:true}),ex("text","Complete: I would like = Je ___.",{answers:["voudrais"]}),ex("short","Write a French opinion using parce que.",{keywords:["parce que"],sample:"J'aime le chocolat parce que c'est bon."})]}),
+      lesson({subject:"french",stage:6,strand:"Speaking",unitId:"s6-conversations",lessonId:"cp-french-s6-short-conversations",title:"Short Conversations",objectives:[objective("french",6,"Speaking","short-conversations","Understand and produce short connected conversations in French.")],explanation:"A short conversation uses greetings, questions, answers and a polite ending. You can connect ideas with et, mais and parce que.",examples:["Bonjour. Comment ca va? Ca va bien, merci. J'aime le sport parce que c'est amusant."],exercises:[ex("listen","Listen and choose the question.",{say:"Comment ca va?",options:["How are you?","Where is the shop?","What time is it?","Do you like fish?"],answer:"How are you?"}),ex("mcq","Which word means but?",{options:["mais","et","avec","tres"],answer:"mais"}),ex("mcq","Ca va bien means ___.",{options:["I am well","I am late","It is raining","I have a book"],answer:"I am well"}),ex("truefalse","parce que can connect an opinion to a reason.",{answer:true}),ex("order","Order the mini conversation.",{items:["Bonjour","Comment ca va?","Ca va bien, merci","Au revoir"],answer:["Bonjour","Comment ca va?","Ca va bien, merci","Au revoir"]}),ex("short","Write two short French sentences about yourself.",{keywords:["je"],sample:"Je m'appelle Alex. J'aime le football."})]}),
+      lesson({subject:"french",stage:5,strand:"Vocabulary",unitId:"s5-hobbies",lessonId:"cp-french-s5-hobbies-reasons",title:"Hobbies and Reasons",objectives:[objective("french",5,"Vocabulary","hobbies-reasons","Use hobby vocabulary and give simple reasons for preferences.")],explanation:"You can talk about hobbies with je joue, je fais and j'ecoute. Add parce que to explain your opinion.",examples:["Je joue au tennis. Je fais de la natation. J'ecoute de la musique parce que c'est relaxant."],exercises:[ex("listen","Listen and choose the hobby.",{say:"Je joue au tennis",options:["I play tennis","I swim","I listen to music","I draw"],answer:"I play tennis"}),ex("mcq","Je fais de la natation means ___.",{options:["I swim","I play tennis","I sing","I read"],answer:"I swim"}),ex("mcq","Which phrase gives a reason?",{options:["parce que c'est amusant","bonjour","au revoir","mon frere"],answer:"parce que c'est amusant"}),ex("truefalse","J'ecoute de la musique means I listen to music.",{answer:true}),ex("text","Complete: I play = Je ___.",{answers:["joue"]}),ex("short","Write a French hobby sentence with a reason.",{keywords:["parce que"],sample:"Je joue au basket parce que c'est amusant."})]}),
+      lesson({subject:"french",stage:6,strand:"Writing",unitId:"s6-plans",lessonId:"cp-french-s6-weekend-plans",title:"Weekend Plans",objectives:[objective("french",6,"Writing","weekend-plans","Write short connected sentences about near-future plans.")],explanation:"To talk about near-future plans, use je vais plus an activity. Add time phrases such as samedi or dimanche.",examples:["Samedi, je vais jouer au football. Dimanche, je vais visiter ma famille."],exercises:[ex("listen","Listen and choose the plan.",{say:"Je vais jouer au football samedi",options:["I am going to play football on Saturday","I played football yesterday","I do not like football","I buy a football"],answer:"I am going to play football on Saturday"}),ex("mcq","Je vais means ___.",{options:["I am going to","I was","I have","I see"],answer:"I am going to"}),ex("mcq","Which word means Sunday?",{options:["dimanche","samedi","lundi","vendredi"],answer:"dimanche"}),ex("truefalse","Samedi means Saturday.",{answer:true}),ex("order","Order the French sentence.",{items:["Je","vais","visiter","ma famille"],answer:["Je","vais","visiter","ma famille"]}),ex("short","Write one French sentence about a weekend plan.",{keywords:["je vais"],sample:"Dimanche, je vais lire un livre."})]})
+    ];
+
+    function defaultStore(){
+      return {
+        version:1,
+        backendMode:"local",
+        theme:"light",
+        activeTab:"today",
+        activeProfileId:"baginda",
+        filters:{subject:"math"},
+        profiles:[
+          {id:"baginda",name:"Baginda",avatar:"B",color:"#4f46e5",stage:5},
+          {id:"keyla",name:"Keyla",avatar:"K",color:"#06b6d4",stage:2}
+        ],
+        progress:{},
+        overrides:{}
+      };
+    }
+
+    function ensureProgress(profileId){
+      state.progress[profileId] ||= {attempts:[],mastery:{},lessonStatus:{},mistakes:[],streak:0,lastStudyDate:"",lastLessonId:""};
+      return state.progress[profileId];
+    }
+
+    const Bridge = {
+      embedded: window.parent && window.parent !== window,
+      context:{circleId:"standalone_demo",circleType:"family",personId:"local_person",role:"parent",theme:"light",backendMode:"local"},
+      send(type, payload={}){
+        if(!this.embedded) return;
+        const msg = {type, appId:APP_ID, payload};
+        if(type === "SHOW_TOAST") msg.message = payload.message || "";
+        window.parent.postMessage(msg, "*");
+      }
+    };
+
+    const LearningBackendAdapter = {
+      mode:"local",
+      loadProfiles(){ return clone(state.profiles); },
+      saveProfile(profile){ const i = state.profiles.findIndex((p) => p.id === profile.id); if(i >= 0) state.profiles[i] = profile; else state.profiles.push(profile); save(); this.emit("cambridge_profiles", profile); },
+      loadProgress(profileId){ return clone(ensureProgress(profileId)); },
+      recordAttempt(attempt){ const progress = ensureProgress(attempt.profileId); progress.attempts.unshift(attempt); progress.attempts = progress.attempts.slice(0,120); this.emit("cambridge_attempts", attempt); save(); },
+      saveMastery(profileId, objectiveId, value){ const progress = ensureProgress(profileId); progress.mastery[objectiveId] = value; this.emit("cambridge_mastery", {profileId,objectiveId,value,updatedAt:new Date().toISOString()}); save(); },
+      loadContentOverrides(){ return clone(state.overrides); },
+      saveContentOverride(lessonId, lessonData){ state.overrides[lessonId] = lessonData; this.emit("cambridge_content_overrides", {lessonId,lessonData,updatedAt:new Date().toISOString()}); save(); },
+      exportSnapshot(){ return JSON.stringify({exportedAt:new Date().toISOString(),store:state}, null, 2); },
+      importSnapshot(text){ const parsed = JSON.parse(text); const next = parsed.store || parsed; state = mergeStore(next); save(); this.emit("cambridge_snapshots", {importedAt:new Date().toISOString(),profileCount:state.profiles.length}); },
+      emit(collection, payload){ if(this.mode === "bridge-v1" || Bridge.embedded){ Bridge.send("DATA_CREATE", {collection, payload}); } }
+    };
+
+    let state = mergeStore(readStore());
+    let activeSession = null;
+    let selectedAnswer = null;
+    let orderAnswer = [];
+    let checked = false;
+
+    function readStore(){
+      try{return JSON.parse(localStorage.getItem(STORE_KEY) || "null") || defaultStore();}
+      catch{return defaultStore();}
+    }
+    function mergeStore(raw){
+      const base = defaultStore();
+      const merged = {
+        ...base,
+        ...raw,
+        filters:{...base.filters,...(raw.filters || {})},
+        profiles:Array.isArray(raw.profiles) && raw.profiles.length ? raw.profiles : base.profiles,
+        progress:raw.progress || {},
+        overrides:raw.overrides || {}
+      };
+      merged.profiles = merged.profiles.map(normalizeProfile);
+      return merged;
+    }
+    function normalizeProfile(item){
+      const p = {...item};
+      if(!p.stage){
+        const legacy = p.stageBySubject || {};
+        const values = SUBJECTS.map((sub) => Number(legacy[sub.id])).filter((n) => Number.isFinite(n) && n >= 1 && n <= 6);
+        const counts = values.reduce((map,n) => (map[n] = (map[n] || 0) + 1, map), {});
+        const mode = Object.keys(counts).sort((a,b) => counts[b] - counts[a] || Number(b) - Number(a))[0];
+        p.stage = Number(mode || legacy.english || legacy.math || 1);
+      }
+      p.stage = Math.min(6, Math.max(1, Number(p.stage) || 1));
+      p.stageBySubject = {english:p.stage,math:p.stage,science:p.stage,french:p.stage};
+      return p;
+    }
+    function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+    function lessons(){
+      return CURRICULUM.map((lessonData) => state.overrides[lessonData.lessonId] ? {...lessonData, ...state.overrides[lessonData.lessonId]} : lessonData);
+    }
+    function lessonById(id){ return lessons().find((item) => item.lessonId === id); }
+    function subject(id){ return SUBJECTS.find((item) => item.id === id); }
+    function profile(){ return state.profiles.find((item) => item.id === state.activeProfileId) || state.profiles[0]; }
+    function profileStage(){ return Number(profile().stage || 1); }
+    function progress(){ return ensureProgress(profile().id); }
+    function filteredLessons(){
+      return lessons().filter((item) => item.subjectId === state.filters.subject && item.stage === profileStage());
+    }
+    function allProfileLessons(){
+      return lessons().filter((item) => item.stage <= profileStage());
+    }
+    function lessonStatus(lessonId){ return progress().lessonStatus[lessonId] || {attempts:0,best:0,mastered:false}; }
+    function masteryValue(objectiveId){ return progress().mastery[objectiveId] || 0; }
+    function subjectCoverage(subjectId){
+      const profileLessons = lessons().filter((item) => item.subjectId === subjectId && item.stage <= profileStage());
+      const objectiveIds = [...new Set(profileLessons.flatMap((item) => item.objectives.map((obj) => obj.id)))];
+      if(!objectiveIds.length) return 0;
+      const total = objectiveIds.reduce((sum,id) => sum + Math.min(100, masteryValue(id)), 0);
+      return Math.round(total / objectiveIds.length);
+    }
+    function todayRecommendation(){
+      const weak = allProfileLessons().find((item) => item.objectives.some((obj) => masteryValue(obj.id) > 0 && masteryValue(obj.id) < 80));
+      if(weak) return weak;
+      const currentStage = lessons().filter((item) => item.stage === profileStage());
+      return currentStage.find((item) => !lessonStatus(item.lessonId).mastered) || currentStage[0] || allProfileLessons().find((item) => !lessonStatus(item.lessonId).mastered) || allProfileLessons()[0] || lessons()[0];
+    }
+    function weakObjectives(){
+      return allProfileLessons().flatMap((item) => item.objectives.map((obj) => ({...obj, lesson:item, value:masteryValue(obj.id)}))).filter((item) => item.value > 0 && item.value < 80).slice(0,8);
+    }
+
+    function icon(name){
+      const icons = {
+        sun:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>',
+        moon:'<svg viewBox="0 0 24 24"><path d="M20 15.2A8.5 8.5 0 0 1 8.8 4 7 7 0 1 0 20 15.2Z"/></svg>',
+        today:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+        path:'<svg viewBox="0 0 24 24"><path d="M5 19c5-1 4-8 9-8h5"/><path d="M15 7l4 4-4 4"/><circle cx="5" cy="19" r="2"/><circle cx="5" cy="5" r="2"/></svg>',
+        practice:'<svg viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2Z"/><path d="M8 7h6M8 11h7M8 15h5"/></svg>',
+        parent:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2.5 21c.7-4 3.1-6 6.5-6s5.8 2 6.5 6"/><path d="M17 11.5a3 3 0 1 0 0-6"/><path d="M17 15c2.5.3 4 2 4.5 5"/></svg>',
+        back:'<svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg>',
+        play:'<svg viewBox="0 0 24 24"><path d="m8 5 11 7-11 7Z"/></svg>',
+        volume:'<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M17 9.5a4 4 0 0 1 0 5"/></svg>'
+      };
+      return icons[name] || "";
+    }
+
+    function init(){
+      if(Bridge.embedded) document.body.classList.add("embedded");
+      document.documentElement.dataset.theme = state.theme;
+      LearningBackendAdapter.mode = Bridge.embedded ? "bridge-v1" : state.backendMode;
+      wire();
+      renderAll();
+      addEventListener("message", onMessage);
+    }
+
+    function onMessage(event){
+      const msg = event.data || {};
+      if(msg.type !== "INIT_APP") return;
+      Bridge.context = {...Bridge.context, ...(msg.payload || {})};
+      if(Bridge.context.theme) {
+        state.theme = Bridge.context.theme === "dark" ? "dark" : "light";
+        document.documentElement.dataset.theme = state.theme;
+      }
+      state.backendMode = "bridge-v1";
+      LearningBackendAdapter.mode = "bridge-v1";
+      $("contextLine").textContent = `${Bridge.context.circleType || "family"} circle`;
+      save();
+      renderAll();
+    }
+
+    function wire(){
+      $("themeBtn").onclick = () => {state.theme = state.theme === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = state.theme; save(); renderTop();};
+      $("profileSelect").onchange = (event) => {state.activeProfileId = event.target.value; save(); renderAll();};
+      $$(".nav button").forEach((button) => button.onclick = () => switchTab(button.dataset.tab));
+      $("lessonBack").onclick = closeLesson;
+      $("lessonAction").onclick = lessonAction;
+      $("sheetClose").onclick = closeSheet;
+      $("scrim").onclick = closeSheet;
+      document.querySelector("[data-tab='today']").innerHTML = icon("today") + "Today";
+      document.querySelector("[data-tab='path']").innerHTML = icon("path") + "Path";
+      document.querySelector("[data-tab='practice']").innerHTML = icon("practice") + "Practice";
+      document.querySelector("[data-tab='parent']").innerHTML = icon("parent") + "Parent";
+      $("lessonBack").innerHTML = icon("back");
+    }
+
+    function switchTab(tab){
+      state.activeTab = tab;
+      save();
+      $$(".view").forEach((view) => view.classList.toggle("on", view.id === "view-" + tab));
+      $$(".nav button").forEach((button) => button.classList.toggle("on", button.dataset.tab === tab));
+      renderView(tab);
+    }
+
+    function renderAll(){
+      renderTop();
+      ["today","path","practice","parent"].forEach(renderView);
+      switchTab(state.activeTab || "today");
+    }
+    function renderView(tab){
+      if(tab === "today") renderToday();
+      if(tab === "path") renderPath();
+      if(tab === "practice") renderPractice();
+      if(tab === "parent") renderParent();
+    }
+    function renderTop(){
+      $("themeBtn").innerHTML = icon(state.theme === "dark" ? "sun" : "moon");
+      $("profileSelect").innerHTML = state.profiles.map((item) => `<option value="${item.id}" ${item.id === state.activeProfileId ? "selected" : ""}>${esc(item.name)}</option>`).join("");
+      $("contextLine").textContent = Bridge.embedded ? `${Bridge.context.circleType || "family"} circle` : "Standalone local mode";
+    }
+
+    function renderToday(){
+      const p = profile();
+      const rec = todayRecommendation();
+      const prog = progress();
+      const totalDone = Object.values(prog.lessonStatus).filter((item) => item.mastered).length;
+      const weak = weakObjectives();
+      $("todayBody").innerHTML = `
+        <section class="hero">
+          ${heroSvg()}
+          <span class="label" style="color:rgba(255,255,255,.72)">Today's mission</span>
+          <h2>${esc(p.name)}, Stage ${profileStage()} is ready.</h2>
+          <p>${esc(rec.subject)} - ${esc(rec.strand)} - ${esc(rec.title)}</p>
+          <button class="btn hero-action" data-start="${rec.lessonId}">${icon("play")} Start lesson</button>
+        </section>
+        <section class="stats">
+          <div class="stat"><b>${prog.streak}</b><span>day streak</span></div>
+          <div class="stat"><b>${totalDone}</b><span>mastered</span></div>
+          <div class="stat"><b>${averageMastery()}%</b><span>mastery</span></div>
+          <div class="stat"><b>${prog.mistakes.length}</b><span>review</span></div>
+        </section>
+        <section class="card glass grid">
+          <div class="between"><div><span class="label">Recommended - ${esc(rec.subject)} ${rec.subjectCode}</span><h2>${esc(rec.title)}</h2><p class="small">${esc(rec.explanation.slice(0,150))}...</p></div><span class="chip on">${esc(rec.strand)}</span></div>
+          <div class="progress-bar"><i style="width:${lessonStatus(rec.lessonId).best}%"></i></div>
+          <button class="btn" data-start="${rec.lessonId}">Continue Lesson</button>
+        </section>
+        <section class="card glass grid">
+          <div class="between"><h3>Needs review</h3><span class="small">${weak.length || "clear"}</span></div>
+          ${weak.length ? weak.map((item) => `<button class="lesson-card" data-start="${item.lesson.lessonId}"><span class="label">${esc(item.lesson.subject)} - Stage ${item.lesson.stage}</span><b>${esc(item.title)}</b><div class="progress-bar"><i style="width:${item.value}%"></i></div></button>`).join("") : `<div class="empty">No weak objectives yet. Complete a lesson to start tracking mastery.</div>`}
+        </section>`;
+      bindStarts($("todayBody"));
+    }
+
+    function averageMastery(){
+      const values = Object.values(progress().mastery);
+      if(!values.length) return 0;
+      return Math.round(values.reduce((a,b) => a + b, 0) / values.length);
+    }
+
+    function heroSvg(){
+      return `<svg class="hero-visual" viewBox="0 0 180 130" aria-hidden="true">
+        <defs><linearGradient id="bookg" x1="0" x2="1"><stop stop-color="#fff" stop-opacity=".92"/><stop offset="1" stop-color="#fff" stop-opacity=".45"/></linearGradient></defs>
+        <path d="M28 32c28-10 47 2 62 16 15-14 34-26 62-16v70c-29-8-48 0-62 14-14-14-33-22-62-14Z" fill="url(#bookg)"/>
+        <path d="M90 48v68" stroke="#fff" stroke-width="4" opacity=".72"/>
+        <circle cx="135" cy="42" r="18" fill="#fff" opacity=".22"/>
+        <path d="M50 62h28M50 76h26M104 62h31M104 76h24" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+      </svg>`;
+    }
+
+    function renderPath(){
+      const activeSubject = subject(state.filters.subject);
+      $("pathBody").innerHTML = `
+        <section class="card glass grid">
+          <div class="between"><div><span class="label">Learning path</span><h2>${esc(activeSubject.name)} - Stage ${profileStage()}</h2><p class="small">${esc(profile().name)} has one current stage across all subjects.</p></div><span class="chip">${activeSubject.code}</span></div>
+          <div class="subject-grid">
+            ${SUBJECTS.map((item) => `<button class="subject-card ${item.id === state.filters.subject ? "on" : ""}" data-subject="${item.id}" style="--s1:${item.color[0]};--s2:${item.color[1]}"><span class="subject-icon">${item.short}</span><b>${esc(item.name)}</b><span class="small">${item.code}</span></button>`).join("")}
+          </div>
+          <div class="stage-grid">${[1,2,3,4,5,6].map((stage) => `<button class="${profileStage() === stage ? "on" : ""}" data-stage="${stage}">S${stage}</button>`).join("")}</div>
+        </section>
+        <section class="lesson-list">
+          ${filteredLessons().map(renderLessonCard).join("") || `<div class="empty">No lessons for this filter.</div>`}
+        </section>`;
+      $$("[data-subject]", $("pathBody")).forEach((button) => button.onclick = () => {state.filters.subject = button.dataset.subject; save(); renderPath();});
+      $$("[data-stage]", $("pathBody")).forEach((button) => button.onclick = () => {const p = profile(); p.stage = Number(button.dataset.stage); p.stageBySubject = {english:p.stage,math:p.stage,science:p.stage,french:p.stage}; LearningBackendAdapter.saveProfile(p); renderAll();});
+      bindStarts($("pathBody"));
+    }
+
+    function renderLessonCard(item){
+      const status = lessonStatus(item.lessonId);
+      const locked = item.stage > profileStage();
+      return `<button class="lesson-card ${status.mastered ? "mastered" : ""} ${locked ? "locked" : ""}" ${locked ? "" : `data-start="${item.lessonId}"`}>
+        <div class="between"><span class="label">${esc(item.strand)} - ${item.subjectCode}</span><span class="chip ${status.mastered ? "on" : ""}">${status.mastered ? "Mastered" : `${status.best}%`}</span></div>
+        <h3>${esc(item.title)}</h3>
+        <p class="small">${esc(item.strand)} - ${esc(item.objectives[0].title)}</p>
+        <div class="meta"><span class="chip">${item.exercises.length} questions</span><span class="chip">${esc(item.unitId.replace(/^s\d-/, "").replace(/-/g, " "))}</span></div>
+        <div class="progress-bar"><i style="width:${status.best || 0}%"></i></div>
+      </button>`;
+    }
+
+    function renderPractice(){
+      const prog = progress();
+      const weak = weakObjectives();
+      const mistakes = prog.mistakes.slice(0,12);
+      $("practiceBody").innerHTML = `
+        <section class="card glass grid">
+          <div class="between"><div><span class="label">Practice</span><h2>Review loop</h2><p class="small">Mistakes and lower-mastery objectives appear here automatically.</p></div><button class="btn" id="mixedReview">Mixed review</button></div>
+        </section>
+        <section class="grid">
+          <h3>Weak objectives</h3>
+          ${weak.length ? weak.map((item) => `<button class="lesson-card" data-start="${item.lesson.lessonId}"><span class="label">${esc(item.lesson.subject)} S${item.lesson.stage}</span><b>${esc(item.title)}</b><div class="progress-bar"><i style="width:${item.value}%"></i></div></button>`).join("") : `<div class="card glass empty">No weak objectives yet.</div>`}
+        </section>
+        <section class="grid">
+          <h3>Recent mistakes</h3>
+          ${mistakes.length ? mistakes.map((item) => `<div class="mistake-card"><span class="label">${esc(item.subject)} - ${esc(item.lessonTitle)}</span><b>${esc(item.prompt)}</b><p class="small">Answer: ${esc(item.answerText)}</p><button class="chip on" data-start="${item.lessonId}">Practice this lesson</button></div>`).join("") : `<div class="card glass empty">Mistakes will appear here after lessons.</div>`}
+        </section>`;
+      $("mixedReview").onclick = startMixedReview;
+      bindStarts($("practiceBody"));
+    }
+
+    function renderParent(){
+      const p = profile();
+      $("parentBody").innerHTML = `
+        <section class="card glass grid">
+          <div class="between"><div><span class="label">Parent dashboard</span><h2>${esc(p.name)}</h2><p class="small">One Cambridge stage controls English, Math, Science and French.</p></div><button class="btn secondary" id="addProfile">Add child</button></div>
+          <label><span class="small">Current Cambridge Primary stage</span><select id="profileStageSelect">${[1,2,3,4,5,6].map((stage) => `<option value="${stage}" ${profileStage() === stage ? "selected" : ""}>Stage ${stage}</option>`).join("")}</select></label>
+        </section>
+        <section class="stats">
+          ${SUBJECTS.map((item) => `<div class="stat"><b>${subjectCoverage(item.id)}%</b><span>${item.short}</span></div>`).join("")}
+        </section>
+        <section class="card glass grid">
+          <div class="between"><h3>Child profiles</h3><span class="small">${state.profiles.length}</span></div>
+          ${state.profiles.map((item) => `<div class="profile-card between"><span class="row"><span class="subject-icon" style="--s1:${item.color};--s2:${item.color}">${esc(item.avatar)}</span><span><b>${esc(item.name)}</b><span class="small" style="display:block">Cambridge Primary Stage ${normalizeProfile(item).stage}</span></span></span><button class="chip" data-edit-profile="${item.id}">Edit</button></div>`).join("")}
+        </section>
+        <section class="card glass grid">
+          <div class="between"><div><h3>Content editor</h3><p class="small">Edit one lesson at a time. Overrides stay local and can be exported.</p></div><span class="chip">${lessons().length} lessons</span></div>
+          <div class="grid two"><button class="btn secondary" id="openEditor">Edit lesson JSON</button><button class="btn secondary" id="exportBtn">Export snapshot</button><button class="btn secondary" id="importBtn">Import snapshot</button><button class="btn danger" id="resetBtn">Reset local data</button></div>
+        </section>`;
+      $("profileStageSelect").onchange = (event) => {p.stage = Number(event.target.value); p.stageBySubject = {english:p.stage,math:p.stage,science:p.stage,french:p.stage}; LearningBackendAdapter.saveProfile(p); renderAll();};
+      $("addProfile").onclick = openAddProfile;
+      $$("[data-edit-profile]", $("parentBody")).forEach((button) => button.onclick = () => openEditProfile(button.dataset.editProfile));
+      $("openEditor").onclick = openEditor;
+      $("exportBtn").onclick = openExport;
+      $("importBtn").onclick = openImport;
+      $("resetBtn").onclick = openReset;
+    }
+
+    function bindStarts(root){
+      $$("[data-start]", root).forEach((button) => button.onclick = () => startLesson(button.dataset.start));
+    }
+
+    function startMixedReview(){
+      const source = weakObjectives().map((item) => item.lesson);
+      const picked = source[0] || todayRecommendation();
+      startLesson(picked.lessonId);
+    }
+
+    function startLesson(lessonId){
+      const item = lessonById(lessonId);
+      if(!item) return toast("Lesson not found");
+      activeSession = {lesson:item,index:-1,score:0,answers:[],misses:[],mode:"intro",startedAt:new Date().toISOString()};
+      $("lessonScreenTitle").textContent = item.title;
+      $("lessonScreenSub").textContent = `${item.subject} ${item.subjectCode} - Stage ${item.stage} - ${item.strand}`;
+      $("lessonScreen").classList.add("on");
+      renderLessonIntro();
+    }
+    function closeLesson(){ $("lessonScreen").classList.remove("on"); activeSession = null; selectedAnswer = null; orderAnswer = []; checked = false; renderAll(); }
+    function renderLessonIntro(){
+      const item = activeSession.lesson;
+      $("feedbackBox").className = "feedback";
+      $("feedbackBox").textContent = "Read the model, then start the questions.";
+      $("lessonAction").textContent = "Start Questions";
+      $("lessonBody").innerHTML = `
+        <section class="card glass lesson-stage lesson-intro">
+          <span class="label">${esc(item.subject)} ${item.subjectCode} - ${esc(item.strand)}</span>
+          <h2>${esc(item.title)}</h2>
+          <p class="muted">${esc(item.explanation)}</p>
+          <div class="example-list">${item.examples.map((example) => `<div class="feedback">${esc(example)}</div>`).join("")}</div>
+          <div class="objective-list">${item.objectives.map((obj) => `<div class="objective-row"><b>Goal</b><span>${esc(obj.title)}</span></div>`).join("")}</div>
+        </section>`;
+    }
+    function lessonAction(){
+      if(!activeSession) return;
+      if(activeSession.mode === "intro"){ nextQuestion(); return; }
+      if(activeSession.mode === "question" && !checked){ checkAnswer(); return; }
+      if(activeSession.mode === "question" && checked){ nextQuestion(); return; }
+      if(activeSession.mode === "done"){ closeLesson(); }
+    }
+    function nextQuestion(){
+      activeSession.index += 1;
+      selectedAnswer = null;
+      orderAnswer = [];
+      checked = false;
+      if(activeSession.index >= activeSession.lesson.exercises.length){ finishLesson(); return; }
+      activeSession.mode = "question";
+      renderQuestion();
+    }
+    function renderQuestion(){
+      const item = activeSession.lesson;
+      const q = item.exercises[activeSession.index];
+      $("lessonAction").textContent = "Check";
+      $("feedbackBox").className = "feedback";
+      $("feedbackBox").textContent = `Question ${activeSession.index + 1} of ${item.exercises.length}`;
+      let body = "";
+      if(q.type === "mcq" || q.type === "listen"){
+        body = `${q.type === "listen" ? `<button class="btn secondary" id="speakBtn">${icon("volume")} Listen</button>` : ""}
+          <div class="answer-grid">${q.options.map((option) => `<button class="answer" data-choice="${esc(option)}">${esc(option)}</button>`).join("")}</div>`;
+      } else if(q.type === "truefalse"){
+        body = `<div class="answer-grid"><button class="answer" data-choice="true">True</button><button class="answer" data-choice="false">False</button></div>`;
+      } else if(q.type === "text" || q.type === "short"){
+        body = `<textarea id="textAnswer" rows="4" placeholder="Type your answer"></textarea>${q.hint ? `<p class="small">${esc(q.hint)}</p>` : ""}`;
+      } else if(q.type === "order"){
+        body = `<div class="label">Build the answer</div><div class="order-answer" id="orderAnswer"></div><div class="label">Tap words</div><div class="order-bank">${shuffle(q.items).map((word) => `<button class="chip" data-order="${esc(word)}">${esc(word)}</button>`).join("")}</div><button class="chip" id="clearOrder">Clear</button>`;
+      } else if(q.type === "match"){
+        const rights = shuffle(q.pairs.map((pair) => pair[1]));
+        body = `<div class="grid">${q.pairs.map((pair,index) => `<div class="match-row"><b>${esc(pair[0])}</b><select data-match="${index}"><option value="">Choose</option>${rights.map((right) => `<option value="${esc(right)}">${esc(right)}</option>`).join("")}</select></div>`).join("")}</div>`;
+      }
+      $("lessonBody").innerHTML = `<section class="question-card glass"><span class="label">${esc(q.type)}</span><h2>${esc(q.prompt)}</h2>${body}</section>`;
+      if(q.type === "listen") $("speakBtn").onclick = () => speak(q.say || q.prompt);
+      $$("[data-choice]", $("lessonBody")).forEach((button) => button.onclick = () => {selectedAnswer = button.dataset.choice; $$("[data-choice]", $("lessonBody")).forEach((b) => b.classList.toggle("selected", b === button));});
+      $$("[data-order]", $("lessonBody")).forEach((button) => button.onclick = () => {orderAnswer.push(button.dataset.order); button.disabled = true; renderOrderAnswer();});
+      const clear = $("clearOrder"); if(clear) clear.onclick = () => {orderAnswer = []; $$("[data-order]", $("lessonBody")).forEach((button) => button.disabled = false); renderOrderAnswer();};
+    }
+    function renderOrderAnswer(){ const box = $("orderAnswer"); if(box) box.innerHTML = orderAnswer.map((word) => `<span class="chip on">${esc(word)}</span>`).join(""); }
+    function checkAnswer(){
+      const q = activeSession.lesson.exercises[activeSession.index];
+      const result = evaluate(q);
+      checked = true;
+      activeSession.answers.push({questionId:q.id,correct:result.correct,answer:result.answerText});
+      if(result.correct) activeSession.score += 1;
+      else activeSession.misses.push({lessonId:activeSession.lesson.lessonId,lessonTitle:activeSession.lesson.title,subject:activeSession.lesson.subject,prompt:q.prompt,answerText:result.expectedText,at:new Date().toISOString()});
+      paintAnswers(q, result);
+      $("feedbackBox").className = "feedback " + (result.correct ? "good" : "bad");
+      $("feedbackBox").textContent = result.correct ? "Correct. Nice work." : `Review: ${result.expectedText}`;
+      $("lessonAction").textContent = activeSession.index + 1 >= activeSession.lesson.exercises.length ? "Finish" : "Next";
+    }
+    function evaluate(q){
+      let answerText = "";
+      let correct = false;
+      let expectedText = "";
+      if(q.type === "mcq" || q.type === "listen"){ answerText = selectedAnswer || ""; expectedText = q.answer; correct = norm(answerText) === norm(q.answer); }
+      if(q.type === "truefalse"){ answerText = selectedAnswer || ""; expectedText = String(q.answer); correct = answerText === String(q.answer); }
+      if(q.type === "text"){ answerText = $("textAnswer")?.value || ""; expectedText = (q.answers || []).join(" / "); correct = (q.answers || []).some((ans) => norm(ans) === norm(answerText)); }
+      if(q.type === "short"){ answerText = $("textAnswer")?.value || ""; expectedText = q.sample || (q.keywords || []).join(", "); correct = (q.keywords || []).some((key) => norm(answerText).includes(norm(key))) || norm(answerText).length >= 18; }
+      if(q.type === "order"){ answerText = orderAnswer.join(" "); expectedText = q.answer.join(" "); correct = norm(answerText) === norm(expectedText); }
+      if(q.type === "match"){
+        const values = $$("[data-match]", $("lessonBody")).map((select) => select.value);
+        answerText = values.join(" | ");
+        expectedText = q.pairs.map((pair) => `${pair[0]} = ${pair[1]}`).join("; ");
+        correct = q.pairs.every((pair,index) => values[index] === pair[1]);
+      }
+      return {correct,answerText,expectedText};
+    }
+    function paintAnswers(q, result){
+      if(q.type === "mcq" || q.type === "listen"){
+        $$("[data-choice]", $("lessonBody")).forEach((button) => { if(norm(button.dataset.choice) === norm(q.answer)) button.classList.add("correct"); else if(button.classList.contains("selected")) button.classList.add("wrong"); });
+      }
+      if(q.type === "truefalse"){
+        $$("[data-choice]", $("lessonBody")).forEach((button) => { if(button.dataset.choice === String(q.answer)) button.classList.add("correct"); else if(button.classList.contains("selected")) button.classList.add("wrong"); });
+      }
+    }
+    function finishLesson(){
+      const item = activeSession.lesson;
+      const pct = Math.round((activeSession.score / item.exercises.length) * 100);
+      const prog = progress();
+      const old = lessonStatus(item.lessonId);
+      prog.lessonStatus[item.lessonId] = {attempts:(old.attempts || 0) + 1,best:Math.max(old.best || 0, pct),mastered:pct >= item.mastery.passPercent,lastScore:pct,lastAt:new Date().toISOString()};
+      prog.mistakes = [...activeSession.misses, ...prog.mistakes].slice(0,80);
+      prog.lastLessonId = item.lessonId;
+      if(prog.lastStudyDate !== DAY()){ prog.streak += 1; prog.lastStudyDate = DAY(); }
+      item.objectives.forEach((obj) => LearningBackendAdapter.saveMastery(profile().id, obj.id, Math.max(masteryValue(obj.id), pct)));
+      LearningBackendAdapter.recordAttempt({profileId:profile().id,lessonId:item.lessonId,subject:item.subject,stage:item.stage,scorePercent:pct,correct:activeSession.score,total:item.exercises.length,misses:activeSession.misses,startedAt:activeSession.startedAt,finishedAt:new Date().toISOString()});
+      activeSession.mode = "done";
+      $("lessonAction").textContent = "Done";
+      $("feedbackBox").className = "feedback " + (pct >= item.mastery.passPercent ? "good" : "bad");
+      $("feedbackBox").textContent = pct >= item.mastery.passPercent ? "Mastery reached." : "Saved for review.";
+      $("lessonBody").innerHTML = `<section class="card glass grid"><span class="label">Result</span><h2>${pct}%</h2><p class="muted">${activeSession.score} of ${item.exercises.length} correct in ${esc(item.title)}.</p><div class="progress-bar"><i style="width:${pct}%"></i></div>${activeSession.misses.length ? `<div class="grid"><h3>Review next</h3>${activeSession.misses.map((miss) => `<div class="feedback bad">${esc(miss.prompt)}<br><span class="small">Answer: ${esc(miss.answerText)}</span></div>`).join("")}</div>` : `<div class="feedback good">No mistakes this round.</div>`}</section>`;
+      toast("Progress saved");
+      Bridge.send("SHOW_TOAST", {message:"Cambridge progress saved"});
+    }
+    function speak(text){
+      if(!("speechSynthesis" in window)) return toast("Listening is not available here");
+      speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "fr-FR";
+      utter.rate = .88;
+      speechSynthesis.speak(utter);
+    }
+
+    function openSheet(title, html){
+      $("sheetTitle").textContent = title;
+      $("sheetBody").innerHTML = html;
+      $("sheetLayer").classList.add("on");
+    }
+    function closeSheet(){ $("sheetLayer").classList.remove("on"); }
+    function openAddProfile(){
+      openSheet("Add child", `<div class="grid"><input id="newProfileName" placeholder="Child name"><button class="btn" id="saveNewProfile">Add profile</button></div>`);
+      $("saveNewProfile").onclick = () => {
+        const name = $("newProfileName").value.trim();
+        if(!name) return toast("Add a name");
+        const id = name.toLowerCase().replace(/[^a-z0-9]+/g,"_") || uid("child");
+        state.profiles.push(normalizeProfile({id,name,avatar:name[0].toUpperCase(),color:"#22c8b8",stage:1}));
+        state.activeProfileId = id;
+        save(); closeSheet(); renderAll();
+      };
+    }
+    function openEditProfile(profileId){
+      const item = state.profiles.find((entry) => entry.id === profileId);
+      if(!item) return;
+      openSheet("Edit child", `<div class="grid"><input id="profileName" value="${esc(item.name)}"><button class="btn" id="saveProfile">Save</button></div>`);
+      $("saveProfile").onclick = () => {item.name = $("profileName").value.trim() || item.name; item.avatar = item.name[0].toUpperCase(); LearningBackendAdapter.saveProfile(item); closeSheet(); renderAll();};
+    }
+    function openEditor(){
+      const opts = lessons().map((item) => `<option value="${item.lessonId}">${item.subject} S${item.stage} - ${esc(item.title)}</option>`).join("");
+      openSheet("Lesson editor", `<div class="grid"><select id="editorLesson">${opts}</select><textarea id="editorJson" class="editor"></textarea><button class="btn" id="saveLessonJson">Save override</button></div>`);
+      const load = () => { $("editorJson").value = JSON.stringify(lessonById($("editorLesson").value), null, 2); };
+      $("editorLesson").onchange = load;
+      $("saveLessonJson").onclick = () => {
+        try{
+          const data = JSON.parse($("editorJson").value);
+          if(!data.lessonId || !Array.isArray(data.exercises)) throw new Error("Lesson requires lessonId and exercises.");
+          LearningBackendAdapter.saveContentOverride(data.lessonId, data);
+          closeSheet(); renderAll(); toast("Lesson override saved");
+        } catch(error){ toast(error.message); }
+      };
+      load();
+    }
+    function openExport(){
+      openSheet("Export snapshot", `<div class="grid"><textarea class="editor" readonly>${esc(LearningBackendAdapter.exportSnapshot())}</textarea><button class="btn secondary" id="copyExport">Copy</button></div>`);
+      $("copyExport").onclick = async () => { try{ await navigator.clipboard.writeText(LearningBackendAdapter.exportSnapshot()); toast("Copied"); } catch { toast("Select and copy the text"); } };
+    }
+    function openImport(){
+      openSheet("Import snapshot", `<div class="grid"><textarea id="importJson" class="editor" placeholder="Paste exported JSON"></textarea><button class="btn" id="doImport">Import</button></div>`);
+      $("doImport").onclick = () => { try{ LearningBackendAdapter.importSnapshot($("importJson").value); closeSheet(); renderAll(); toast("Imported"); } catch(error){ toast(error.message); } };
+    }
+    function openReset(){
+      openSheet("Reset local data?", `<div class="grid"><p class="muted">This clears local Cambridge progress, profiles and overrides on this device only.</p><button class="btn danger" id="confirmReset">Reset</button></div>`);
+      $("confirmReset").onclick = () => { localStorage.removeItem(STORE_KEY); state = mergeStore(defaultStore()); closeSheet(); renderAll(); toast("Reset complete"); };
+    }
+    function toast(message){
+      $("toast").textContent = message;
+      $("toast").classList.add("on");
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => $("toast").classList.remove("on"), 2200);
+    }
+    function shuffle(array){
+      const out = array.slice();
+      for(let i = out.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
+      return out;
+    }
+
+    init();
+  </script>
+</body>
+</html>

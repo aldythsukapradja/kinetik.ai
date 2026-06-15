@@ -1,0 +1,160 @@
+<!--
+KINETIK APP STANDARD v0.3
+
+PRODUCT:
+Kinetik is a private life app for Family and Friends circles.
+
+APP:
+Code Philosophy Kids is a polished learning-path app for the Kinetik rebuild.
+Analog inspiration: Duolingo learning path, Code.org, ScratchJr, Brilliant.
+
+IMPORTANT:
+- This app uses proven Duolingo-style learning mechanics: path, XP, streaks, hearts, bite-size questions, instant feedback, and unit completion.
+- It does not copy Duolingo brand assets, mascots, names, illustrations, or exact trade dress.
+- It keeps a distinct Kinetik visual system.
+
+ARCHITECTURE:
+- Single self-contained HTML file.
+- Inline CSS and vanilla JavaScript only.
+- No external frameworks, CDNs, build step, or backend dependency.
+- Works directly from a local HTML file.
+- Works embedded inside the Kinetik shell iframe.
+- Uses AppBridge messages for future parent-shell persistence.
+- Uses localStorage for direct-file progress and history.
+
+KINETIK INTEGRATION:
+- Detects embedded mode with window.self !== window.top.
+- Listens for INIT_APP messages.
+- Accepts circleId, circleType, memberId, personId, theme, and context.
+- Sends DATA_CREATE, DATA_UPDATE, and SHOW_TOAST bridge messages when relevant.
+
+DATA:
+- Storage prefix: kinetik_path_code_philosophy_kids.
+- App-specific future records should be stored in AppRecords with circleId, appId, collection, and payloadJson.
+- This app must not access another circle's data.
+
+React/TypeScript app scale-up note:
+- This single-file app should later become a React feature module or standalone route.
+- It must keep using AppBridge/DataAPI contracts.
+- It must not access another circle's data.
+- It must store app-specific data in AppRecords using circleId, appId, collection, payloadJson.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7fff8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Code">
+  <title>Code Philosophy Kids - Kinetik Path</title>
+  <script type="application/kinetik-app+json">
+{
+  "appId": "code-philosophy-kids",
+  "name": "Code Philosophy Kids",
+  "shortName": "Code",
+  "icon": "🧩",
+  "gradient": [
+    "#7c3aed",
+    "#06b6d4"
+  ],
+  "category": "kids",
+  "tagline": "A playful path for thinking like a careful coder.",
+  "about": "A Kinetik learning-path app for debugging, sequencing, loops, kindness, and computational thinking.",
+  "audience": "children learning coding habits",
+  "circleTypes": [
+    "family",
+    "learning"
+  ],
+  "worksWith": [
+    "offline",
+    "standalone",
+    "embedded",
+    "local progress"
+  ],
+  "status": "live",
+  "minMembers": 1
+}
+  </script>
+  <style>
+    :root{color-scheme:light;--bg:#f5fbf7;--ink:#111827;--muted:#6b7280;--faint:#9ca3af;--panel:#fff;--soft:#eef8f1;--line:rgba(17,24,39,.1);--a:#7c3aed;--b:#06b6d4;--good:#20b15a;--warn:#ffb020;--bad:#ef4444;--shadow:0 20px 48px rgba(35,73,50,.14);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    [data-theme=dark]{color-scheme:dark;--bg:#07110d;--ink:#f8fbff;--muted:#b7c2bc;--faint:#7f8b86;--panel:#111c17;--soft:#0d1813;--line:rgba(255,255,255,.12);--shadow:0 20px 48px rgba(0,0,0,.35)}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;width:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink)}body{background:radial-gradient(circle at 10% -10%,color-mix(in srgb,var(--a) 22%,transparent),transparent 34%),radial-gradient(circle at 92% 0%,color-mix(in srgb,var(--b) 18%,transparent),transparent 32%),linear-gradient(180deg,var(--bg),color-mix(in srgb,var(--bg) 88%,var(--soft)))}button,input{font:inherit}button{border:0;color:inherit;cursor:pointer}h1,h2,h3,p{margin:0}.app{height:100dvh;max-width:760px;margin:0 auto;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;overflow:hidden}
+    .top{padding:calc(10px + env(safe-area-inset-top,0px)) 16px 8px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center}.back,.iconbtn{width:40px;height:40px;border-radius:14px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 10px 24px rgba(0,0,0,.06)}.brand{min-width:0}.brand h1{font-size:20px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand p{margin-top:4px;color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mark{width:42px;height:42px;border-radius:15px;color:white;display:grid;place-items:center;font-size:12px;font-weight:950;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 14px 28px color-mix(in srgb,var(--a) 25%,transparent)}
+    .hud{padding:0 16px 10px;display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center}.bar{height:14px;border-radius:999px;background:rgba(120,140,130,.16);overflow:hidden;border:1px solid var(--line)}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--good),var(--a));border-radius:inherit;transition:width .25s ease}.pill{height:34px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);font-size:12px;font-weight:950;box-shadow:0 8px 18px rgba(0,0,0,.05)}.heart{color:var(--bad)}.xp{color:var(--a)}.streak{color:var(--warn)}
+    .content{min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px 16px 18px;scrollbar-width:none}.content::-webkit-scrollbar{display:none}.screen{display:none}.screen.active{display:block;animation:rise .24s ease both}@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .hero{border-radius:28px;padding:18px;color:white;background:radial-gradient(circle at 12% 0%,rgba(255,255,255,.32),transparent 30%),linear-gradient(135deg,var(--a),var(--b));box-shadow:var(--shadow);overflow:hidden;position:relative}.hero:after{content:"";position:absolute;right:-40px;bottom:-74px;width:160px;height:160px;border-radius:50%;border:28px solid rgba(255,255,255,.16)}.hero>*{position:relative;z-index:1}.kicker{font-size:11px;letter-spacing:1.8px;font-weight:950;text-transform:uppercase;opacity:.74}.hero h2{margin-top:8px;font-size:28px;line-height:1;letter-spacing:0}.hero p{margin-top:9px;color:rgba(255,255,255,.82);font-size:13px;line-height:1.35;font-weight:750}
+    .path{position:relative;padding:18px 0 8px}.path:before{content:"";position:absolute;left:50%;top:28px;bottom:36px;width:8px;border-radius:999px;background:linear-gradient(180deg,color-mix(in srgb,var(--a) 26%,transparent),color-mix(in srgb,var(--b) 22%,transparent));transform:translateX(-50%)}.unit{margin-top:14px}.unit-head{position:relative;z-index:1;margin:0 auto 12px;width:max-content;max-width:100%;padding:9px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);box-shadow:0 8px 22px rgba(0,0,0,.06);text-align:center}.unit-head b{display:block;font-size:13px}.unit-head span{display:block;margin-top:2px;color:var(--muted);font-size:11px;font-weight:750}.node-wrap{position:relative;display:grid;justify-items:center;gap:14px}.lesson{position:relative;z-index:1;width:84%;max-width:360px;min-height:74px;padding:10px 12px;border-radius:24px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;background:var(--panel);border:1px solid var(--line);box-shadow:0 14px 30px rgba(30,70,46,.11);transition:transform .18s ease}.lesson:nth-child(even){margin-left:42px}.lesson:nth-child(odd){margin-right:42px}.lesson:active{transform:scale(.98)}.badge{width:50px;height:50px;border-radius:19px;color:white;display:grid;place-items:center;background:linear-gradient(135deg,var(--a),var(--b));font-size:20px;font-weight:950;box-shadow:0 12px 24px color-mix(in srgb,var(--a) 22%,transparent)}.locked .badge{background:#cbd5d1;box-shadow:none}.done .badge{background:linear-gradient(135deg,var(--good),var(--a))}.lesson b{display:block;font-size:14px;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lesson span{display:block;margin-top:4px;color:var(--muted);font-size:12px;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.state{font-size:12px;font-weight:950;color:var(--a)}.locked .state{color:var(--faint)}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:28px;padding:17px;box-shadow:var(--shadow)}.visual{height:150px;border-radius:24px;background:radial-gradient(circle at 20% 20%,color-mix(in srgb,var(--a) 18%,transparent),transparent 34%),linear-gradient(135deg,color-mix(in srgb,var(--a) 8%,var(--panel)),color-mix(in srgb,var(--b) 8%,var(--panel)));border:1px solid var(--line);display:grid;place-items:center;margin-bottom:14px}.visual svg{width:210px;max-width:80%;height:126px}.tag{display:inline-flex;align-items:center;height:28px;padding:0 10px;border-radius:999px;background:color-mix(in srgb,var(--a) 11%,transparent);color:var(--a);font-size:11px;font-weight:950;border:1px solid color-mix(in srgb,var(--a) 18%,transparent)}.prompt{margin-top:12px;font-size:25px;line-height:1.08;letter-spacing:0}.choices{display:grid;gap:10px;margin-top:14px}.choice{min-height:58px;padding:13px;border-radius:18px;background:var(--panel);border:2px solid var(--line);box-shadow:0 8px 18px rgba(0,0,0,.05);text-align:left;font-size:15px;font-weight:900}.choice.selected{border-color:var(--a);background:color-mix(in srgb,var(--a) 10%,var(--panel))}.choice.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 13%,var(--panel))}.choice.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--panel))}
+    .feedback{margin-top:14px;padding:14px;border-radius:22px;background:var(--soft);border:1px solid var(--line);display:none}.feedback.show{display:block}.feedback b{display:block;font-size:15px}.feedback p{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.35;font-weight:750}.result{text-align:center}.result .big{width:94px;height:94px;border-radius:32px;margin:0 auto 16px;color:white;display:grid;place-items:center;font-size:34px;font-weight:950;background:linear-gradient(135deg,var(--good),var(--a));box-shadow:0 22px 40px color-mix(in srgb,var(--good) 22%,transparent)}.result h2{font-size:28px}.result p{margin-top:8px;color:var(--muted);font-size:14px;line-height:1.35;font-weight:750}.progress-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric{padding:14px;border-radius:22px;background:var(--panel);border:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.05)}.metric b{font-size:24px}.metric span{display:block;margin-top:4px;color:var(--muted);font-size:12px;font-weight:800}
+    .bottom{padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:1fr auto;gap:10px;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--bg) 92%,transparent) 32%,var(--bg));backdrop-filter:blur(18px)}.primary,.secondary{min-height:52px;border-radius:18px;font-size:15px;font-weight:950;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .18s ease}.primary{color:white;background:linear-gradient(135deg,var(--good),var(--a));box-shadow:0 16px 32px color-mix(in srgb,var(--a) 24%,transparent)}.primary:disabled{opacity:.5;box-shadow:none}.secondary{min-width:56px;background:var(--panel);border:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.06)}.primary:active,.secondary:active{transform:scale(.98)}.toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom,0px));transform:translate(-50%,18px);opacity:0;max-width:min(340px,calc(100vw - 32px));padding:12px 14px;border-radius:999px;background:rgba(17,24,39,.92);color:white;font-size:13px;font-weight:850;box-shadow:0 18px 42px rgba(0,0,0,.22);transition:opacity .22s ease,transform .22s ease;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
+    @media (min-width:720px){.content{padding-inline:24px}.path{max-width:640px;margin:0 auto}.lesson{width:64%}.progress-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media (max-width:370px){.top{padding-inline:12px}.hud{padding-inline:12px;gap:6px}.pill{padding:0 8px}.hero h2{font-size:25px}.lesson{width:88%}.lesson:nth-child(even){margin-left:26px}.lesson:nth-child(odd){margin-right:26px}.prompt{font-size:22px}}@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <button class="back" type="button" id="homeBtn" aria-label="Learning path">P</button>
+      <div class="brand"><h1>Code Philosophy Kids</h1><p id="circleLabel">Standalone learning circle</p></div>
+      <div class="mark">CP</div>
+    </header>
+    <section class="hud">
+      <div class="bar" aria-label="lesson progress"><i id="topProgress"></i></div>
+      <div class="pill heart"><span id="heartCount">5</span> HP</div>
+      <div class="pill streak"><span id="streakCount">0</span> day</div>
+      <div class="pill xp"><span id="xpCount">0</span> XP</div>
+    </section>
+    <section class="content">
+      <div class="screen active" id="screenPath"></div>
+      <div class="screen" id="screenLesson"></div>
+      <div class="screen" id="screenResult"></div>
+      <div class="screen" id="screenProgress"></div>
+    </section>
+    <footer class="bottom">
+      <button class="primary" type="button" id="primaryBtn">Start lesson</button>
+      <button class="secondary" type="button" id="secondaryBtn" aria-label="Progress">Stats</button>
+    </footer>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script>
+    (function(){
+      "use strict";
+      const App={"file":"App_CodePhilosophyKids.html","appId":"code-philosophy-kids","name":"Code Philosophy Kids","shortName":"Code","icon":"CP","gradient":["#7c3aed","#06b6d4"],"category":"kids","tagline":"A playful path for thinking like a careful coder.","about":"A Kinetik learning-path app for debugging, sequencing, loops, kindness, and computational thinking.","audience":"children learning coding habits","circleTypes":["family","learning"],"analog":"Duolingo learning path, Code.org, ScratchJr, Brilliant","units":[{"title":"Think In Steps","subtitle":"Computers need clear order.","lessons":[{"title":"Sequence","kind":"Logic","questions":[{"prompt":"Which order helps a sandwich robot?","choices":["Eat, open, spread","Open, spread, close","Close, open, spread","Skip every step"],"answer":1,"explain":"Programs need steps in the right order."},{"prompt":"A program is like...","choices":["A recipe","A cloud only","A mystery box","A broken toy"],"answer":0,"explain":"Recipes and programs both follow ordered instructions."},{"prompt":"If steps are swapped, the program may...","choices":["Still always work","Do the wrong thing","Become a cake","Need no testing"],"answer":1,"explain":"Order changes behavior."}]},{"title":"Loops","kind":"Pattern","questions":[{"prompt":"A dance repeats clap-step four times. Coding idea?","choices":["Loop","Crash","Password","Pixel"],"answer":0,"explain":"Loops repeat a pattern."},{"prompt":"Why use a loop?","choices":["Less repeated code","More confusion","Hide the goal","Break everything"],"answer":0,"explain":"Loops keep repeated instructions tidy."},{"prompt":"A loop needs to know...","choices":["When to stop","Your favorite snack","The weather","Nothing"],"answer":0,"explain":"Good loops have a stopping rule or count."}]}]},{"title":"Debug Kindly","subtitle":"Fix one thing at a time.","lessons":[{"title":"Bug Hunt","kind":"Debug","questions":[{"prompt":"Robot turns left instead of right. First move?","choices":["Check one step","Delete all code","Blame robot","Quit"],"answer":0,"explain":"Debugging works best one step at a time."},{"prompt":"A helpful debugging question is...","choices":["What changed?","Who can I blame?","Can I ignore it?","Why test?"],"answer":0,"explain":"Asking what changed narrows the bug."},{"prompt":"A friend is stuck. Best help?","choices":["Give a hint","Take over","Laugh","Walk away"],"answer":0,"explain":"A hint helps them learn and keeps it kind."}]}]}]};
+      const Config={appId:App.appId,storagePrefix:"kinetik_path_code_philosophy_kids",collection:"learning_path_sessions"};
+      const $=(s)=>document.querySelector(s);const $$=(s)=>Array.from(document.querySelectorAll(s));
+      const fallback={theme:"light",circleId:"standalone_demo",circleType:(App.circleTypes&&App.circleTypes[0])||"learning",personId:"standalone_person",memberId:"standalone_person",screen:"path",activeUnit:0,activeLesson:0,q:0,selected:null,checked:false,lessonCorrect:0,xp:0,streak:0,hearts:5,completed:{},lastDate:""};
+      const state=Object.assign(fallback,readJson(Config.storagePrefix+"_state",{}));state.embedded=isEmbedded();setTheme(state.theme,false);listen();wire();render();
+      function isEmbedded(){try{return window.self!==window.top}catch(e){return true}}
+      const Bridge={send(type,payload){if(!state.embedded||!window.parent||window.parent===window)return;window.parent.postMessage({type,appId:Config.appId,payload},"*")}};
+      function listen(){window.addEventListener("message",(event)=>{const msg=event.data||{};if(msg.type!=="INIT_APP")return;const p=msg.payload||{};state.circleId=p.circleId||state.circleId;state.circleType=p.circleType||state.circleType;state.personId=p.personId||p.memberId||state.personId;state.memberId=p.memberId||p.personId||state.memberId;if(p.theme)setTheme(p.theme,true);save();render()})}
+      function wire(){$("#homeBtn").onclick=()=>show("path");$("#secondaryBtn").onclick=()=>state.screen==="progress"?show("path"):show("progress");$("#primaryBtn").onclick=primary}
+      function render(){renderHud();renderScreens();renderPath();renderLesson();renderResult();renderProgressScreen();renderBottom()}
+      function renderHud(){const lesson=currentLesson();const pct=state.screen==="lesson"?Math.round((state.q/(lesson.questions.length))*100):completionPercent();$("#topProgress").style.width=pct+"%";$("#heartCount").textContent=state.hearts;$("#streakCount").textContent=state.streak;$("#xpCount").textContent=state.xp;$("#circleLabel").textContent=(state.embedded?"":"Standalone ")+titleCase(state.circleType)+" circle"}
+      function renderScreens(){$$(".screen").forEach(s=>s.classList.remove("active"));$("#screen"+titleCase(state.screen)).classList.add("active")}
+      function renderPath(){let html='<article class="hero"><div class="kicker">Kinetik Learning Path</div><h2>'+esc(App.tagline)+'</h2><p>'+esc(App.analog)+'</p></article><div class="path">';App.units.forEach((unit,ui)=>{html+='<section class="unit"><div class="unit-head"><b>'+esc(unit.title)+'</b><span>'+esc(unit.subtitle)+'</span></div><div class="node-wrap">';unit.lessons.forEach((lesson,li)=>{const key=lessonKey(ui,li);const locked=!isUnlocked(ui,li);const done=!!state.completed[key];html+='<button class="lesson '+(locked?'locked ':'')+(done?'done':'')+'" data-unit="'+ui+'" data-lesson="'+li+'" '+(locked?'disabled':'')+'><span class="badge">'+(done?'OK':locked?'L':li+1)+'</span><span><b>'+esc(lesson.title)+'</b><span>'+esc(lesson.kind)+' / '+lesson.questions.length+' questions</span></span><span class="state">'+(done?'Done':locked?'Locked':'Start')+'</span></button>'});html+='</div></section>'});html+='</div>';$("#screenPath").innerHTML=html;$$(".lesson:not(.locked)").forEach(btn=>btn.onclick=()=>startLesson(Number(btn.dataset.unit),Number(btn.dataset.lesson)))}
+      function renderLesson(){const lesson=currentLesson();const question=lesson.questions[state.q]||lesson.questions[0];let html='<article class="card"><div class="visual">'+visual()+'</div><span class="tag">'+esc(lesson.kind)+' / Question '+(state.q+1)+' of '+lesson.questions.length+'</span><h2 class="prompt">'+esc(question.prompt)+'</h2><div class="choices">';question.choices.forEach((choice,i)=>{let cls='choice';if(state.selected===i)cls+=' selected';if(state.checked&&i===question.answer)cls+=' correct';if(state.checked&&state.selected===i&&i!==question.answer)cls+=' wrong';html+='<button class="'+cls+'" data-choice="'+i+'">'+esc(choice)+'</button>'});html+='</div><div class="feedback '+(state.checked?'show':'')+'"><b>'+(state.selected===question.answer?'Nice answer':'Good try')+'</b><p>'+esc(question.explain)+'</p></div></article>';$("#screenLesson").innerHTML=html;$$(".choice").forEach(btn=>btn.onclick=()=>{if(state.checked)return;state.selected=Number(btn.dataset.choice);save();render()})}
+      function renderResult(){const lesson=currentLesson();$("#screenResult").innerHTML='<article class="card result"><div class="big">'+(state.lessonCorrect===lesson.questions.length?'XP':'OK')+'</div><h2>Lesson complete</h2><p>'+state.lessonCorrect+' of '+lesson.questions.length+' correct. You earned '+(10+state.lessonCorrect*5)+' XP for '+esc(lesson.title)+'.</p></article>'}
+      function renderProgressScreen(){$("#screenProgress").innerHTML='<article class="hero"><div class="kicker">Progress</div><h2>'+completionPercent()+'% complete</h2><p>Your XP, hearts, streak, and completed nodes are saved locally for this circle.</p></article><div class="progress-grid" style="margin-top:14px"><div class="metric"><b>'+state.xp+'</b><span>Total XP</span></div><div class="metric"><b>'+state.streak+'</b><span>Streak</span></div><div class="metric"><b>'+Object.keys(state.completed).length+'</b><span>Lessons done</span></div><div class="metric"><b>'+state.hearts+'</b><span>Hearts</span></div></div>'}
+      function renderBottom(){if(state.screen==="path"){$("#primaryBtn").textContent="Continue";$("#primaryBtn").disabled=false;$("#secondaryBtn").textContent="Stats"}else if(state.screen==="lesson"){$("#primaryBtn").textContent=state.checked?"Continue":"Check";$("#primaryBtn").disabled=state.selected==null;$("#secondaryBtn").textContent="Exit"}else if(state.screen==="result"){$("#primaryBtn").textContent="Back to path";$("#primaryBtn").disabled=false;$("#secondaryBtn").textContent="Stats"}else{$("#primaryBtn").textContent="Continue learning";$("#primaryBtn").disabled=false;$("#secondaryBtn").textContent="Path"}}
+      function primary(){if(state.screen==="path"){const next=nextOpenLesson();startLesson(next.u,next.l);return}if(state.screen==="progress"){show("path");return}if(state.screen==="result"){show("path");return}if(state.screen==="lesson"){if(!state.checked)return checkAnswer();advanceQuestion()}}
+      function checkAnswer(){const q=currentLesson().questions[state.q];state.checked=true;if(state.selected===q.answer){state.lessonCorrect+=1;toast("Correct")}else{state.hearts=Math.max(0,state.hearts-1);toast("Heart lost")}save();render()}
+      function advanceQuestion(){const lesson=currentLesson();if(state.q<lesson.questions.length-1){state.q+=1;state.selected=null;state.checked=false;save();render();return}completeLesson()}
+      function completeLesson(){const lesson=currentLesson();const key=lessonKey(state.activeUnit,state.activeLesson);const earned=10+state.lessonCorrect*5;state.completed[key]=true;state.xp+=earned;state.hearts=Math.min(5,state.hearts+1);const today=new Date().toISOString().slice(0,10);if(state.lastDate!==today){state.streak+=1;state.lastDate=today}Bridge.send("DATA_CREATE",{collection:Config.collection,payload:{circleId:state.circleId,circleType:state.circleType,appId:Config.appId,ownerPersonId:state.personId,lesson:lesson.title,unit:App.units[state.activeUnit].title,correct:state.lessonCorrect,total:lesson.questions.length,xp:earned,createdAt:new Date().toISOString()}});show("result")}
+      function startLesson(u,l){state.activeUnit=u;state.activeLesson=l;state.q=0;state.selected=null;state.checked=false;state.lessonCorrect=0;show("lesson")}
+      function show(screen){state.screen=screen;save();render()}
+      function currentLesson(){return App.units[state.activeUnit].lessons[state.activeLesson]}
+      function lessonKey(u,l){return "u"+u+"_l"+l}
+      function isUnlocked(u,l){if(u===0&&l===0)return true;if(l>0)return !!state.completed[lessonKey(u,l-1)];const prev=App.units[u-1];return !!state.completed[lessonKey(u-1,prev.lessons.length-1)]}
+      function nextOpenLesson(){for(let u=0;u<App.units.length;u++){for(let l=0;l<App.units[u].lessons.length;l++){if(isUnlocked(u,l)&&!state.completed[lessonKey(u,l)])return{u,l}}}return{u:0,l:0}}
+      function completionPercent(){let total=0,done=0;App.units.forEach((unit,u)=>unit.lessons.forEach((lesson,l)=>{total++;if(state.completed[lessonKey(u,l)])done++}));return Math.round(done/Math.max(1,total)*100)}
+      function visual(){return '<svg viewBox="0 0 240 136" aria-hidden="true"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--a)"/><stop offset="1" stop-color="var(--b)"/></linearGradient></defs><path d="M48 94c26-56 118-70 148 0" fill="none" stroke="url(#g)" stroke-width="12" stroke-linecap="round" opacity=".28"/><circle cx="74" cy="76" r="30" fill="url(#g)" opacity=".88"/><rect x="116" y="48" width="72" height="14" rx="7" fill="url(#g)" opacity=".9"/><rect x="116" y="72" width="52" height="14" rx="7" fill="url(#g)" opacity=".55"/><rect x="116" y="96" width="84" height="14" rx="7" fill="url(#g)" opacity=".32"/></svg>'}
+      function setTheme(theme,persist){state.theme=theme==="dark"?"dark":"light";document.documentElement.dataset.theme=state.theme;document.querySelector("meta[name='theme-color']").setAttribute("content",state.theme==="dark"?"#07110d":"#f7fff8");if(persist)save()}
+      function save(){localStorage.setItem(Config.storagePrefix+"_state",JSON.stringify(state))}
+      function readJson(key,fallback){try{const value=localStorage.getItem(key);return value?JSON.parse(value):fallback}catch(e){return fallback}}
+      function toast(message){const node=$("#toast");node.textContent=message;node.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>node.classList.remove("show"),1500)}
+      function titleCase(v){v=String(v||"");return v.charAt(0).toUpperCase()+v.slice(1)}
+      function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+    })();
+  </script>
+</body>
+</html>

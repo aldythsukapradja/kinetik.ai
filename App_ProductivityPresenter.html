@@ -1,0 +1,156 @@
+<!--
+KINETIK APP STANDARD v0.4
+
+PRODUCT:
+Kinetik is a private life app for Family and Friends circles.
+
+APP:
+Presenter Studio is a polished standalone Kinetik mini app.
+Analog inspiration: Orai, Speeko, PitchVantage.
+
+IMPORTANT:
+- This app closely follows proven interaction patterns from the analog target.
+- It does not copy protected logos, mascots, names, exact artwork, or exact trade dress.
+- It keeps distinct Kinetik branding, icons, colors, and data contracts.
+
+ARCHITECTURE:
+- Single self-contained HTML file.
+- Inline CSS and vanilla JavaScript only.
+- No external frameworks, CDNs, build step, or backend dependency.
+- Works directly from a local HTML file.
+- Works embedded inside the Kinetik shell iframe.
+- Uses AppBridge messages for future parent-shell persistence.
+- Uses localStorage for direct-file progress and history.
+
+KINETIK INTEGRATION:
+- Detects embedded mode with window.self !== window.top.
+- Listens for INIT_APP messages.
+- Accepts circleId, circleType, memberId, personId, theme, and context.
+- Sends DATA_CREATE, DATA_UPDATE, OPEN_APP, and SHOW_TOAST bridge messages when relevant.
+
+DATA:
+- Storage prefix: kinetik_polished_productivity_presenter.
+- App-specific future records should be stored in AppRecords with circleId, appId, collection, and payloadJson.
+- This app must not access another circle's data.
+
+React/TypeScript app scale-up note:
+- This single-file app should later become a React feature module or standalone route.
+- It must keep using AppBridge/DataAPI contracts.
+- It must not access another circle's data.
+- It must store app-specific data in AppRecords using circleId, appId, collection, payloadJson.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7faff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Presenter Studio">
+  <title>Presenter Studio - Kinetik Polished</title>
+  <script type="application/kinetik-app+json">
+{
+  "appId": "productivity-presenter",
+  "name": "Presenter Studio",
+  "shortName": "PS",
+  "icon": "🎤",
+  "gradient": [
+    "#4f7cff",
+    "#111827"
+  ],
+  "category": "scenario coach",
+  "tagline": "Practice sharper openings and calmer delivery.",
+  "about": "A presentation coach with hook scoring, Q&A scenarios, and delivery confidence reps.",
+  "audience": "family and friends circles",
+  "circleTypes": [
+    "family",
+    "friends",
+    "learning",
+    "work"
+  ],
+  "worksWith": [
+    "offline",
+    "standalone",
+    "embedded",
+    "local progress"
+  ],
+  "status": "live",
+  "minMembers": 1
+}
+  </script>
+  <style>
+    :root{color-scheme:light;--bg:#f5f8ff;--bg2:#edf3ff;--ink:#111827;--muted:#6b7280;--faint:#9ca3af;--panel:rgba(255,255,255,.88);--solid:#fff;--line:rgba(17,24,39,.1);--a:#4f7cff;--b:#111827;--good:#18b978;--warn:#f59e0b;--bad:#ef4444;--shadow:0 22px 58px rgba(35,52,92,.15);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    [data-theme=dark]{color-scheme:dark;--bg:#08101b;--bg2:#101827;--ink:#f8fbff;--muted:#b9c3d2;--faint:#7e8aa2;--panel:rgba(18,26,42,.82);--solid:#111827;--line:rgba(255,255,255,.12);--shadow:0 22px 58px rgba(0,0,0,.35)}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;width:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink)}body{background:radial-gradient(circle at 12% -8%,color-mix(in srgb,var(--a) 22%,transparent),transparent 34%),radial-gradient(circle at 94% 0%,color-mix(in srgb,var(--b) 18%,transparent),transparent 32%),linear-gradient(180deg,var(--bg),var(--bg2))}button,input{font:inherit}button{border:0;color:inherit;cursor:pointer}h1,h2,h3,p{margin:0}.app{height:100dvh;max-width:780px;margin:0 auto;display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden}.top{padding:calc(12px + env(safe-area-inset-top,0px)) 16px 10px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px}.mark{width:46px;height:46px;border-radius:16px;color:white;display:grid;place-items:center;font-size:12px;font-weight:950;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 16px 32px color-mix(in srgb,var(--a) 24%,transparent)}.title{min-width:0}.title h1{font-size:22px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title p{margin-top:5px;color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.iconbtn{width:42px;height:42px;border-radius:15px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 10px 24px rgba(0,0,0,.06)}.content{min-height:0;overflow-y:auto;overflow-x:hidden;padding:6px 16px 18px;scrollbar-width:none}.content::-webkit-scrollbar,.hscroll::-webkit-scrollbar{display:none}.hero{position:relative;overflow:hidden;border-radius:30px;padding:18px;color:white;background:radial-gradient(circle at 14% 0%,rgba(255,255,255,.34),transparent 31%),linear-gradient(135deg,var(--a),var(--b));box-shadow:var(--shadow)}.hero:after{content:"";position:absolute;right:-42px;bottom:-78px;width:172px;height:172px;border-radius:50%;border:30px solid rgba(255,255,255,.14)}.hero>*{position:relative;z-index:1}.kicker{font-size:11px;letter-spacing:1.8px;font-weight:950;text-transform:uppercase;opacity:.74}.hero h2{margin-top:8px;font-size:29px;line-height:1;letter-spacing:0}.hero p{margin-top:9px;color:rgba(255,255,255,.82);font-size:13px;line-height:1.35;font-weight:750}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:16px}.stat{min-height:62px;padding:10px;border-radius:18px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(14px)}.stat b{font-size:20px}.stat span{display:block;margin-top:6px;color:rgba(255,255,255,.78);font-size:11px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .tabs{position:sticky;top:0;z-index:2;margin:14px 0;padding:4px;border-radius:18px;background:rgba(255,255,255,.64);border:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;backdrop-filter:blur(20px)}[data-theme=dark] .tabs{background:rgba(18,26,42,.74)}.tab{height:40px;border-radius:14px;background:transparent;color:var(--muted);font-size:13px;font-weight:950}.tab.active{color:var(--ink);background:var(--solid);box-shadow:0 8px 18px rgba(0,0,0,.08)}.screen{display:none}.screen.active{display:block;animation:rise .24s ease both}@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.panel{border-radius:28px;background:var(--panel);border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.08);padding:15px;margin-bottom:12px;backdrop-filter:blur(20px)}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.panel h3{font-size:16px}.muted{color:var(--muted);font-size:12px;font-weight:760;line-height:1.35}.chip{display:inline-flex;align-items:center;height:29px;padding:0 10px;border-radius:999px;background:color-mix(in srgb,var(--a) 10%,transparent);border:1px solid color-mix(in srgb,var(--a) 17%,transparent);color:var(--a);font-size:11px;font-weight:950}.grid{display:grid;gap:10px}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.tile,.choice{width:100%;border-radius:22px;background:var(--solid);border:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.06);padding:13px;text-align:left;transition:transform .18s ease,border-color .18s ease}.tile:active,.choice:active,.primary:active,.secondary:active,.iconbtn:active{transform:scale(.98)}.tile b{display:block;font-size:14px;line-height:1.15}.tile span{display:block;margin-top:6px;color:var(--muted);font-size:12px;font-weight:750;line-height:1.3}.visual{min-height:168px;border-radius:26px;background:radial-gradient(circle at 22% 20%,color-mix(in srgb,var(--a) 18%,transparent),transparent 32%),linear-gradient(135deg,color-mix(in srgb,var(--a) 8%,var(--solid)),color-mix(in srgb,var(--b) 8%,var(--solid)));border:1px solid var(--line);display:grid;place-items:center;margin-bottom:13px;overflow:hidden}.visual svg{width:min(250px,82vw);height:150px}.prompt{font-size:24px;line-height:1.08;margin-top:10px}.choices{display:grid;gap:10px;margin-top:14px}.choice{font-size:15px;font-weight:900;min-height:58px;border-width:2px}.choice.selected{border-color:var(--a);background:color-mix(in srgb,var(--a) 9%,var(--solid))}.choice.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--solid))}.choice.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--solid))}.feedback{display:none;margin-top:12px;border-radius:20px;padding:13px;background:color-mix(in srgb,var(--a) 8%,var(--solid));border:1px solid var(--line)}.feedback.show{display:block}.feedback b{font-size:14px}.feedback p{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.35;font-weight:750}.meter{height:9px;border-radius:999px;background:rgba(120,140,160,.16);overflow:hidden;margin-top:10px}.meter i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--a),var(--b));transition:width .28s ease}.hscroll{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none}.appcard{flex:0 0 70%;min-height:150px;color:white;background:linear-gradient(135deg,var(--x),var(--y));border:0}.appicon{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-weight:950}.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}.check{width:34px;height:34px;border-radius:13px;display:grid;place-items:center;background:rgba(120,140,160,.14);border:1px solid var(--line);font-weight:950;color:transparent}.done .check{color:white;background:linear-gradient(135deg,var(--good),var(--a));border-color:transparent}.done .row-label{text-decoration:line-through;color:var(--muted)}.row-label{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.inputrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}.input{height:48px;border-radius:17px;border:1px solid var(--line);padding:0 13px;background:var(--solid);color:var(--ink)}.bottom{padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--bg) 94%,transparent) 35%,var(--bg));backdrop-filter:blur(18px)}.primary,.secondary{min-height:52px;border-radius:18px;font-size:15px;font-weight:950;display:inline-flex;align-items:center;justify-content:center;gap:8px}.primary{color:white;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 16px 32px color-mix(in srgb,var(--a) 24%,transparent)}.primary:disabled{opacity:.5;box-shadow:none}.secondary{min-width:56px;background:var(--panel);border:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.06)}.toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom,0px));transform:translate(-50%,18px);opacity:0;max-width:min(340px,calc(100vw - 32px));padding:12px 14px;border-radius:999px;background:rgba(17,24,39,.92);color:white;font-size:13px;font-weight:850;box-shadow:0 18px 42px rgba(0,0,0,.22);transition:opacity .22s ease,transform .22s ease;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
+    .clock{width:158px;height:158px;border-radius:50%;background:var(--solid);border:8px solid color-mix(in srgb,var(--a) 22%,white);position:relative;box-shadow:0 18px 38px rgba(0,0,0,.13)}.hand{position:absolute;left:50%;top:50%;height:5px;border-radius:999px;background:var(--ink);transform-origin:left center}.hour{width:43px}.minute{width:60px;background:var(--a)}.pin{position:absolute;left:50%;top:50%;width:13px;height:13px;border-radius:50%;background:var(--b);transform:translate(-50%,-50%)}.tick{position:absolute;left:50%;top:50%;font-size:12px;font-weight:950;color:var(--muted)}
+    @media (min-width:720px){.content{padding-inline:24px}.two{grid-template-columns:repeat(3,minmax(0,1fr))}.appcard{flex-basis:38%}}@media (max-width:370px){.top{padding-inline:12px}.hero h2{font-size:25px}.prompt{font-size:22px}.two{grid-template-columns:1fr}.appcard{flex-basis:82%}}@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <div class="mark">PS</div>
+      <div class="title"><h1>Presenter Studio</h1><p id="circleLine">Standalone circle</p></div>
+      <button class="iconbtn" id="themeBtn" type="button" aria-label="Toggle theme">T</button>
+    </header>
+    <section class="content">
+      <article class="hero"><div class="kicker">Orai, Speeko, PitchVantage</div><h2>Practice sharper openings and calmer delivery.</h2><p>A presentation coach with hook scoring, Q&amp;A scenarios, and delivery confidence reps.</p><div class="stats"><div class="stat"><b id="score">0</b><span>score</span></div><div class="stat"><b id="streak">0</b><span>streak</span></div><div class="stat"><b id="session">0</b><span>sessions</span></div></div></article>
+      <nav class="tabs"><button class="tab active" data-tab="play" type="button">Play</button><button class="tab" data-tab="progress" type="button">Progress</button><button class="tab" data-tab="about" type="button">About</button></nav>
+      <section class="screen active" id="play"></section>
+      <section class="screen" id="progress"></section>
+      <section class="screen" id="about"></section>
+    </section>
+    <footer class="bottom"><button class="primary" id="primary" type="button">Continue</button><button class="secondary" id="next" type="button">Next</button></footer>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script>
+    (function(){
+      "use strict";
+      const App={"appId":"productivity-presenter","name":"Presenter Studio","file":"App_ProductivityPresenter.html","icon":"PS","gradient":["#4f7cff","#111827"],"category":"scenario coach","mode":"coach","analog":"Orai, Speeko, PitchVantage","tagline":"Practice sharper openings and calmer delivery.","about":"A presentation coach with hook scoring, Q&A scenarios, and delivery confidence reps.","items":[{"title":"Opening Hook","kind":"Hook","prompt":"Best presentation opening?","choices":["State the tension","Read agenda only","Apologize","Start with filler"],"answer":0,"explain":"Tension gives the audience a reason to listen.","visual":"wave"},{"title":"Slide Rhythm","kind":"Slides","prompt":"A slide is crowded. What should you do?","choices":["One idea per slide","Shrink text","Read all text","Add more bullets"],"answer":0,"explain":"One idea helps the audience track you.","visual":"wave"},{"title":"Q&A Calm","kind":"Q&A","prompt":"You get a tough question. Best first move?","choices":["Acknowledge and clarify","Deflect","Argue","Panic"],"answer":0,"explain":"Clarifying buys time and builds trust.","visual":"wave"}]};
+      const Config={appId:App.appId,storagePrefix:"kinetik_polished_productivity_presenter",collection:App.mode+"_records"};
+      const $=(s)=>document.querySelector(s);const $$=(s)=>Array.from(document.querySelectorAll(s));
+      const fallback={theme:"light",circleId:"standalone_demo",circleType:"family",personId:"standalone_person",memberId:"standalone_person",tab:"play",index:0,selected:null,checked:false,score:0,streak:0,sessions:0,done:{},customItems:[],installed:{},step:0,wheel:0};
+      const state=Object.assign(fallback,readJson(Config.storagePrefix+"_state",{}));state.embedded=isEmbedded();setTheme(state.theme,false);listen();wire();render();
+      function isEmbedded(){try{return window.self!==window.top}catch(e){return true}}
+      const Bridge={send(type,payload){if(!state.embedded||!window.parent||window.parent===window)return;window.parent.postMessage({type,appId:Config.appId,payload},"*")}};
+      function listen(){window.addEventListener("message",(event)=>{const msg=event.data||{};if(msg.type!=="INIT_APP")return;const p=msg.payload||{};state.circleId=p.circleId||state.circleId;state.circleType=p.circleType||state.circleType;state.personId=p.personId||p.memberId||state.personId;state.memberId=p.memberId||p.personId||state.memberId;if(p.theme)setTheme(p.theme,true);save();render()})}
+      function wire(){$("#themeBtn").onclick=()=>setTheme(state.theme==="dark"?"light":"dark",true);$$(".tab").forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;save();render()});$("#next").onclick=next;$("#primary").onclick=primary}
+      function render(){$("#circleLine").textContent=(state.embedded?"":"Standalone ")+titleCase(state.circleType)+" circle";$("#score").textContent=state.score;$("#streak").textContent=state.streak;$("#session").textContent=state.sessions;$$(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===state.tab));["play","progress","about"].forEach(id=>$("#"+id).classList.toggle("active",state.tab===id));renderPlay();renderProgress();renderAbout();renderButtons()}
+      function renderPlay(){if(App.mode==="store")return renderStore();if(App.mode==="grocery")return renderGrocery();if(App.mode==="recipe")return renderRecipe();return renderChallenge()}
+      function renderStore(){const featured=(App.items||[]).slice(0,6);$("#play").innerHTML='<div class="hscroll">'+featured.map(item=>'<button class="tile appcard" style="--x:'+item.gradient[0]+';--y:'+item.gradient[1]+'" data-app="'+escAttr(item.appId)+'"><span class="appicon">'+esc(item.icon)+'</span><b>'+esc(item.name)+'</b><span>'+esc(item.tagline)+'</span><span class="chip">'+(state.installed[item.appId]?"OPEN":"GET")+'</span></button>').join("")+'</div><div class="panel" style="margin-top:12px"><div class="panel-head"><div><h3>Browse all apps</h3><p class="muted">Local Kinetik apps discovered from rebuilt manifests.</p></div></div><div class="grid two">'+(App.items||[]).map(item=>'<button class="tile" data-app="'+escAttr(item.appId)+'"><span class="row"><span class="appicon" style="background:linear-gradient(135deg,'+item.gradient[0]+','+item.gradient[1]+')">'+esc(item.icon)+'</span><span><b>'+esc(item.name)+'</b><span>'+esc(item.category)+'</span></span><span class="chip">'+(state.installed[item.appId]?"OPEN":"GET")+'</span></span></button>').join("")+'</div></div>';$$("[data-app]").forEach(btn=>btn.onclick=()=>{const id=btn.dataset.app;state.installed[id]=true;complete(1,"Installed "+id);Bridge.send("OPEN_APP",{appId:id})})}
+      function renderGrocery(){const sections=App.sections||[];$("#play").innerHTML=sections.map((section,idx)=>{const items=idx===0?section.items.concat(state.customItems||[]):section.items;return '<div class="panel"><div class="panel-head"><div><h3>'+esc(section.icon)+' '+esc(section.name)+'</h3><p class="muted">Tap to move items into cart.</p></div><span class="chip">'+items.filter(item=>state.done[section.name+'_'+item]).length+'/'+items.length+'</span></div><div class="grid">'+items.map(item=>row(section.name,item)).join("")+'</div></div>'}).join("")+'<div class="panel"><div class="inputrow"><input class="input" id="addInput" placeholder="Add item"><button class="secondary" id="addBtn">Add</button></div></div>';$$("[data-item]").forEach(b=>b.onclick=()=>{state.done[b.dataset.key]=!state.done[b.dataset.key];complete(1,"Cart updated");render()});$("#addBtn").onclick=()=>{const input=$("#addInput");const text=input.value.trim();if(!text)return;state.customItems.push(text);input.value="";complete(1,"Item added");render()}}
+      function renderRecipe(){const recipe=(App.recipes||[])[state.index%(App.recipes||[]).length];const active=recipe.steps[state.step]||recipe.steps[0];$("#play").innerHTML='<div class="panel"><div class="visual">'+visual("recipe",recipe)+'</div><span class="chip">'+esc(recipe.type)+' / '+recipe.time+' min</span><h2 class="prompt">'+esc(recipe.title)+'</h2><p class="muted">'+esc(recipe.ingredients.join(", "))+'</p></div><div class="panel"><div class="panel-head"><div><h3>Step '+(state.step+1)+'</h3><p class="muted">'+esc(active)+'</p></div><span class="chip">'+(state.step+1)+'/'+recipe.steps.length+'</span></div><div class="meter"><i style="width:'+Math.round((state.step+1)/recipe.steps.length*100)+'%"></i></div></div>'}
+      function renderChallenge(){const item=current();$("#play").innerHTML='<div class="panel"><div class="visual">'+visual(item.visual||App.mode,item)+'</div><span class="chip">'+esc(item.kind)+'</span><h2 class="prompt">'+esc(item.prompt)+'</h2><div class="choices">'+item.choices.map((choice,i)=>'<button class="choice '+choiceClass(i)+'" data-choice="'+i+'">'+esc(choice)+'</button>').join("")+'</div><div class="feedback '+(state.checked?'show':'')+'"><b>'+(state.selected===item.answer?'Correct':'Try this idea')+'</b><p>'+esc(item.explain)+'</p></div></div>';$$("[data-choice]").forEach(btn=>btn.onclick=()=>{if(state.checked)return;state.selected=Number(btn.dataset.choice);save();render()})}
+      function renderProgress(){$("#progress").innerHTML='<div class="panel"><div class="panel-head"><div><h3>Progress</h3><p class="muted">Saved locally for this app and circle.</p></div><span class="chip">'+state.score+' pts</span></div><div class="meter"><i style="width:'+Math.min(100,state.score%101)+'%"></i></div></div><div class="grid two"><div class="tile"><b>'+state.score+'</b><span>Total score</span></div><div class="tile"><b>'+state.streak+'</b><span>Current streak</span></div><div class="tile"><b>'+state.sessions+'</b><span>Sessions</span></div><div class="tile"><b>'+esc(App.analog)+'</b><span>Analog target</span></div></div>'}
+      function renderAbout(){$("#about").innerHTML='<div class="panel"><span class="chip">'+esc(App.mode)+'</span><h2 class="prompt">'+esc(App.name)+'</h2><p class="muted">'+esc(App.about)+'</p></div><div class="panel"><h3>Interaction target</h3><p class="muted">'+esc(App.analog)+'</p></div>'}
+      function renderButtons(){if(App.mode==="store"){$("#primary").textContent="Install featured";$("#next").textContent="Reset"}else if(App.mode==="grocery"){$("#primary").textContent="Finish shop";$("#next").textContent="Clear"}else if(App.mode==="recipe"){$("#primary").textContent="Next step";$("#next").textContent="Recipe"}else{$("#primary").textContent=state.checked?"Continue":"Check";$("#primary").disabled=state.selected==null;$("#next").textContent=App.mode==="spin"?"Spin":"Next"}}
+      function primary(){if(App.mode==="store"){const first=(App.items||[])[0];if(first){state.installed[first.appId]=true;complete(1,"Featured installed");render()}return}if(App.mode==="grocery"){complete(8,"Shopping saved");return}if(App.mode==="recipe"){const recipe=(App.recipes||[])[state.index%(App.recipes||[]).length];if(state.step<recipe.steps.length-1){state.step++;save();render()}else{complete(12,"Cooked saved");next()}return}if(!state.checked){check();return}next()}
+      function check(){const item=current();state.checked=true;if(state.selected===item.answer){complete(10,"Correct")}else{state.streak=0;toast(item.explain);save()}Bridge.send("DATA_CREATE",{collection:Config.collection,payload:record({item:item.title,correct:state.selected===item.answer})});render()}
+      function next(){if(App.mode==="store"){state.installed={};save();render();return}if(App.mode==="grocery"){state.done={};save();render();return}if(App.mode==="recipe"){state.index=(state.index+1)%(App.recipes||[]).length;state.step=0;save();render();return}if(App.mode==="spin"){state.wheel=(state.wheel+137)%360}state.index=(state.index+1)%(App.items||[]).length;state.selected=null;state.checked=false;save();render()}
+      function complete(points,msg){state.score+=points;state.streak+=1;state.sessions+=1;save();toast(msg||"Saved")}
+      function row(section,item){const key=section+"_"+item;return '<button class="tile '+(state.done[key]?'done':'')+'" data-item data-key="'+escAttr(key)+'"><span class="row"><span class="check">OK</span><span class="row-label">'+esc(item)+'</span><span class="muted">'+esc(section)+'</span></span></button>'}
+      function current(){return (App.items||[])[state.index%(App.items||[]).length]}
+      function choiceClass(i){if(state.selected===i&&!state.checked)return"selected";if(state.checked&&i===current().answer)return"correct";if(state.checked&&i===state.selected&&i!==current().answer)return"wrong";return""}
+      function record(extra){return Object.assign({circleId:state.circleId,circleType:state.circleType,appId:Config.appId,ownerPersonId:state.personId,createdAt:new Date().toISOString()},extra||{})}
+      function visual(type,item){if(type==="clock")return clock(item.hour,item.minute);if(type==="spin")return spin();if(type==="bars"||type==="line"||type==="dots"||type==="people")return chart(type);if(type==="chess")return board();if(type==="ladder")return ladder();if(type==="wave")return wave();if(type==="habit")return habit();if(type==="wisdom")return wisdom();return generic(type)}
+      function generic(type){return '<svg viewBox="0 0 260 150"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--a)"/><stop offset="1" stop-color="var(--b)"/></linearGradient></defs><rect x="30" y="26" width="200" height="98" rx="32" fill="url(#g)" opacity=".16"/><circle cx="82" cy="76" r="34" fill="url(#g)" opacity=".88"/><rect x="126" y="48" width="78" height="14" rx="7" fill="url(#g)" opacity=".9"/><rect x="126" y="72" width="56" height="14" rx="7" fill="url(#g)" opacity=".56"/><rect x="126" y="96" width="88" height="14" rx="7" fill="url(#g)" opacity=".34"/></svg>'}
+      function chart(type){return '<svg viewBox="0 0 260 150"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--a)"/><stop offset="1" stop-color="var(--b)"/></linearGradient></defs><rect x="38" y="30" width="184" height="96" rx="24" fill="url(#g)" opacity=".12"/><rect x="60" y="82" width="24" height="28" rx="8" fill="url(#g)"/><rect x="102" y="58" width="24" height="52" rx="8" fill="url(#g)" opacity=".82"/><rect x="144" y="72" width="24" height="38" rx="8" fill="url(#g)" opacity=".62"/><path d="M62 88c28-36 54 10 82-20s42-2 58-28" fill="none" stroke="url(#g)" stroke-width="8" stroke-linecap="round" opacity="'+(type==="line"?".9":".2")+'"/></svg>'}
+      function board(){let s='<svg viewBox="0 0 160 160">';for(let y=0;y<4;y++){for(let x=0;x<4;x++){s+='<rect x="'+(22+x*28)+'" y="'+(22+y*28)+'" width="28" height="28" fill="'+((x+y)%2?'var(--a)':'var(--solid)')+'" opacity="'+((x+y)%2?'.72':'1')+'"/>'}}return s+'<text x="80" y="94" text-anchor="middle" font-size="34" fill="var(--ink)">N</text></svg>'}
+      function ladder(){return '<svg viewBox="0 0 260 150"><path d="M58 120 188 28" stroke="var(--a)" stroke-width="12" stroke-linecap="round"/><path d="M86 126 216 34" stroke="var(--b)" stroke-width="12" stroke-linecap="round"/><path d="M82 104h54M112 82h54M142 60h54" stroke="var(--ink)" stroke-width="8" stroke-linecap="round" opacity=".38"/><circle cx="68" cy="122" r="18" fill="var(--a)"/></svg>'}
+      function spin(){return '<svg viewBox="0 0 180 180"><g style="transform-origin:90px 90px;transform:rotate('+state.wheel+'deg)"><circle cx="90" cy="90" r="68" fill="var(--a)"/><path d="M90 90 90 22A68 68 0 0 1 158 90Z" fill="var(--b)"/><path d="M90 90 158 90A68 68 0 0 1 90 158Z" fill="var(--warn)"/><path d="M90 90 90 158A68 68 0 0 1 22 90Z" fill="var(--good)"/></g><circle cx="90" cy="90" r="22" fill="var(--solid)"/><path d="M90 8 104 34H76Z" fill="var(--ink)"/></svg>'}
+      function wave(){return '<svg viewBox="0 0 260 150"><path d="M40 94c24-42 42 42 68 0s42 42 68 0 28 12 44 0" fill="none" stroke="var(--a)" stroke-width="11" stroke-linecap="round"/><rect x="58" y="38" width="144" height="24" rx="12" fill="var(--b)" opacity=".22"/><circle cx="82" cy="104" r="18" fill="var(--b)"/></svg>'}
+      function habit(){return '<svg viewBox="0 0 260 150"><circle cx="92" cy="78" r="44" fill="var(--good)" opacity=".8"/><path d="M78 78l12 12 28-32" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><rect x="146" y="48" width="58" height="16" rx="8" fill="var(--a)"/><rect x="146" y="76" width="78" height="16" rx="8" fill="var(--b)" opacity=".7"/></svg>'}
+      function wisdom(){return '<svg viewBox="0 0 260 150"><rect x="66" y="26" width="128" height="98" rx="24" fill="var(--solid)" stroke="var(--line)"/><rect x="84" y="48" width="92" height="12" rx="6" fill="var(--a)"/><rect x="84" y="72" width="68" height="12" rx="6" fill="var(--b)" opacity=".72"/><rect x="84" y="96" width="84" height="12" rx="6" fill="var(--warn)" opacity=".56"/></svg>'}
+      function clock(h,m){const hour=((h%12)*30)+(m*.5)-90;const min=(m*6)-90;let ticks="";[12,3,6,9].forEach(n=>{const a=(n===12?-90:n*30-90)*Math.PI/180;const x=79+Math.cos(a)*61;const y=79+Math.sin(a)*61;ticks+='<span class="tick" style="transform:translate(-50%,-50%);left:'+x+'px;top:'+y+'px">'+n+'</span>'});return '<div class="clock">'+ticks+'<span class="hand hour" style="transform:rotate('+hour+'deg)"></span><span class="hand minute" style="transform:rotate('+min+'deg)"></span><span class="pin"></span></div>'}
+      function setTheme(theme,persist){state.theme=theme==="dark"?"dark":"light";document.documentElement.dataset.theme=state.theme;document.querySelector("meta[name='theme-color']").setAttribute("content",state.theme==="dark"?"#08101b":"#f7faff");if(persist)save()}
+      function save(){localStorage.setItem(Config.storagePrefix+"_state",JSON.stringify(state))}
+      function readJson(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
+      function toast(m){const n=$("#toast");n.textContent=m;n.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>n.classList.remove("show"),1500)}
+      function titleCase(v){v=String(v||"");return v.charAt(0).toUpperCase()+v.slice(1)}
+      function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+      function escAttr(v){return esc(v).replace(/\x60/g,"&#096;")}
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#b875ff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Guitar">
+  <title>Guitar Basics - Kinetik</title>
+  <script type="application/kinetik-app+json">
+{
+  "appId": "learn-guitar",
+  "name": "Guitar Basics",
+  "shortName": "Guitar",
+  "icon": "🎸",
+  "gradient": [
+    "#b875ff",
+    "#ffbd4a"
+  ],
+  "category": "music",
+  "tagline": "One chord, one rhythm.",
+  "about": "A tiny guitar practice app for beginners. Learn one chord or rhythm per session, use a short timer, and track whether the sound is clean or needs work.",
+  "audience": "all",
+  "circleTypes": [
+    "family",
+    "friends"
+  ],
+  "worksWith": [
+    "offline",
+    "standalone"
+  ],
+  "status": "live",
+  "minMembers": 1
+}
+  </script>
+  <style>
+
+    :root{
+      color-scheme:light;
+      --bg:#fbf3ff;
+      --ink:#1f2633;
+      --muted:rgba(31,38,51,.62);
+      --panel:rgba(255,255,255,.80);
+      --soft:rgba(255,255,255,.60);
+      --line:rgba(31,38,51,.13);
+      --accent:#b875ff;
+      --accent2:#ffbd4a;
+      --good:#22b98f;
+      --danger:#e85f7a;
+      --shadow:0 22px 60px rgba(42,66,96,.16);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    [data-theme="dark"]{
+      color-scheme:dark;
+      --bg:#0d111b;
+      --ink:#f7f9ff;
+      --muted:rgba(247,249,255,.66);
+      --panel:rgba(22,28,42,.82);
+      --soft:rgba(255,255,255,.08);
+      --line:rgba(255,255,255,.13);
+      --shadow:0 24px 70px rgba(0,0,0,.38);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      min-height:100dvh;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 14% 8%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 34%),
+        radial-gradient(circle at 88% 10%,color-mix(in srgb,var(--accent2) 20%,transparent),transparent 31%),
+        linear-gradient(180deg,rgba(255,255,255,.25),transparent 50%),
+        var(--bg);
+      overflow:hidden;
+    }
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .app{
+      width:min(100%,680px);
+      height:100dvh;
+      margin:0 auto;
+      padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+      display:grid;
+      grid-template-rows:auto minmax(0,1fr);
+      gap:10px;
+      overflow:hidden;
+    }
+    .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .brand{display:flex;align-items:center;gap:9px;min-width:0}
+    .mark{width:38px;height:38px;border-radius:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 12px 30px color-mix(in srgb,var(--accent) 24%,transparent);display:grid;place-items:center;color:white;font-size:22px;font-weight:950}
+    h1,h2,h3,p{margin:0}
+    h1{font-size:21px;line-height:1;font-weight:950;letter-spacing:0}
+    h2{font-size:18px;line-height:1.1}
+    h3{font-size:14px;line-height:1.1}
+    .small{font-size:12px;color:var(--muted);line-height:1.25}
+    .screen{display:none;min-height:0;overflow:hidden}
+    .screen.active{display:grid}
+    .center{align-content:center;gap:12px}
+    .main{grid-template-rows:auto minmax(0,1fr) auto;gap:10px}
+    .panel{border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(24px) saturate(1.16);box-shadow:var(--shadow);border-radius:24px;padding:14px;overflow:hidden}
+    .flat{box-shadow:none;background:var(--soft)}
+    .grid{display:grid;gap:9px}
+    .two{grid-template-columns:1fr 1fr}
+    .row{display:flex;align-items:center;gap:8px}
+    .between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    label{display:grid;gap:6px;font-size:12px;font-weight:850;color:var(--muted)}
+    input,select{width:100%;min-height:44px;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:15px;padding:11px 12px;outline:none}
+    input:focus,select:focus{border-color:color-mix(in srgb,var(--accent) 55%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent)}
+    .btn{min-height:44px;border:0;border-radius:15px;padding:10px 13px;color:white;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 12px 28px color-mix(in srgb,var(--accent) 22%,transparent);font-weight:950;display:inline-flex;align-items:center;justify-content:center;gap:7px;touch-action:manipulation}
+    .btn.secondary{background:var(--soft);border:1px solid var(--line);color:var(--ink);box-shadow:none}
+    .btn.danger{background:rgba(232,95,122,.12);border:1px solid rgba(232,95,122,.28);color:var(--danger);box-shadow:none}
+    .icon-btn{width:44px;height:44px;border-radius:15px;padding:0;flex:0 0 auto}
+    .chip{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:7px 10px;color:var(--muted);font-size:12px;font-weight:850}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+    .stat{border:1px solid var(--line);background:var(--soft);border-radius:16px;padding:9px;text-align:center;min-width:0}
+    .stat b{display:block;font-size:18px;line-height:1}
+    .stat span{display:block;margin-top:3px;font-size:11px;color:var(--muted);font-weight:850}
+    .scroll{min-height:0;overflow:auto;display:grid;gap:9px;overscroll-behavior:contain}
+    .drawer{position:fixed;inset:auto 10px calc(10px + env(safe-area-inset-bottom)) 10px;max-width:660px;margin:0 auto;transform:translateY(120%);transition:transform .22s ease;z-index:10}
+    .drawer.open{transform:translateY(0)}
+    .drawer-list{max-height:48dvh;overflow:auto;display:grid;gap:7px;margin-top:10px}
+    .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translate(-50%,120px);background:#1d2635;color:white;border-radius:999px;padding:10px 14px;box-shadow:0 12px 34px rgba(0,0,0,.24);font-size:13px;font-weight:850;transition:transform .22s ease;z-index:20}
+    .toast.show{transform:translate(-50%,0)}
+    @media(max-height:720px){.app{gap:7px;padding-top:calc(8px + env(safe-area-inset-top));padding-bottom:calc(8px + env(safe-area-inset-bottom))}.panel{padding:11px}}
+
+    .lesson{display:grid;gap:12px;text-align:left}
+    .coach-visual{height:118px;border-radius:24px;border:1px solid var(--line);background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,var(--soft)),var(--soft));display:grid;place-items:center;overflow:hidden}
+    .coach-visual svg{width:min(100%,260px);height:108px}
+    .hero-title{font-size:30px;line-height:1.02;font-weight:950;letter-spacing:0}
+    .cue{border:1px solid var(--line);background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 14%,var(--soft)),var(--soft));border-radius:20px;padding:13px;font-weight:850}
+    .steps{display:grid;gap:8px}
+    .step{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;border:1px solid var(--line);background:var(--soft);border-radius:16px;padding:10px}
+    .badge{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;font-size:12px;font-weight:950}
+    .timer{font-size:42px;font-weight:950;text-align:center;line-height:1}
+    .rate{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <div class="brand"><div class="mark">🎸</div><div><h1>Guitar Basics</h1><p class="small" id="circleLabel">Standalone circle</p></div></div>
+      <div class="row"><button class="btn secondary icon-btn" id="libraryBtn" aria-label="Open library">☰</button><button class="btn secondary icon-btn" id="themeBtn" aria-label="Toggle theme"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v2.2M12 18.8V21M4.4 4.4 6 6M18 18l1.6 1.6M3 12h2.2M18.8 12H21M4.4 19.6 6 18M18 6l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="2"/></svg></button></div>
+    </header>
+    <section class="screen center active" id="setupScreen">
+      <div class="panel grid">
+        <div><h2>Today&#39;s practice</h2><p class="small">Short guitar sessions that are easy to start.</p></div>
+        <label>Name<input id="playerName" maxlength="18" value="Player 1" autocomplete="off"></label>
+        <label>Level<select id="levelSelect"><option>Beginner</option><option>Improving</option><option>Confident</option></select></label>
+        <button class="btn" id="startBtn">Start Today</button>
+      </div>
+    </section>
+    <section class="screen main" id="mainScreen">
+      <div class="stats"><div class="stat"><b id="streakText">0</b><span>streak</span></div><div class="stat"><b id="doneText">0</b><span>done</span></div><div class="stat"><b id="scoreText">-</b><span>last</span></div></div>
+      <div class="scroll">
+        <div class="panel lesson">
+          <div class="coach-visual"><svg viewBox="0 0 260 108" aria-hidden="true"><rect x="42" y="24" width="176" height="60" rx="18" fill="none" stroke="currentColor" stroke-width="5" opacity=".32"/><path d="M70 24v60M104 24v60M138 24v60M172 24v60" stroke="var(--accent)" stroke-width="4"/><path d="M42 38h176M42 54h176M42 70h176" stroke="currentColor" stroke-width="3" opacity=".38"/><circle cx="104" cy="54" r="10" fill="var(--accent2)"/><circle cx="138" cy="70" r="10" fill="var(--accent)"/></svg></div>
+          <span class="chip" id="levelPill">Beginner</span>
+          <h2 class="hero-title" id="lessonTitle">Lesson</h2>
+          <div class="cue" id="lessonCue">Cue</div>
+          <div class="steps" id="lessonSteps"></div>
+        </div>
+        <div class="panel grid">
+          <div class="timer" id="timerText">03:00</div>
+          <div class="two grid"><button class="btn" id="timerBtn">Start Timer</button><button class="btn secondary" id="resetTimerBtn">Reset</button></div>
+        </div>
+      </div>
+      <div class="panel grid">
+        <div class="rate"><button class="btn secondary" data-rate="Hard">Hard</button><button class="btn secondary" data-rate="Good">Good</button><button class="btn secondary" data-rate="Easy">Easy</button></div>
+        <button class="btn" id="doneBtn">Done</button>
+      </div>
+    </section>
+  </main>
+  <aside class="drawer panel" id="drawer"><div class="between"><div><h2>Library</h2><p class="small">Small lessons, one step at a time.</p></div><button class="btn secondary icon-btn" id="closeDrawer">×</button></div><div class="drawer-list" id="libraryList"></div></aside>
+  <div class="toast" id="toast">Saved</div>
+  <script>
+    const AppConfig={"appId":"learn-guitar","storagePrefix":"kinetik_learn_guitar","sessionCollection":"learning_sessions"};
+    const lessons=[{"id":"guitar-em","level":"Beginner","title":"E Minor Chord","cue":"Two fingers, relaxed wrist, clear strings.","steps":["Place fingers on the second fret of A and D strings.","Strum slowly from thick to thin strings.","Lift and reset the shape 10 times."],"seconds":180},{"id":"guitar-g","level":"Beginner","title":"G Major Shape","cue":"Curve fingers so open strings can ring.","steps":["Place fingers slowly one by one.","Strum once and listen for buzzing.","Reset the chord 8 times."],"seconds":180},{"id":"guitar-down","level":"Beginner","title":"Down Strum Pulse","cue":"Keep your wrist loose, not stiff.","steps":["Mute strings with fretting hand.","Strum down four times evenly.","Repeat for one full minute."],"seconds":180},{"id":"guitar-c","level":"Improving","title":"C Major Switch","cue":"Move slowly first. Clean beats fast.","steps":["Hold C major.","Switch to G major without rushing.","Repeat the switch 12 times."],"seconds":210},{"id":"guitar-d","level":"Improving","title":"D Major Ring","cue":"Small triangle shape, thumb relaxed.","steps":["Build the D chord from top finger down.","Strum only four thin strings.","Fix any muted string."],"seconds":210},{"id":"guitar-strum","level":"Improving","title":"Down Down Up","cue":"The hand keeps moving even when you skip.","steps":["Count one and two and.","Strum down, down, up.","Repeat with E minor."],"seconds":210},{"id":"guitar-am","level":"Confident","title":"A Minor Mood","cue":"Same family as C, but darker sound.","steps":["Build A minor slowly.","Switch between C and A minor.","Listen for the mood change."],"seconds":240},{"id":"guitar-progression","level":"Confident","title":"Four Chord Loop","cue":"Smooth transitions matter more than speed.","steps":["Play G, D, Em, C.","One strum per chord.","Repeat the loop for three minutes."],"seconds":240}];
+    const $=(id)=>document.getElementById(id);
+    const state={circleId:"standalone_demo",circleType:"friends",playerId:"local_player",theme:localStorage.getItem(AppConfig.storagePrefix+"_theme")||"light",name:"Player 1",level:"Beginner",lesson:null,remaining:0,timer:null,rating:"-",progress:readProgress()};
+    if(window.self!==window.top)document.body.classList.add("embedded");
+    document.documentElement.dataset.theme=state.theme;
+    const Bridge={send(type,payload){if(window.parent&&window.parent!==window)window.parent.postMessage({type,appId:AppConfig.appId,payload},"*")}};
+    addEventListener("message",(event)=>{const msg=event.data||{};if(msg.type!=="INIT_APP")return;const ctx=msg.payload||{};state.circleId=ctx.circleId||state.circleId;state.circleType=ctx.circleType||state.circleType;state.playerId=ctx.personId||state.playerId;if(ctx.theme)setTheme(ctx.theme);$("circleLabel").textContent=state.circleType+" circle";});
+    function setTheme(theme){state.theme=theme==="dark"?"dark":"light";document.documentElement.dataset.theme=state.theme;localStorage.setItem(AppConfig.storagePrefix+"_theme",state.theme)}
+    function toast(message){$("toast").textContent=message;$("toast").classList.add("show");Bridge.send("SHOW_TOAST",{message});clearTimeout(toast.timer);toast.timer=setTimeout(()=>$("toast").classList.remove("show"),1500)}
+    function readProgress(){try{return JSON.parse(localStorage.getItem(AppConfig.storagePrefix+"_progress")||'{"done":0,"streak":0,"lastDate":"","lastRating":"-","index":0}')}catch{return {done:0,streak:0,lastDate:"",lastRating:"-",index:0}}}
+    function saveProgress(){localStorage.setItem(AppConfig.storagePrefix+"_progress",JSON.stringify(state.progress))}
+    function start(){state.name=$("playerName").value.trim()||"Player 1";state.level=$("levelSelect").value;pickLesson();$("setupScreen").classList.remove("active");$("mainScreen").classList.add("active");render()}
+    function pickLesson(){const pool=lessons.filter((lesson)=>lesson.level===state.level);state.lesson=pool[state.progress.index%pool.length]||lessons[0];state.remaining=state.lesson.seconds;clearInterval(state.timer);state.timer=null}
+    function render(){const lesson=state.lesson;$("levelPill").textContent=state.level;$("lessonTitle").textContent=lesson.title;$("lessonCue").textContent=lesson.cue;$("lessonSteps").innerHTML=lesson.steps.map((step,index)=>'<div class="step"><span class="badge">'+(index+1)+'</span><span>'+escapeHtml(step)+'</span></div>').join("");$("streakText").textContent=state.progress.streak;$("doneText").textContent=state.progress.done;$("scoreText").textContent=state.progress.lastRating;$("timerText").textContent=formatTime(state.remaining);$("timerBtn").textContent=state.timer?"Pause Timer":"Start Timer";renderLibrary()}
+    function renderLibrary(){const pool=lessons.filter((lesson)=>lesson.level===state.level);$("libraryList").innerHTML=pool.map((lesson,index)=>'<div class="step"><span class="badge">'+(index+1)+'</span><div><b>'+escapeHtml(lesson.title)+'</b><div class="small">'+escapeHtml(lesson.cue)+'</div></div></div>').join("")}
+    function toggleTimer(){if(state.timer){clearInterval(state.timer);state.timer=null;render();return}state.timer=setInterval(()=>{state.remaining=Math.max(0,state.remaining-1);$("timerText").textContent=formatTime(state.remaining);if(state.remaining===0){clearInterval(state.timer);state.timer=null;toast("Timer complete");render()}},1000);render()}
+    function markDone(){const today=new Date().toISOString().slice(0,10);if(state.progress.lastDate!==today){state.progress.streak+=1;state.progress.lastDate=today}state.progress.done+=1;state.progress.index+=1;state.progress.lastRating=state.rating;saveProgress();Bridge.send("DATA_CREATE",{collection:AppConfig.sessionCollection,payload:{circleId:state.circleId,appId:AppConfig.appId,playerName:state.name,lessonId:state.lesson.id,level:state.level,rating:state.rating,createdAt:new Date().toISOString()}});toast("Progress saved");pickLesson();render()}
+    function formatTime(seconds){const m=String(Math.floor(seconds/60)).padStart(2,"0");const s=String(seconds%60).padStart(2,"0");return m+":"+s}
+    function escapeHtml(text){return String(text).replace(/[&<>"']/g,(m)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+    $("themeBtn").onclick=()=>setTheme(state.theme==="dark"?"light":"dark");$("startBtn").onclick=start;$("timerBtn").onclick=toggleTimer;$("resetTimerBtn").onclick=()=>{state.remaining=state.lesson.seconds;clearInterval(state.timer);state.timer=null;render()};$("doneBtn").onclick=markDone;document.querySelectorAll("[data-rate]").forEach((button)=>button.onclick=()=>{state.rating=button.dataset.rate;toast("Marked "+state.rating);render()});$("libraryBtn").onclick=()=>{$("drawer").classList.add("open");renderLibrary()};$("closeDrawer").onclick=()=>$("drawer").classList.remove("open");
+  </script>
+</body>
+</html>

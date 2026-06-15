@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#eaf7f2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Padel Academy">
+  <title>Padel Academy - Kinetik</title>
+  <script type="application/kinetik-app+json">
+{
+  "appId": "padel-academy",
+  "name": "Padel Academy",
+  "shortName": "Academy",
+  "icon": "🎓",
+  "gradient": ["#13b981", "#2563eb"],
+  "category": "sports",
+  "tagline": "Padel skills, match by match.",
+  "about": "A local-first padel training path for technique, tactics, movement, rules, and match IQ. It tracks player level, drill sessions, review items, and editable content while reserving a backend adapter for future Kinetik integration.",
+  "audience": "family",
+  "circleTypes": ["family", "friends"],
+  "worksWith": ["offline", "standalone", "training", "future-backend"],
+  "status": "live",
+  "minMembers": 1
+}
+  </script>
+  <style>
+    :root{
+      color-scheme:light;
+      --bg0:#eaf7f2;
+      --bg1:#edf3fb;
+      --ink:#111827;
+      --muted:rgba(17,24,39,.68);
+      --faint:rgba(17,24,39,.46);
+      --panel:rgba(255,255,255,.74);
+      --panel2:rgba(255,255,255,.9);
+      --soft:rgba(21,79,109,.07);
+      --line:rgba(52,83,116,.18);
+      --accent:#13b981;
+      --accent2:#2563eb;
+      --good:#059669;
+      --warn:#d97706;
+      --bad:#dc2626;
+      --court:#0f9f74;
+      --shadow:0 24px 70px rgba(35,66,97,.18);
+      --sat:env(safe-area-inset-top,0px);
+      --sab:env(safe-area-inset-bottom,0px);
+      --navh:calc(64px + max(var(--sab),8px));
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+    }
+    html[data-theme="dark"]{
+      color-scheme:dark;
+      --bg0:#07120f;
+      --bg1:#0a1322;
+      --ink:#eef7ff;
+      --muted:rgba(238,247,255,.68);
+      --faint:rgba(238,247,255,.42);
+      --panel:rgba(14,24,37,.7);
+      --panel2:rgba(18,31,48,.86);
+      --soft:rgba(255,255,255,.08);
+      --line:rgba(255,255,255,.13);
+      --shadow:0 24px 80px rgba(0,0,0,.42);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;overflow:hidden}
+    body{
+      min-height:100dvh;
+      color:var(--ink);
+      background:
+        radial-gradient(105% 80% at 85% -10%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 57%),
+        radial-gradient(110% 80% at 0% 105%,color-mix(in srgb,var(--accent2) 16%,transparent),transparent 55%),
+        linear-gradient(165deg,var(--bg0),var(--bg1) 62%,var(--bg0));
+      -webkit-font-smoothing:antialiased;
+    }
+    button,input,select,textarea{font:inherit;color:inherit}
+    button{border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    h1,h2,h3,p{margin:0}
+    h1{font-size:21px;line-height:1;font-weight:900;letter-spacing:0}
+    h2{font-size:22px;line-height:1.08;letter-spacing:0}
+    h3{font-size:15px;line-height:1.2;letter-spacing:0}
+    .app{height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;max-width:980px;margin:0 auto;padding-top:var(--sat);overflow:hidden}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px 8px}
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .mark{width:42px;height:42px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 18px 44px color-mix(in srgb,var(--accent) 24%,transparent);color:#fff;display:grid;place-items:center;font-weight:950;font-size:15px;letter-spacing:0}
+    .brand-title{display:grid;gap:3px;min-width:0}
+    .brand-title span,.small{font-size:12px;color:var(--muted);line-height:1.28}
+    .top-actions{display:flex;align-items:center;gap:8px;min-width:0}
+    select,input,textarea{border:1px solid var(--line);background:var(--soft);border-radius:16px;min-height:44px;padding:10px 12px;outline:none}
+    select:focus,input:focus,textarea:focus{border-color:color-mix(in srgb,var(--accent2) 48%,var(--line));box-shadow:0 0 0 4px color-mix(in srgb,var(--accent2) 14%,transparent)}
+    #playerSelect{max-width:150px}
+    .icon-btn{width:44px;height:44px;border-radius:16px;border:1px solid var(--line);background:var(--soft);display:grid;place-items:center;flex:0 0 auto}
+    .main{min-height:0;overflow:hidden;padding:0 12px}
+    .view{display:none;height:100%;min-height:0;overflow:auto;padding:4px 0 12px;overscroll-behavior:contain}
+    .view.active{display:block}
+    .stack{display:grid;gap:12px}
+    .grid{display:grid;gap:10px}
+    .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .panel,.card{
+      border:1px solid var(--line);
+      background:var(--panel);
+      backdrop-filter:blur(24px) saturate(1.12);
+      box-shadow:var(--shadow);
+      border-radius:24px;
+      overflow:hidden;
+    }
+    .panel{padding:16px}
+    .card{padding:14px;box-shadow:none;background:var(--panel2)}
+    .flat{background:var(--soft);box-shadow:none}
+    .row{display:flex;align-items:center;gap:9px;min-width:0}
+    .between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .muted{color:var(--muted);line-height:1.4}
+    .label{font-size:11px;line-height:1.1;font-weight:950;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+    .pill,.chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:999px;border:1px solid var(--line);background:var(--soft);min-height:32px;padding:7px 10px;color:var(--muted);font-size:12px;font-weight:850}
+    .chip.on,.pill.good{background:color-mix(in srgb,var(--accent) 14%,transparent);border-color:color-mix(in srgb,var(--accent) 38%,var(--line));color:color-mix(in srgb,var(--accent) 76%,var(--ink))}
+    .pill.warn{background:rgba(217,119,6,.12);border-color:rgba(217,119,6,.25);color:var(--warn)}
+    .pill.bad{background:rgba(220,38,38,.1);border-color:rgba(220,38,38,.22);color:var(--bad)}
+    .btn{min-height:46px;border-radius:18px;padding:11px 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 18px 42px color-mix(in srgb,var(--accent2) 19%,transparent);color:#fff;font-weight:950}
+    .btn.secondary{background:var(--soft);border:1px solid var(--line);color:var(--ink);box-shadow:none}
+    .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);box-shadow:none}
+    .btn.danger{background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.25);color:var(--bad);box-shadow:none}
+    .hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(132px,.8fr);gap:12px;align-items:stretch;min-height:204px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 92%,#fff),color-mix(in srgb,var(--accent2) 92%,#111));color:white}
+    .hero .label,.hero .muted{color:rgba(255,255,255,.78)}
+    .hero-copy{display:grid;align-content:center;gap:10px;min-width:0}
+    .hero h2{font-size:27px;max-width:11ch}
+    .court-card{border-radius:22px;background:rgba(255,255,255,.17);border:1px solid rgba(255,255,255,.2);display:grid;place-items:center;min-height:164px;padding:8px;overflow:hidden}
+    .court{width:100%;max-width:220px;aspect-ratio:10/16;border:2px solid rgba(255,255,255,.8);border-radius:18px;position:relative;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04))}
+    .court:before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.72)}
+    .court:after{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;background:rgba(255,255,255,.5)}
+    .net{position:absolute;left:0;right:0;top:49%;height:8px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.32) 0 6px,rgba(255,255,255,.06) 6px 11px)}
+    .player-dot{position:absolute;width:18px;height:18px;border-radius:50%;background:white;box-shadow:0 0 0 7px rgba(255,255,255,.18)}
+    .p1{left:28%;bottom:22%}.p2{right:23%;bottom:31%}.p3{left:24%;top:20%}.p4{right:27%;top:28%}
+    .stat{border:1px solid var(--line);background:var(--soft);border-radius:18px;padding:10px;min-width:0}
+    .stat b{display:block;font-size:20px;line-height:1}
+    .stat span{display:block;margin-top:4px;font-size:11px;color:var(--muted);font-weight:850}
+    .progress-bar{height:9px;background:var(--soft);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+    .progress-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:inherit;transition:width .25s ease}
+    .lesson-card{display:grid;gap:10px}
+    .lesson-card.locked{opacity:.6}
+    .lesson-card h3{font-size:16px}
+    .mini-map{display:grid;gap:8px}
+    .objective-row{display:grid;grid-template-columns:88px minmax(0,1fr);gap:9px;border:1px solid var(--line);background:var(--soft);border-radius:16px;padding:10px}
+    .objective-row b{font-size:12px}
+    .module-list{display:flex;flex-wrap:wrap;gap:8px;padding-bottom:2px}
+    .nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;height:var(--navh);padding:8px 10px max(8px,var(--sab));border-top:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 92%,transparent);backdrop-filter:blur(24px)}
+    .tab{border-radius:18px;display:grid;place-items:center;color:var(--faint);font-size:11px;font-weight:900;gap:2px}
+    .tab svg{width:20px;height:20px}
+    .tab.active{background:color-mix(in srgb,var(--accent2) 14%,transparent);color:var(--accent2)}
+    .lesson-player{position:fixed;inset:0;z-index:20;display:none;background:linear-gradient(165deg,var(--bg0),var(--bg1));color:var(--ink)}
+    .lesson-player.open{display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+    .lesson-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(10px + var(--sat)) 12px 10px;border-bottom:1px solid var(--line);background:var(--panel)}
+    .lesson-body{min-height:0;overflow:auto;padding:12px;display:grid;gap:12px}
+    .lesson-foot{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:10px 12px calc(10px + var(--sab));border-top:1px solid var(--line);background:var(--panel)}
+    .feedback{border:1px solid var(--line);background:var(--soft);border-radius:17px;padding:11px;line-height:1.38}
+    .feedback.good{background:rgba(5,150,105,.12);border-color:rgba(5,150,105,.25)}
+    .feedback.bad{background:rgba(220,38,38,.1);border-color:rgba(220,38,38,.24)}
+    .timer{font-size:44px;font-weight:950;letter-spacing:0;text-align:center}
+    .answer-grid{display:grid;gap:9px}
+    .answer{border:1px solid var(--line);background:var(--panel2);border-radius:17px;min-height:48px;padding:11px 12px;text-align:left;font-weight:850}
+    .answer.selected{border-color:var(--accent2);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent2) 12%,transparent)}
+    .answer.correct{background:rgba(5,150,105,.13);border-color:rgba(5,150,105,.32)}
+    .answer.wrong{background:rgba(220,38,38,.12);border-color:rgba(220,38,38,.3)}
+    .rating-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .rating-grid .btn{min-height:64px;box-shadow:none}
+    .rating-grid .btn.selected{border-color:color-mix(in srgb,var(--accent) 42%,var(--line));background:color-mix(in srgb,var(--accent) 14%,var(--soft));box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 12%,transparent)}
+    .sheet-layer{position:fixed;inset:0;z-index:30;display:none;align-items:end;background:rgba(6,12,24,.34)}
+    .sheet-layer.on{display:flex}
+    .sheet{width:min(100%,720px);max-height:82dvh;margin:0 auto;background:var(--panel2);border:1px solid var(--line);border-radius:26px 26px 0 0;box-shadow:0 -26px 80px rgba(0,0,0,.22);padding:16px 16px calc(16px + var(--sab));overflow:auto}
+    .sheet textarea{width:100%;min-height:240px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+    .toast{position:fixed;left:50%;bottom:calc(var(--navh) + 14px);transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;z-index:40;background:rgba(17,24,39,.92);color:white;border-radius:999px;padding:10px 14px;font-weight:850;box-shadow:0 16px 44px rgba(0,0,0,.25);transition:.2s ease;max-width:calc(100% - 30px);text-align:center}
+    .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+    @media (min-width:760px){
+      .view{padding-bottom:18px}
+      .desktop-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(280px,.95fr);gap:12px;align-items:start}
+      .hero h2{font-size:34px}
+    }
+    @media (max-width:520px){
+      .topbar{gap:8px;padding-left:8px;padding-right:8px}
+      .brand-title h1{font-size:19px}
+      .hero{grid-template-columns:1fr;min-height:auto}
+      .hero h2{font-size:25px;max-width:12ch}
+      .court-card{min-height:128px}
+      .court{max-width:164px;aspect-ratio:16/10}
+      #playerSelect{max-width:132px}
+      .two,.three{grid-template-columns:1fr 1fr}
+      .lesson-foot{grid-template-columns:1fr}
+      .lesson-foot .btn{width:100%}
+    }
+    @media (max-width:360px){
+      .top-actions{gap:5px}
+      #playerSelect{max-width:114px}
+      .mark{width:38px;height:38px}
+      .btn{padding-left:12px;padding-right:12px}
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">PA</div>
+        <div class="brand-title">
+          <h1>Padel Academy</h1>
+          <span id="modeLabel">Standalone local mode</span>
+        </div>
+      </div>
+      <div class="top-actions">
+        <select id="playerSelect" aria-label="Player"></select>
+        <button class="icon-btn" id="themeBtn" aria-label="Toggle theme"></button>
+      </div>
+    </header>
+
+    <section class="main">
+      <section class="view active" id="todayView"></section>
+      <section class="view" id="pathView"></section>
+      <section class="view" id="practiceView"></section>
+      <section class="view" id="progressView"></section>
+    </section>
+
+    <nav class="nav" aria-label="Padel Academy navigation">
+      <button class="tab active" data-tab="today"></button>
+      <button class="tab" data-tab="path"></button>
+      <button class="tab" data-tab="practice"></button>
+      <button class="tab" data-tab="progress"></button>
+    </nav>
+  </main>
+
+  <section class="lesson-player" id="lessonPlayer" aria-live="polite">
+    <header class="lesson-head">
+      <div class="row">
+        <button class="icon-btn" id="closeLesson" aria-label="Close lesson"></button>
+        <div>
+          <h3 id="lessonTitle">Lesson</h3>
+          <p class="small" id="lessonMeta"></p>
+        </div>
+      </div>
+      <span class="pill" id="lessonStep">Ready</span>
+    </header>
+    <main class="lesson-body" id="lessonBody"></main>
+    <footer class="lesson-foot">
+      <div class="feedback" id="lessonFeedback">Read the plan, then start the drill.</div>
+      <button class="btn" id="lessonAction">Start Drill</button>
+    </footer>
+  </section>
+
+  <section class="sheet-layer" id="sheetLayer">
+    <div class="sheet">
+      <div class="between" style="margin-bottom:12px">
+        <div>
+          <span class="label">Padel Academy</span>
+          <h2 id="sheetTitle">Settings</h2>
+        </div>
+        <button class="icon-btn" id="closeSheet" aria-label="Close sheet"></button>
+      </div>
+      <div id="sheetBody"></div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORE_KEY = "kinetik_padel_academy_v1";
+    const APP_ID = "padel-academy";
+    const DAY = () => new Date().toISOString().slice(0,10);
+    const $ = (id, root=document) => root.getElementById(id);
+    const $$ = (selector, root=document) => Array.from(root.querySelectorAll(selector));
+    const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
+    const uid = (prefix) => prefix + "_" + Math.random().toString(36).slice(2,9);
+
+    const LEVELS = [
+      {id:"foundation", name:"Foundation", short:"Foundation", order:1, description:"Grip, contact, ready position, and simple rally habits."},
+      {id:"club", name:"Club Player", short:"Club", order:2, description:"Volleys, lobs, wall timing, and reliable serve patterns."},
+      {id:"match", name:"Match Ready", short:"Match", order:3, description:"Transitions, partner movement, pressure choices, and point construction."},
+      {id:"competitive", name:"Competitive", short:"Compete", order:4, description:"Pattern reading, formations, decisive overheads, and clutch routines."}
+    ];
+    const MODULES = [
+      {id:"technique", name:"Technique"},
+      {id:"movement", name:"Movement"},
+      {id:"serve-return", name:"Serve/Return"},
+      {id:"walls", name:"Glass"},
+      {id:"net", name:"Net"},
+      {id:"tactics", name:"Tactics"},
+      {id:"match-iq", name:"Match IQ"},
+      {id:"fitness", name:"Fitness"}
+    ];
+    const moduleName = (id) => MODULES.find((item) => item.id === id)?.name || id;
+    const levelName = (id) => LEVELS.find((item) => item.id === id)?.short || id;
+    const levelOrder = (id) => LEVELS.find((item) => item.id === id)?.order || 1;
+
+    function L(level, module, slug, title, focus, explanation, cue, drillSteps, check, timerSeconds=360){
+      return {
+        id:`padel-${level}-${slug}`,
+        programme:"Padel Academy",
+        level,
+        module,
+        title,
+        focus,
+        objectiveId:`pa-${level}-${module}-${slug}`,
+        sourceRef: module === "serve-return" || module === "match-iq" ? "FIP Rules of Padel, rules/scoring alignment; original coaching content." : "Original coaching content.",
+        explanation,
+        cue,
+        drillSteps,
+        timerSeconds,
+        check,
+        mastery:{sessions:2, minimumRating:"good"}
+      };
+    }
+
+    const BASE_LESSONS = [
+      L("foundation","technique","ready-position","Ready Position Reset","Build the neutral stance after every shot.","Good padel starts before the swing. A balanced ready position keeps the racket in front, knees soft, and weight alive so the next ball is not a surprise.","Racket in front, chest quiet, split as they hit.",["Stand on the service line with racket head above the wrist.","Partner feeds ten easy balls to either side.","After each hit, recover to the same ready shape before the next feed.","Score one point only when the recovery happens before the feed."],{prompt:"What is the best recovery cue after hitting?",options:["Watch your shot until it lands","Racket in front and split as they hit","Walk backward to the glass","Stand upright to rest"],answer:"Racket in front and split as they hit",feedback:"The reset matters more than the swing. Recover early."},300),
+      L("foundation","technique","compact-forehand","Compact Forehand Contact","Use a short swing that keeps control under pressure.","Beginners often swing too long. In padel, the court is small and the ball arrives quickly, so a compact take-back gives cleaner timing and fewer late contacts.","Turn the shoulders, keep the swing shorter than you think.",["Start two steps behind the service line.","Drop-feed to your forehand and aim crosscourt at medium speed.","Freeze for one second after contact to check balance.","Do three sets of eight balls and count clean contacts."],{prompt:"Why keep the forehand backswing compact in padel?",options:["To create maximum tennis-style power","To make timing easier in a small court","To hide the racket behind the body","To avoid using the legs"],answer:"To make timing easier in a small court",feedback:"Compact shape buys time and control."},360),
+      L("foundation","technique","stable-backhand","Stable Backhand Block","Make the backhand a reliable control shot.","A stable backhand is a block, not a rescue swing. Keep the face calm, step toward the ball, and send it deep enough to restart the rally.","Quiet racket face, finish toward the target.",["Partner feeds to backhand from the opposite service box.","Block crosscourt with a smooth finish at shoulder height.","Recover to ready position before the next feed.","Aim for twelve controlled balls, not winners."],{prompt:"A stable backhand in padel should usually feel like a...",options:["Large rescue swing","Controlled block through the ball","Jumping overhead","Slice with no follow through"],answer:"Controlled block through the ball",feedback:"Block first. Add variety later."},360),
+      L("foundation","serve-return","controlled-serve","Controlled Underhand Serve","Start points safely with a legal, repeatable serve.","Padel serve is an underhand starter shot. Build a calm routine: bounce, set the feet, contact at or below waist height, and send the ball diagonally into the service box.","Bounce, breathe, brush, recover.",["Place three targets deep in the diagonal service box.","Serve ten balls at 60 percent speed.","After each serve, move one step toward the net and split.","Track how many serves land in and set up a first volley."],{prompt:"What should the serve do first?",options:["Win the point immediately","Start the point legally and help you move forward","Hit the side fence before bouncing","Stay as low as possible into the net"],answer:"Start the point legally and help you move forward",feedback:"A good serve starts the pattern; it does not need to be a winner."},420),
+      L("foundation","walls","first-glass-read","First Glass Read","Learn when to let the ball use the back glass.","The wall is not an emergency. If the ball is deep and rising, letting it bounce into the back glass can give you space and time to play forward again.","If it is deep and climbing, let the glass help.",["Stand near the back line with a partner feeding medium-depth balls.","Call early: 'before' if you hit before glass, 'after' if you let it rebound.","For after-glass balls, wait, step forward, and guide the ball crosscourt.","Finish with five calm after-glass returns in a row."],{prompt:"When is it often smart to use the back glass?",options:["When the ball is deep and still rising","When the ball is short near the net","On every serve return","Only after you lose balance"],answer:"When the ball is deep and still rising",feedback:"Depth and height tell you whether the glass can buy time."},420),
+      L("foundation","movement","home-base","Home Base Movement","Recover to the right zone with your partner.","Padel is played in pairs. Your home base changes with the ball: defend behind the service line together, attack near the net together, and avoid leaving a big gap between partners.","Move as a pair, not as two solo players.",["Rally slowly with both players starting behind the service line.","When one ball lands short, both players step up together.","When lobbed, both players recover together.","Pause after each point and check the distance between partners."],{prompt:"What is the safest movement habit in doubles padel?",options:["One player attacks while the partner stays back","Both players move as a pair","The fastest player covers every ball","Stand on opposite sidelines"],answer:"Both players move as a pair",feedback:"Most easy points are lost by spacing, not technique."},360),
+
+      L("club","net","volley-control","Volley Control Window","Own the net with compact volleys.","At net, the racket should work like a small steering wheel. Big swings open gaps. Compact volleys keep pressure without giving away errors.","Catch the ball in front and guide it deep.",["Start one racket length behind the net.","Partner feeds medium balls to both sides.","Volley with a short punch to deep crosscourt targets.","After every volley, reset the racket in front of the chest."],{prompt:"At the net, the best first priority is usually...",options:["A huge winner swing","Control and depth","Dropping the racket low","Turning away from the partner"],answer:"Control and depth",feedback:"Depth keeps the opponents pinned back."},360),
+      L("club","net","bandeja-shape","Bandeja Shape","Use the bandeja to keep the net instead of over-hitting.","The bandeja is a controlled overhead used to maintain position. Contact slightly to the side, keep the face stable, and send the ball deep with enough margin.","Side-on, calm face, deep target.",["Partner lobs to your hitting shoulder.","Move back with side steps, not straight backpedaling.","Strike at 70 percent and aim deep crosscourt.","Recover forward immediately after the shot."],{prompt:"What is the main job of a bandeja?",options:["Finish every point","Keep the net position with control","Hit the ceiling","Avoid moving the feet"],answer:"Keep the net position with control",feedback:"The bandeja is a position shot first."},480),
+      L("club","serve-return","return-depth","Return Depth Habit","Return serves deep enough to stop the server rushing.","A good return makes the server volley from below net height or from an uncomfortable position. Height and depth matter more than speed.","Deep middle is better than fast panic.",["Receive ten serves from the right side.","Return crosscourt or through the middle with a safe margin.","Score two points for a deep return, one for any ball in, zero for an error.","Switch sides and repeat."],{prompt:"A reliable return should usually prioritize...",options:["Maximum speed","Depth and margin","A risky winner down the line","Hitting before the bounce"],answer:"Depth and margin",feedback:"Return depth protects you from the first volley."},420),
+      L("club","walls","back-glass-timing","Back Glass Timing","Wait long enough for the rebound to settle.","Many wall errors happen because the player rushes forward too soon. Let the ball rebound, create space, then move through the ball with a simple finish.","Wait, step, guide.",["Partner feeds deep balls that hit the back glass.","Start by exaggerating the wait and saying 'now' before moving.","Guide the ball crosscourt at medium pace.","Repeat until the contact point is comfortably in front."],{prompt:"What fixes most rushed back-glass errors?",options:["Swing earlier","Wait for the rebound, then step forward","Stand closer to the wall","Close your racket face completely"],answer:"Wait for the rebound, then step forward",feedback:"Good wall play is mostly patience."},420),
+      L("club","tactics","lob-under-pressure","Lob Under Pressure","Use the lob to reset when defending.","The lob is not a desperate shot. A high, deep lob gives your team time to move from defense back toward neutral or attack.","High enough for time, deep enough for space.",["Start in defense with both players behind the service line.","Partner feeds pressured balls to the corners.","Play a high lob to the opposite back third.","After a good lob, move forward together and call the next position."],{prompt:"The purpose of a defensive lob is to...",options:["Reset the rally and gain time","Show power","Keep both players stuck at the back","Hit the side fence directly"],answer:"Reset the rally and gain time",feedback:"A good lob changes the shape of the point."},480),
+      L("club","tactics","crosscourt-rally","Crosscourt Rally Discipline","Build points through the safer diagonal.","Crosscourt gives more court length and often keeps the ball away from the middle gap. It is the simplest pattern for a stable rally.","Win the pattern before trying the line.",["Rally crosscourt for two minutes without changing direction.","Use medium speed and aim above the net with margin.","Only change direction after three stable crosscourt balls.","Record the longest crosscourt streak."],{prompt:"Why is crosscourt often safer than down the line?",options:["There is more court length and margin","It is always a winner","The net is higher there","The partner cannot help"],answer:"There is more court length and margin",feedback:"Crosscourt is a percentage pattern."},420),
+
+      L("match","tactics","net-takeover","Net Takeover Trigger","Recognize when both players should move forward.","The net is valuable only when taken together at the right moment. A short ball, deep lob, or weak return can be the trigger to advance as a pair.","Call the trigger, go together.",["Play points where either partner may call 'go'.","Move forward together only after a short or floating ball.","If one player stays back, reset and replay the pattern.","Score the point only when the pair moves as one."],{prompt:"The safest net takeover happens when...",options:["Only one player rushes forward","Both partners move after a clear trigger","You move forward after every shot","You ignore the opponent's contact"],answer:"Both partners move after a clear trigger",feedback:"The trigger and the pair movement belong together."},420),
+      L("match","tactics","chiquita","Chiquita Setup","Play a soft, low ball to win the next shot.","A chiquita is a small attacking reset: low over the net, dipping at the volleyer's feet. It is not fast; it creates a weak volley so your team can step in.","Soft, low, then step.",["Start from defense with partner at the net feeding easy balls.","Play a low ball toward the opponent's feet.","Move forward after a successful low dip.","Follow with a controlled volley to the open space."],{prompt:"A chiquita works because it...",options:["Travels fast at the body","Dips low and creates a weak volley","Always hits the back wall","Gives up the net"],answer:"Dips low and creates a weak volley",feedback:"Soft can be attacking when it changes the next ball."},420),
+      L("match","movement","transition-footwork","Transition Footwork","Move from defense to net without crossing feet late.","The transition is where many points fall apart. Use quick recovery steps, keep the racket ready, and split before the opponent hits instead of running through contact.","Move, split, then decide.",["Start two steps behind the service line.","Coach feeds a short ball, then a volley ball.","Approach behind a controlled shot, split, then volley.","Repeat eight times from each side."],{prompt:"During transition, when should you split step?",options:["As the opponent hits","After your volley lands","Only at the back glass","Never during padel"],answer:"As the opponent hits",feedback:"Split timing protects the next reaction."},360),
+      L("match","serve-return","serve-first-volley","Serve Plus First Volley","Connect the serve to the next ball.","The serve is the beginning of a two-shot pattern. A controlled serve followed by a balanced first volley is more useful than a risky serve that leaves you late.","Serve to set up, split to finish.",["Serve at 70 percent to a deep target.","Move toward net immediately after the serve.","Split as the returner contacts the ball.","Volley deep through the middle or crosscourt."],{prompt:"After serving in padel, the server should usually...",options:["Stay still at the back","Move forward and prepare the first volley","Run to the side fence","Turn away from the returner"],answer:"Move forward and prepare the first volley",feedback:"Serve and first volley are one pattern."},480),
+      L("match","walls","defending-corners","Defending Corners","Read double-glass pressure without rushing.","Corner defense needs calm sequencing. Track the ball, make space, and choose a simple target before adding power. The goal is to escape the corner, not win from it every time.","Create space first, target second.",["Partner feeds to the back corner with medium pace.","Call whether it is back glass, side glass, or double glass.","Let the ball separate from the wall before contact.","Recover with a high lob or deep crosscourt ball."],{prompt:"The main goal when defending the corner is to...",options:["Escape with a safe target","Hit a winner immediately","Stand closer to the glass","Swing before reading the rebound"],answer:"Escape with a safe target",feedback:"Corner defense rewards calm spacing."},480),
+      L("match","movement","partner-shadowing","Partner Shadowing","Keep the middle protected as a pair.","When your partner moves wide, your job changes. Shift enough to protect the middle without standing on top of them. Good teams look connected even when stretched.","Follow the ball, protect the middle.",["Play a slow rally where one player is pulled wide.","The partner shifts toward the middle and calls 'middle'.","Freeze after every third shot to check spacing.","Repeat on both sides until movement feels automatic."],{prompt:"When your partner is pulled wide, you should usually...",options:["Shift to protect the middle","Stay fixed on your sideline","Run behind them","Stand at the back wall"],answer:"Shift to protect the middle",feedback:"The middle gap is the first emergency."},360),
+
+      L("competitive","net","vibora-decision","Vibora Decision","Choose when a faster overhead is worth the risk.","The vibora can pressure the side wall, but it is not the answer to every lob. Use it when you are balanced, the lob is attackable, and your partner is ready to close.","Attack only from balance.",["Receive mixed lobs: easy, neutral, and difficult.","Call 'bandeja' or 'vibora' before hitting.","Use vibora only on balanced balls at shoulder-friendly height.","Review whether the choice kept your team in control."],{prompt:"When should you choose a vibora over a bandeja?",options:["When balanced with an attackable lob","Whenever the ball is high","When falling backward","When your partner is out of position"],answer:"When balanced with an attackable lob",feedback:"Shot selection matters more than shot name."},480),
+      L("competitive","tactics","kicksmash-choice","Kicksmash Choice","Know when the smash is the right finish.","A kicksmash is high reward but situational. Court conditions, ball height, your position, and opponent recovery all matter. The best players reject low-percentage finishes.","Finish only when the setup is honest.",["Coach feeds ten lobs of different depth.","Call 'finish', 'bandeja', or 'reset' before contact.","Only smash when the ball is short enough and you are moving forward.","Track decision quality, not just winners."],{prompt:"A smash is a good choice mainly when...",options:["The setup is short and attackable","You are moving backward","You are late and off balance","The ball is below shoulder height"],answer:"The setup is short and attackable",feedback:"A smart non-smash often wins the next ball."},480),
+      L("competitive","tactics","australian-formation","Australian Formation Basics","Use formation to protect strengths and patterns.","Australian formation can keep each player on their preferred side after serve. It needs clear serve targets, planned first movement, and communication before the point starts.","Agree the pattern before the serve.",["Choose server side and receiver target before the serve.","Server and partner start in formation positions.","Serve to the planned target and execute the first movement.","Reset immediately if communication is unclear."],{prompt:"Australian formation requires...",options:["Clear pre-point communication","Random movement after the serve","Only one player at net","No target on the serve"],answer:"Clear pre-point communication",feedback:"Formation without a plan creates confusion."},420),
+      L("competitive","match-iq","golden-point-plan","Deciding Point Plan","Prepare a simple pressure routine for deciding points.","Many club and tournament matches use deciding-point formats. The routine should be boring: choose a serve or return target, breathe, commit, and play the highest-percentage first ball.","Pressure likes simple plans.",["Pick one serve target and one return target for pressure points.","Practice five points starting at deuce or deciding point.","Before each point, say the target out loud.","Review whether the first two shots matched the plan."],{prompt:"Under deciding-point pressure, the best plan is usually...",options:["A simple high-percentage first pattern","A surprise trick shot","No plan at all","Maximum speed on every ball"],answer:"A simple high-percentage first pattern",feedback:"Simple plans survive pressure."},360),
+      L("competitive","match-iq","pattern-reading","Opponent Pattern Reading","Spot repeated choices before they hurt you.","Pattern reading is noticing what happens twice. Does the opponent lob under pressure, return crosscourt, or volley middle? Call it early and adjust before the pattern becomes a problem.","Notice twice, adjust once.",["Play a set of six practice points.","After each point, name one opponent tendency.","Choose one adjustment for the next point.","Review whether the adjustment changed the rally."],{prompt:"A useful pattern is something the opponent...",options:["Repeats under similar pressure","Does once by accident","Says before warmup","Never uses in points"],answer:"Repeats under similar pressure",feedback:"Two similar choices are enough to start testing an adjustment."},420),
+      L("competitive","fitness","pressure-reset","Pressure Reset Between Points","Recover emotionally and physically in ten seconds.","Competitive padel is full of fast momentum swings. A repeatable reset helps you avoid stacking mistakes: breathe, release the last point, name the next target, and reconnect with your partner.","Breathe, target, partner.",["After every practice point, turn away from the net for one breath.","Name the next target with your partner.","Return to ready position before the server starts.","Use the same routine after winners and errors."],{prompt:"A good reset routine should happen...",options:["Only after mistakes","After every point, including winners","Only during changeovers","When the match is already lost"],answer:"After every point, including winners",feedback:"Consistency makes the routine available under pressure."},300)
+    ];
+
+    function defaultStore(){
+      return {
+        theme:"light",
+        backendMode:"local",
+        activePlayerId:"player_1",
+        activeTab:"today",
+        activeModule:"all",
+        players:[
+          {id:"player_1", name:"Aldyth", avatar:"A", level:"club", createdAt:new Date().toISOString()},
+          {id:"player_2", name:"Guest Player", avatar:"G", level:"foundation", createdAt:new Date().toISOString()}
+        ],
+        progress:{},
+        contentOverrides:{}
+      };
+    }
+    function readStore(){
+      try{
+        const raw = localStorage.getItem(STORE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return {};
+      }
+    }
+    function mergeStore(base, saved){
+      const store = {...base, ...saved};
+      store.players = (saved.players && saved.players.length ? saved.players : base.players).map(normalizePlayer);
+      store.activePlayerId = store.players.some((item) => item.id === store.activePlayerId) ? store.activePlayerId : store.players[0].id;
+      store.progress = saved.progress || {};
+      store.contentOverrides = saved.contentOverrides || {};
+      store.theme = store.theme === "dark" ? "dark" : "light";
+      store.backendMode = store.backendMode || "local";
+      store.activeTab = store.activeTab || "today";
+      store.activeModule = store.activeModule || "all";
+      return store;
+    }
+    function normalizePlayer(player){
+      const level = LEVELS.some((item) => item.id === player.level) ? player.level : "foundation";
+      const name = player.name || "Player";
+      return {...player, id:player.id || uid("player"), name, avatar:(player.avatar || name[0] || "P").slice(0,1).toUpperCase(), level};
+    }
+    let state = mergeStore(defaultStore(), readStore());
+
+    const Bridge = {
+      embedded: window.parent && window.parent !== window,
+      context:{circleId:"standalone_demo", circleType:"friends", personId:"local_player", role:"coach", theme:"light", backendMode:"local"},
+      send(type, payload){
+        if(!this.embedded) return;
+        window.parent.postMessage({type, appId:APP_ID, payload}, "*");
+      }
+    };
+    const PadelBackendAdapter = {
+      mode(){ return Bridge.context.backendMode || state.backendMode || "local"; },
+      loadProfiles(){ return state.players; },
+      saveProfile(player){ const idx = state.players.findIndex((item) => item.id === player.id); if(idx >= 0) state.players[idx] = normalizePlayer(player); else state.players.push(normalizePlayer(player)); save(); this.emit("padel_profiles", player); },
+      loadProgress(playerId){ return ensureProgress(playerId); },
+      recordAttempt(payload){ ensureProgress(payload.playerId).sessions.unshift(payload); ensureProgress(payload.playerId).sessions = ensureProgress(payload.playerId).sessions.slice(0,120); save(); this.emit("padel_sessions", payload); },
+      saveMastery(playerId, objectiveId, value){ const progress = ensureProgress(playerId); progress.mastery[objectiveId] = Math.max(progress.mastery[objectiveId] || 0, value); save(); this.emit("padel_mastery", {playerId, objectiveId, value, updatedAt:new Date().toISOString()}); },
+      loadContentOverrides(){ return state.contentOverrides; },
+      saveContentOverride(lessonId, lesson){ state.contentOverrides[lessonId] = lesson; save(); this.emit("padel_content_overrides", {lessonId, lesson, updatedAt:new Date().toISOString()}); },
+      exportSnapshot(){ return JSON.stringify({appId:APP_ID, generatedAt:new Date().toISOString(), store:state}, null, 2); },
+      importSnapshot(text){ const parsed = JSON.parse(text); const next = parsed.store || parsed; state = mergeStore(defaultStore(), next); save(); this.emit("padel_snapshots", {importedAt:new Date().toISOString(), playerCount:state.players.length}); },
+      emit(collection, payload){ if(this.mode() === "bridge-v1" || Bridge.embedded) Bridge.send("DATA_CREATE", {collection, payload}); }
+    };
+
+    let activeSession = null;
+    let timerHandle = null;
+
+    function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+    function player(){ return state.players.find((item) => item.id === state.activePlayerId) || state.players[0]; }
+    function ensureProgress(playerId=state.activePlayerId){
+      if(!state.progress[playerId]) state.progress[playerId] = {streak:0,lastTrainDate:"",lessonStatus:{},mastery:{},review:[],sessions:[]};
+      return state.progress[playerId];
+    }
+    function lessons(){
+      return BASE_LESSONS.map((item) => ({...item, ...(state.contentOverrides[item.id] || {})}));
+    }
+    function lessonById(id){ return lessons().find((item) => item.id === id); }
+    function levelLessons(level=player().level){ return lessons().filter((item) => item.level === level); }
+    function lessonStatus(lessonId){ return ensureProgress().lessonStatus[lessonId] || {attempts:0,completed:0,bestRating:0,mastered:false,lastRating:""}; }
+    function ratingValue(rating){ return {hard:1,good:2,easy:3}[rating] || 0; }
+    function ratingText(rating){ return ({hard:"Needs reps",good:"Solid",easy:"Confident"}[rating] || "Not rated"); }
+    function masteryPercent(){
+      const current = levelLessons(player().level);
+      if(!current.length) return 0;
+      return Math.round(current.filter((item) => lessonStatus(item.id).mastered).length / current.length * 100);
+    }
+    function completedCount(){ return Object.values(ensureProgress().lessonStatus).filter((item) => item.completed > 0).length; }
+    function recommendLesson(){
+      const current = levelLessons(player().level);
+      return current.find((item) => !lessonStatus(item.id).mastered) || current[0] || lessons()[0];
+    }
+    function reviewItems(){ return ensureProgress().review.slice(0,8); }
+
+    function icon(name){
+      const data = {
+        moon:"M21 12.8A8.5 8.5 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z",
+        sun:"M12 4V2m0 20v-2m8-8h2M2 12h2m13.7-5.7 1.4-1.4M4.9 19.1l1.4-1.4m0-11.4L4.9 4.9m14.2 14.2-1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z",
+        home:"M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3v-9.5Z",
+        path:"M5 19c4 0 4-4 8-4s4-4 6-8M6 7h.01M12 12h.01M18 5h.01",
+        practice:"M8 5h8M8 9h8M8 13h5M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z",
+        progress:"M4 19V5m0 14h16M8 16v-5m4 5V8m4 8v-9",
+        play:"M8 5v14l11-7-11-7Z",
+        close:"M18 6 6 18M6 6l12 12",
+        back:"M15 18 9 12l6-6",
+        edit:"M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z",
+        download:"M12 3v12m0 0 4-4m-4 4-4-4M5 21h14",
+        plus:"M12 5v14M5 12h14",
+        reset:"M4 4v6h6M20 20v-6h-6M5 15a7 7 0 0 0 12 3M19 9A7 7 0 0 0 7 6"
+      };
+      const path = data[name] || data.play;
+      return `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="${path}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+
+    function init(){
+      document.documentElement.dataset.theme = state.theme;
+      bindStatic();
+      renderAll();
+      addEventListener("message", (event) => {
+        const msg = event.data || {};
+        if(msg.type !== "INIT_APP") return;
+        Bridge.embedded = true;
+        Bridge.context = {...Bridge.context, ...(msg.payload || {})};
+        state.backendMode = Bridge.context.backendMode || "bridge-v1";
+        if(Bridge.context.theme){
+          state.theme = Bridge.context.theme === "dark" ? "dark" : "light";
+          document.documentElement.dataset.theme = state.theme;
+        }
+        save();
+        renderAll();
+      });
+    }
+    function bindStatic(){
+      $("themeBtn").onclick = () => { state.theme = state.theme === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = state.theme; save(); renderTop(); };
+      $("playerSelect").onchange = (event) => { state.activePlayerId = event.target.value; save(); renderAll(); };
+      $$("[data-tab]").forEach((button) => button.onclick = () => { state.activeTab = button.dataset.tab; save(); renderAll(); });
+      $("closeLesson").onclick = closeLesson;
+      $("lessonAction").onclick = lessonAction;
+      $("closeSheet").onclick = closeSheet;
+      $("sheetLayer").onclick = (event) => { if(event.target === $("sheetLayer")) closeSheet(); };
+    }
+    function renderAll(){
+      ensureProgress();
+      renderTop();
+      renderNav();
+      renderView();
+    }
+    function renderTop(){
+      $("modeLabel").textContent = Bridge.embedded ? `${Bridge.context.circleType || "Kinetik"} circle` : "Standalone local mode";
+      $("playerSelect").innerHTML = state.players.map((item) => `<option value="${esc(item.id)}">${esc(item.name)}</option>`).join("");
+      $("playerSelect").value = player().id;
+      $("themeBtn").innerHTML = icon(state.theme === "dark" ? "sun" : "moon");
+    }
+    function renderNav(){
+      const tabs = [
+        ["today","Today","home"],
+        ["path","Path","path"],
+        ["practice","Practice","practice"],
+        ["progress","Progress","progress"]
+      ];
+      tabs.forEach(([id,label,ico]) => {
+        const button = document.querySelector(`[data-tab="${id}"]`);
+        button.classList.toggle("active", state.activeTab === id);
+        button.innerHTML = `${icon(ico)}<span>${label}</span>`;
+      });
+      $$(".view").forEach((view) => view.classList.remove("active"));
+      $(`${state.activeTab}View`).classList.add("active");
+    }
+    function renderView(){
+      if(state.activeTab === "today") renderToday();
+      if(state.activeTab === "path") renderPath();
+      if(state.activeTab === "practice") renderPractice();
+      if(state.activeTab === "progress") renderProgress();
+    }
+
+    function renderToday(){
+      const next = recommendLesson();
+      const progress = ensureProgress();
+      const weak = reviewItems();
+      $("todayView").innerHTML = `
+        <div class="stack">
+          <section class="panel hero">
+            <div class="hero-copy">
+              <span class="label">Today's court work</span>
+              <h2>${esc(player().name)}, train one match habit.</h2>
+              <p class="muted">${esc(levelName(player().level))} level - ${esc(moduleName(next.module))}</p>
+              <button class="btn secondary" style="color:var(--ink);background:rgba(255,255,255,.9);width:max-content" data-start="${esc(next.id)}">${icon("play")} Start ${esc(next.title)}</button>
+            </div>
+            <div class="court-card" aria-hidden="true">
+              <div class="court"><span class="net"></span><span class="player-dot p1"></span><span class="player-dot p2"></span><span class="player-dot p3"></span><span class="player-dot p4"></span></div>
+            </div>
+          </section>
+          <section class="three">
+            <div class="stat"><b>${progress.streak}</b><span>day streak</span></div>
+            <div class="stat"><b>${completedCount()}</b><span>lessons done</span></div>
+            <div class="stat"><b>${masteryPercent()}%</b><span>${esc(levelName(player().level))} mastery</span></div>
+          </section>
+          <section class="desktop-grid">
+            <div class="card lesson-card">
+              <div class="between"><span class="label">Recommended</span><span class="pill">${esc(levelName(next.level))}</span></div>
+              <h2>${esc(next.title)}</h2>
+              <p class="muted">${esc(next.focus)}</p>
+              <div class="progress-bar"><i style="width:${lessonStatus(next.id).mastered ? 100 : Math.min(88, lessonStatus(next.id).completed * 44)}%"></i></div>
+              <button class="btn" data-start="${esc(next.id)}">Continue Training</button>
+            </div>
+            <div class="card grid">
+              <div class="between"><h3>Needs review</h3><button class="chip" id="clearReview">clear</button></div>
+              ${weak.length ? weak.map((item) => `<div class="feedback bad"><b>${esc(item.lessonTitle)}</b><br><span class="small">${esc(item.reason)}</span></div>`).join("") : `<p class="muted" style="text-align:center;padding:18px">No weak habits yet. Complete a drill to start tracking review.</p>`}
+            </div>
+          </section>
+          <section class="card grid">
+            <div class="between"><h3>Skill pulse</h3><span class="small">Current level only</span></div>
+            ${skillPulseHtml()}
+          </section>
+        </div>`;
+      bindLessonButtons();
+      const clear = $("clearReview");
+      if(clear) clear.onclick = () => { ensureProgress().review = []; save(); renderAll(); };
+    }
+    function skillPulseHtml(){
+      const current = levelLessons(player().level);
+      const groups = MODULES.map((module) => {
+        const items = current.filter((lesson) => lesson.module === module.id);
+        if(!items.length) return "";
+        const mastered = items.filter((lesson) => lessonStatus(lesson.id).mastered).length;
+        const pct = Math.round(mastered / items.length * 100);
+        return `<div class="objective-row"><b>${esc(module.name)}</b><span><span class="progress-bar"><i style="width:${pct}%"></i></span><span class="small">${mastered}/${items.length} mastered</span></span></div>`;
+      }).filter(Boolean).join("");
+      return groups || `<p class="muted">No lessons in this level yet.</p>`;
+    }
+
+    function renderPath(){
+      const currentLevel = player().level;
+      const activeModule = state.activeModule || "all";
+      const items = levelLessons(currentLevel).filter((lesson) => activeModule === "all" || lesson.module === activeModule);
+      $("pathView").innerHTML = `
+        <div class="stack">
+          <section class="panel grid">
+            <div class="between">
+              <div>
+                <span class="label">Player level</span>
+                <h2>${esc(levelName(currentLevel))}</h2>
+              </div>
+              <span class="pill good">One level for every lesson</span>
+            </div>
+            <p class="muted">${esc(LEVELS.find((item) => item.id === currentLevel)?.description || "")}</p>
+            <div class="module-list">${LEVELS.map((level) => `<button class="chip ${level.id === currentLevel ? "on" : ""}" data-set-level="${esc(level.id)}">${esc(level.short)}</button>`).join("")}</div>
+          </section>
+          <section class="card grid">
+            <div class="between"><h3>Training modules</h3><span class="small">${items.length} lessons</span></div>
+            <div class="module-list">
+              <button class="chip ${activeModule === "all" ? "on" : ""}" data-module="all">All</button>
+              ${MODULES.map((module) => `<button class="chip ${activeModule === module.id ? "on" : ""}" data-module="${esc(module.id)}">${esc(module.name)}</button>`).join("")}
+            </div>
+          </section>
+          <section class="mini-map">
+            ${items.map(lessonCard).join("")}
+          </section>
+        </div>`;
+      $$("[data-set-level]").forEach((button) => button.onclick = () => { const p = player(); p.level = button.dataset.setLevel; PadelBackendAdapter.saveProfile(p); state.activeModule = "all"; renderAll(); toast(`${p.name} set to ${levelName(p.level)} level`); });
+      $$("[data-module]").forEach((button) => button.onclick = () => { state.activeModule = button.dataset.module; save(); renderPath(); });
+      bindLessonButtons();
+    }
+    function lessonCard(item){
+      const status = lessonStatus(item.id);
+      const stateLabel = status.mastered ? "Mastered" : status.completed ? `${ratingText(status.lastRating)}` : "Ready";
+      const stateClass = status.mastered ? "good" : status.lastRating === "hard" ? "warn" : "";
+      return `<article class="card lesson-card">
+        <div class="between"><span class="label">${esc(moduleName(item.module))}</span><span class="pill ${stateClass}">${esc(stateLabel)}</span></div>
+        <h3>${esc(item.title)}</h3>
+        <p class="muted">${esc(item.focus)}</p>
+        <div class="objective-row"><b>Coaching cue</b><span>${esc(item.cue)}</span></div>
+        <button class="btn secondary" data-start="${esc(item.id)}">${status.completed ? "Train Again" : "Start Lesson"}</button>
+      </article>`;
+    }
+
+    function renderPractice(){
+      const review = reviewItems();
+      const cueCards = lessons().filter((item) => item.level === player().level).slice(0,6);
+      $("practiceView").innerHTML = `
+        <div class="stack">
+          <section class="panel grid">
+            <span class="label">Practice loop</span>
+            <h2>Turn weak habits into automatic choices.</h2>
+            <p class="muted">Review is built from hard ratings and missed knowledge checks. Keep it short, then go back to the path.</p>
+            <div class="two">
+              <button class="btn" id="startReview">${icon("play")} Mixed Review</button>
+              <button class="btn secondary" id="quickWall">Glass Timing</button>
+            </div>
+          </section>
+          <section class="card grid">
+            <div class="between"><h3>Review queue</h3><span class="pill">${review.length}</span></div>
+            ${review.length ? review.map((item) => `<button class="feedback bad" style="text-align:left" data-start="${esc(item.lessonId)}"><b>${esc(item.lessonTitle)}</b><br><span class="small">${esc(item.reason)}</span></button>`).join("") : `<p class="muted" style="text-align:center;padding:18px">No review cards yet. Rate a drill as hard or miss a check to add one.</p>`}
+          </section>
+          <section class="card grid">
+            <div class="between"><h3>Flash cues</h3><span class="small">${esc(levelName(player().level))} level</span></div>
+            ${cueCards.map((item) => `<div class="objective-row"><b>${esc(moduleName(item.module))}</b><span>${esc(item.cue)}</span></div>`).join("")}
+          </section>
+        </div>`;
+      $("startReview").onclick = () => startLesson(review[0]?.lessonId || recommendLesson().id);
+      $("quickWall").onclick = () => startLesson(levelLessons(player().level).find((item) => item.module === "walls")?.id || recommendLesson().id);
+      bindLessonButtons();
+    }
+
+    function renderProgress(){
+      const p = player();
+      const progress = ensureProgress();
+      const sessions = progress.sessions.slice(0,8);
+      $("progressView").innerHTML = `
+        <div class="stack">
+          <section class="panel grid">
+            <div class="between">
+              <div>
+                <span class="label">Player dashboard</span>
+                <h2>${esc(p.name)}</h2>
+                <p class="muted">One overall padel level controls the full training path.</p>
+              </div>
+              <button class="btn secondary" id="addPlayer">${icon("plus")} Add</button>
+            </div>
+            <label class="grid"><span class="small">Player level</span><select id="levelSelect">${LEVELS.map((level) => `<option value="${esc(level.id)}">${esc(level.name)}</option>`).join("")}</select></label>
+            <div class="three">
+              <div class="stat"><b>${progress.sessions.length}</b><span>sessions</span></div>
+              <div class="stat"><b>${progress.streak}</b><span>streak</span></div>
+              <div class="stat"><b>${masteryPercent()}%</b><span>level mastery</span></div>
+            </div>
+          </section>
+          <section class="card grid">
+            <div class="between"><h3>Recent sessions</h3><button class="chip" id="resetProgress">reset</button></div>
+            ${sessions.length ? sessions.map((item) => `<div class="feedback"><b>${esc(item.lessonTitle)}</b><br><span class="small">${esc(ratingText(item.rating))} - ${new Date(item.finishedAt).toLocaleDateString()}</span></div>`).join("") : `<p class="muted" style="text-align:center;padding:18px">No sessions recorded yet.</p>`}
+          </section>
+          <section class="card grid">
+            <div class="between"><h3>Content and data</h3><span class="pill">${esc(PadelBackendAdapter.mode())}</span></div>
+            <div class="two">
+              <button class="btn secondary" id="openEditor">${icon("edit")} Editor</button>
+              <button class="btn secondary" id="openExport">${icon("download")} Export</button>
+              <button class="btn secondary" id="openImport">Import</button>
+              <button class="btn secondary" id="openBackend">Backend</button>
+            </div>
+          </section>
+        </div>`;
+      $("levelSelect").value = p.level;
+      $("levelSelect").onchange = (event) => { p.level = event.target.value; PadelBackendAdapter.saveProfile(p); renderAll(); };
+      $("addPlayer").onclick = openAddPlayer;
+      $("openEditor").onclick = openEditor;
+      $("openExport").onclick = openExport;
+      $("openImport").onclick = openImport;
+      $("openBackend").onclick = openBackend;
+      $("resetProgress").onclick = openResetProgress;
+    }
+
+    function bindLessonButtons(){
+      $$("[data-start]").forEach((button) => button.onclick = () => startLesson(button.dataset.start));
+    }
+    function startLesson(lessonId){
+      const item = lessonById(lessonId);
+      if(!item) return toast("Lesson not found");
+      clearTimer();
+      activeSession = {lesson:item, mode:"intro", selected:"", checked:false, correct:false, rating:"good", startedAt:new Date().toISOString(), remaining:item.timerSeconds};
+      $("lessonPlayer").classList.add("open");
+      renderLesson();
+    }
+    function closeLesson(){
+      clearTimer();
+      activeSession = null;
+      $("lessonPlayer").classList.remove("open");
+      renderAll();
+    }
+    function renderLesson(){
+      const item = activeSession.lesson;
+      $("lessonTitle").textContent = item.title;
+      $("lessonMeta").textContent = `${levelName(item.level)} - ${moduleName(item.module)}`;
+      $("closeLesson").innerHTML = icon("back");
+      if(activeSession.mode === "intro") renderLessonIntro(item);
+      if(activeSession.mode === "drill") renderLessonDrill(item);
+      if(activeSession.mode === "check") renderLessonCheck(item);
+      if(activeSession.mode === "result") renderLessonResult(item);
+    }
+    function renderLessonIntro(item){
+      $("lessonStep").textContent = "Plan";
+      $("lessonAction").textContent = "Start Drill";
+      $("lessonFeedback").className = "feedback";
+      $("lessonFeedback").textContent = "Read the model, then start the court drill.";
+      $("lessonBody").innerHTML = `
+        <section class="panel grid">
+          <span class="label">${esc(moduleName(item.module))}</span>
+          <h2>${esc(item.title)}</h2>
+          <p class="muted">${esc(item.explanation)}</p>
+          <div class="objective-row"><b>Goal</b><span>${esc(item.focus)}</span></div>
+          <div class="objective-row"><b>Cue</b><span>${esc(item.cue)}</span></div>
+        </section>
+        <section class="card grid">
+          <div class="between"><h3>Drill steps</h3><span class="pill">${Math.ceil(item.timerSeconds / 60)} min</span></div>
+          ${item.drillSteps.map((step,index) => `<div class="objective-row"><b>Step ${index + 1}</b><span>${esc(step)}</span></div>`).join("")}
+        </section>`;
+    }
+    function renderLessonDrill(item){
+      $("lessonStep").textContent = "Drill";
+      $("lessonAction").textContent = "Knowledge Check";
+      $("lessonFeedback").className = "feedback";
+      $("lessonFeedback").textContent = "Use the timer if you are on court, or tap Knowledge Check after reading the drill.";
+      $("lessonBody").innerHTML = `
+        <section class="panel grid">
+          <span class="label">Training timer</span>
+          <div class="timer" id="timerText">${formatTime(activeSession.remaining)}</div>
+          <div class="two">
+            <button class="btn" id="timerToggle">${icon("play")} ${timerHandle ? "Pause" : "Start"}</button>
+            <button class="btn secondary" id="timerReset">${icon("reset")} Reset</button>
+          </div>
+          <div class="feedback"><b>Coaching cue</b><br>${esc(item.cue)}</div>
+        </section>
+        <section class="card grid">${item.drillSteps.map((step) => `<p class="muted">${esc(step)}</p>`).join("")}</section>`;
+      $("timerToggle").onclick = toggleTimer;
+      $("timerReset").onclick = () => { activeSession.remaining = item.timerSeconds; clearTimer(); renderLessonDrill(item); };
+    }
+    function renderLessonCheck(item){
+      activeSession.checked = false;
+      activeSession.selected = "";
+      $("lessonStep").textContent = "Check";
+      $("lessonAction").textContent = "Check Answer";
+      $("lessonFeedback").className = "feedback";
+      $("lessonFeedback").textContent = "Pick the coaching choice that best matches the lesson.";
+      $("lessonBody").innerHTML = `
+        <section class="panel grid">
+          <span class="label">Knowledge check</span>
+          <h2>${esc(item.check.prompt)}</h2>
+          <div class="answer-grid">
+            ${item.check.options.map((option) => `<button class="answer" data-answer="${esc(option)}">${esc(option)}</button>`).join("")}
+          </div>
+        </section>`;
+      $$("[data-answer]", $("lessonBody")).forEach((button) => button.onclick = () => {
+        activeSession.selected = button.dataset.answer;
+        $$("[data-answer]", $("lessonBody")).forEach((item) => item.classList.toggle("selected", item === button));
+      });
+    }
+    function renderLessonResult(item){
+      $("lessonStep").textContent = "Rate";
+      $("lessonAction").textContent = "Save Session";
+      $("lessonFeedback").className = "feedback " + (activeSession.correct ? "good" : "bad");
+      $("lessonFeedback").textContent = activeSession.correct ? "Good check. Rate the drill feel and save." : `Review note: ${item.check.feedback}`;
+      $("lessonBody").innerHTML = `
+        <section class="panel grid">
+          <span class="label">Session rating</span>
+          <h2>How did this habit feel?</h2>
+          <div class="rating-grid">
+            <button class="btn secondary ${activeSession.rating === "hard" ? "selected" : ""}" data-rate="hard">Hard</button>
+            <button class="btn secondary ${activeSession.rating === "good" ? "selected" : ""}" data-rate="good">Good</button>
+            <button class="btn secondary ${activeSession.rating === "easy" ? "selected" : ""}" data-rate="easy">Easy</button>
+          </div>
+          <div class="objective-row"><b>Answer</b><span>${esc(item.check.answer)}</span></div>
+        </section>`;
+      $$("[data-rate]", $("lessonBody")).forEach((button) => button.onclick = () => { activeSession.rating = button.dataset.rate; renderLessonResult(item); });
+    }
+    function lessonAction(){
+      if(!activeSession) return;
+      if(activeSession.mode === "intro"){ activeSession.mode = "drill"; renderLesson(); return; }
+      if(activeSession.mode === "drill"){ clearTimer(); activeSession.mode = "check"; renderLesson(); return; }
+      if(activeSession.mode === "check"){
+        if(!activeSession.selected) return toast("Choose an answer");
+        if(!activeSession.checked){ checkLessonAnswer(); return; }
+        activeSession.mode = "result"; renderLesson(); return;
+      }
+      if(activeSession.mode === "result") finishLesson();
+    }
+    function checkLessonAnswer(){
+      const item = activeSession.lesson;
+      activeSession.checked = true;
+      activeSession.correct = activeSession.selected === item.check.answer;
+      $$("[data-answer]", $("lessonBody")).forEach((button) => {
+        if(button.dataset.answer === item.check.answer) button.classList.add("correct");
+        else if(button.classList.contains("selected")) button.classList.add("wrong");
+      });
+      $("lessonFeedback").className = "feedback " + (activeSession.correct ? "good" : "bad");
+      $("lessonFeedback").textContent = activeSession.correct ? "Correct. That choice fits the habit." : item.check.feedback;
+      $("lessonAction").textContent = "Rate Session";
+    }
+    function finishLesson(){
+      const item = activeSession.lesson;
+      const p = player();
+      const progress = ensureProgress(p.id);
+      const old = lessonStatus(item.id);
+      const rating = activeSession.rating || "good";
+      const nextCompleted = (old.completed || 0) + 1;
+      const bestRating = Math.max(old.bestRating || 0, ratingValue(rating));
+      const mastered = nextCompleted >= item.mastery.sessions && bestRating >= ratingValue(item.mastery.minimumRating);
+      progress.lessonStatus[item.id] = {attempts:(old.attempts || 0) + 1, completed:nextCompleted, bestRating, lastRating:rating, mastered, lastAt:new Date().toISOString()};
+      if(progress.lastTrainDate !== DAY()){ progress.streak += 1; progress.lastTrainDate = DAY(); }
+      if(!activeSession.correct || rating === "hard"){
+        progress.review = [{lessonId:item.id, lessonTitle:item.title, reason:!activeSession.correct ? item.check.feedback : "Rated hard after practice.", at:new Date().toISOString()}, ...progress.review.filter((entry) => entry.lessonId !== item.id)].slice(0,40);
+      } else {
+        progress.review = progress.review.filter((entry) => entry.lessonId !== item.id);
+      }
+      PadelBackendAdapter.saveMastery(p.id, item.objectiveId, mastered ? 100 : Math.min(90, nextCompleted * 45 + bestRating * 10));
+      PadelBackendAdapter.recordAttempt({playerId:p.id, playerName:p.name, lessonId:item.id, lessonTitle:item.title, level:item.level, module:item.module, rating, correct:activeSession.correct, selected:activeSession.selected, startedAt:activeSession.startedAt, finishedAt:new Date().toISOString()});
+      Bridge.send("SHOW_TOAST", {message:"Padel session saved"});
+      toast("Session saved");
+      closeLesson();
+    }
+    function formatTime(seconds){
+      const min = Math.floor(seconds / 60);
+      const sec = seconds % 60;
+      return `${min}:${String(sec).padStart(2,"0")}`;
+    }
+    function toggleTimer(){
+      if(timerHandle){ clearTimer(); renderLessonDrill(activeSession.lesson); return; }
+      timerHandle = setInterval(() => {
+        activeSession.remaining = Math.max(0, activeSession.remaining - 1);
+        const box = $("timerText");
+        if(box) box.textContent = formatTime(activeSession.remaining);
+        if(activeSession.remaining <= 0){ clearTimer(); toast("Timer complete"); renderLessonDrill(activeSession.lesson); }
+      }, 1000);
+      renderLessonDrill(activeSession.lesson);
+    }
+    function clearTimer(){ if(timerHandle) clearInterval(timerHandle); timerHandle = null; }
+
+    function openSheet(title, html){
+      $("sheetTitle").textContent = title;
+      $("sheetBody").innerHTML = html;
+      $("sheetLayer").classList.add("on");
+    }
+    function closeSheet(){ $("sheetLayer").classList.remove("on"); }
+    function openAddPlayer(){
+      openSheet("Add player", `<div class="grid"><input id="newPlayerName" placeholder="Player name"><select id="newPlayerLevel">${LEVELS.map((level) => `<option value="${esc(level.id)}">${esc(level.name)}</option>`).join("")}</select><button class="btn" id="saveNewPlayer">Add Player</button></div>`);
+      $("saveNewPlayer").onclick = () => {
+        const name = $("newPlayerName").value.trim();
+        if(!name) return toast("Add a player name");
+        const p = normalizePlayer({id:uid("player"), name, level:$("newPlayerLevel").value, createdAt:new Date().toISOString()});
+        state.players.push(p);
+        state.activePlayerId = p.id;
+        save(); closeSheet(); renderAll();
+      };
+    }
+    function openEditor(){
+      const opts = lessons().map((item) => `<option value="${esc(item.id)}">${esc(levelName(item.level))} - ${esc(item.title)}</option>`).join("");
+      openSheet("Content editor", `<div class="grid"><select id="editorLesson">${opts}</select><textarea id="editorJson"></textarea><button class="btn" id="saveLessonJson">Save Override</button></div>`);
+      const load = () => { $("editorJson").value = JSON.stringify(lessonById($("editorLesson").value), null, 2); };
+      $("editorLesson").onchange = load;
+      $("saveLessonJson").onclick = () => {
+        try{
+          const data = JSON.parse($("editorJson").value);
+          if(!data.id || !data.check || !Array.isArray(data.drillSteps)) throw new Error("Lesson requires id, check, and drillSteps.");
+          PadelBackendAdapter.saveContentOverride(data.id, data);
+          closeSheet(); renderAll(); toast("Override saved");
+        } catch(error){ toast(error.message); }
+      };
+      load();
+    }
+    function openExport(){
+      openSheet("Export snapshot", `<div class="grid"><textarea readonly>${esc(PadelBackendAdapter.exportSnapshot())}</textarea><button class="btn secondary" id="copyExport">Copy</button></div>`);
+      $("copyExport").onclick = async () => { try{ await navigator.clipboard.writeText(PadelBackendAdapter.exportSnapshot()); toast("Copied"); } catch { toast("Select and copy the JSON"); } };
+    }
+    function openImport(){
+      openSheet("Import snapshot", `<div class="grid"><textarea id="importJson" placeholder="Paste exported JSON"></textarea><button class="btn" id="doImport">Import</button></div>`);
+      $("doImport").onclick = () => { try{ PadelBackendAdapter.importSnapshot($("importJson").value); closeSheet(); renderAll(); toast("Imported"); } catch(error){ toast(error.message); } };
+    }
+    function openBackend(){
+      openSheet("Backend adapter", `<div class="grid"><p class="muted">Current mode: <b>${esc(PadelBackendAdapter.mode())}</b>. Local mode writes to localStorage. Bridge mode also emits Kinetik DATA_CREATE messages. Future mode is reserved for the later Kinetik backend.</p><select id="backendMode"><option value="local">local</option><option value="bridge-v1">bridge-v1</option><option value="future">future</option></select><div class="feedback"><b>Reserved collections</b><br>padel_profiles, padel_sessions, padel_mastery, padel_content_overrides, padel_snapshots</div><button class="btn" id="saveBackend">Save</button></div>`);
+      $("backendMode").value = state.backendMode || "local";
+      $("saveBackend").onclick = () => { state.backendMode = $("backendMode").value; save(); closeSheet(); renderAll(); };
+    }
+    function openResetProgress(){
+      openSheet("Reset progress?", `<div class="grid"><p class="muted">This clears progress for ${esc(player().name)} on this device only. Content overrides and other players stay.</p><button class="btn danger" id="confirmReset">Reset Player Progress</button></div>`);
+      $("confirmReset").onclick = () => { state.progress[player().id] = {streak:0,lastTrainDate:"",lessonStatus:{},mastery:{},review:[],sessions:[]}; save(); closeSheet(); renderAll(); toast("Progress reset"); };
+    }
+    function toast(message){
+      $("toast").textContent = message;
+      $("toast").classList.add("on");
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => $("toast").classList.remove("on"), 2200);
+    }
+
+    init();
+  </script>
+</body>
+</html>

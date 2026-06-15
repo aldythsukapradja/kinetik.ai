@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffcf5a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Emoji Party">
+  <title>Emoji Party - Kinetik</title>
+  <script type="application/kinetik-app+json">
+  {
+    "appId": "game-emoji-party",
+    "name": "Emoji Party",
+    "shortName": "EmojiParty",
+    "icon": "😄",
+    "gradient": ["#ffcf5a", "#ff6fae"],
+    "category": "games",
+    "tagline": "Guess the clue, beat the room.",
+    "about": "A funny emoji guessing game for family and friends. Play hundreds of local clues across music, cartoons, jokes, places, family life, holidays, and more.",
+    "audience": "all",
+    "circleTypes": ["family", "friends"],
+    "worksWith": ["offline", "standalone"],
+    "status": "live",
+    "minMembers": 1
+  }
+  </script>
+  <style>
+    :root{
+      color-scheme:light;
+      --bg:#fff8e8;
+      --ink:#2a1e14;
+      --muted:rgba(42,30,20,.62);
+      --panel:rgba(255,255,255,.80);
+      --soft:rgba(255,255,255,.60);
+      --line:rgba(68,45,22,.13);
+      --accent:#ffcf5a;
+      --accent2:#ff6fae;
+      --blue:#5f8cff;
+      --good:#23b993;
+      --danger:#e85f7a;
+      --shadow:0 22px 60px rgba(188,128,37,.17);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    [data-theme="dark"]{
+      color-scheme:dark;
+      --bg:#181108;
+      --ink:#fffaf1;
+      --muted:rgba(255,250,241,.66);
+      --panel:rgba(39,27,14,.80);
+      --soft:rgba(255,255,255,.08);
+      --line:rgba(255,255,255,.13);
+      --shadow:0 24px 70px rgba(0,0,0,.38);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      min-height:100dvh;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 14% 8%,rgba(255,207,90,.30),transparent 34%),
+        radial-gradient(circle at 88% 10%,rgba(255,111,174,.21),transparent 31%),
+        linear-gradient(180deg,rgba(255,255,255,.25),transparent 50%),
+        var(--bg);
+      overflow:hidden;
+    }
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .app{
+      width:min(100%,680px);
+      height:100dvh;
+      margin:0 auto;
+      padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+      display:grid;
+      grid-template-rows:auto minmax(0,1fr);
+      gap:10px;
+      overflow:hidden;
+    }
+    .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .brand{display:flex;align-items:center;gap:9px;min-width:0}
+    .mark{width:38px;height:38px;border-radius:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 12px 30px rgba(255,111,174,.20);display:grid;place-items:center;color:white;font-size:22px;font-weight:950}
+    h1,h2,h3,p{margin:0}
+    h1{font-size:21px;line-height:1;font-weight:950;letter-spacing:0}
+    h2{font-size:18px;line-height:1.1}
+    h3{font-size:14px;line-height:1.1}
+    .small{font-size:12px;color:var(--muted);line-height:1.25}
+    .screen{display:none;min-height:0;overflow:hidden}
+    .screen.active{display:grid}
+    .setup{align-content:center;gap:12px}
+    .game{grid-template-rows:auto minmax(0,1fr) auto;gap:10px}
+    .panel{
+      border:1px solid var(--line);
+      background:var(--panel);
+      backdrop-filter:blur(24px) saturate(1.16);
+      box-shadow:var(--shadow);
+      border-radius:24px;
+      padding:14px;
+      overflow:hidden;
+    }
+    .grid{display:grid;gap:9px}
+    .two{grid-template-columns:1fr 1fr}
+    .row{display:flex;align-items:center;gap:8px}
+    .between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    label{display:grid;gap:6px;font-size:12px;font-weight:850;color:var(--muted)}
+    input,select{
+      width:100%;
+      min-height:44px;
+      border:1px solid var(--line);
+      background:var(--soft);
+      color:var(--ink);
+      border-radius:15px;
+      padding:11px 12px;
+      outline:none;
+    }
+    input:focus,select:focus{border-color:rgba(255,111,174,.5);box-shadow:0 0 0 4px rgba(255,111,174,.13)}
+    .btn{
+      min-height:44px;
+      border:0;
+      border-radius:15px;
+      padding:10px 13px;
+      color:#261400;
+      background:linear-gradient(135deg,var(--accent),#ff9a5a);
+      box-shadow:0 12px 28px rgba(255,207,90,.24);
+      font-weight:950;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      touch-action:manipulation;
+    }
+    .btn.secondary{background:var(--soft);border:1px solid var(--line);color:var(--ink);box-shadow:none}
+    .btn.pink{background:linear-gradient(135deg,var(--accent2),#9b6cff);color:white}
+    .icon-btn{width:44px;height:44px;border-radius:15px;padding:0;flex:0 0 auto}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+    .stat{border:1px solid var(--line);background:var(--soft);border-radius:16px;padding:8px;text-align:center;min-width:0}
+    .stat b{display:block;font-size:17px;line-height:1}
+    .stat span{display:block;margin-top:3px;font-size:11px;color:var(--muted);font-weight:850}
+    .clue-card{
+      min-height:0;
+      display:grid;
+      grid-template-rows:auto minmax(0,1fr) auto;
+      gap:12px;
+      text-align:center;
+      place-items:center;
+    }
+    .theme-pill{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:7px 11px;color:var(--muted);font-size:12px;font-weight:900}
+    .emoji-clue{
+      width:100%;
+      min-height:190px;
+      border-radius:28px;
+      border:1px solid var(--line);
+      background:
+        radial-gradient(circle at 20% 15%,rgba(255,207,90,.28),transparent 35%),
+        radial-gradient(circle at 82% 18%,rgba(255,111,174,.18),transparent 32%),
+        var(--soft);
+      display:grid;
+      place-items:center;
+      padding:20px;
+      font-size:clamp(50px,17vw,104px);
+      line-height:1.12;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.45);
+      overflow-wrap:anywhere;
+    }
+    .hint{min-height:20px;color:var(--muted);font-size:13px;font-weight:750}
+    .answer-box{display:grid;gap:9px}
+    .actions{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px}
+    .drawer{
+      position:fixed;
+      inset:auto 10px calc(10px + env(safe-area-inset-bottom)) 10px;
+      max-width:660px;
+      margin:0 auto;
+      transform:translateY(120%);
+      transition:transform .22s ease;
+      z-index:10;
+    }
+    .drawer.open{transform:translateY(0)}
+    .drawer-list{max-height:48dvh;overflow:auto;display:grid;gap:7px;margin-top:10px}
+    .leader{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;border:1px solid var(--line);background:var(--soft);border-radius:15px;padding:9px}
+    .rank{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#261400;font-weight:950;font-size:12px}
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      place-items:center;
+      background:rgba(8,12,20,.32);
+      backdrop-filter:blur(12px);
+      z-index:15;
+      padding:18px;
+    }
+    .modal.show{display:grid}
+    .modal-card{width:min(100%,360px);display:grid;gap:12px;text-align:center}
+    .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translate(-50%,120px);background:#2b1b11;color:white;border-radius:999px;padding:10px 14px;box-shadow:0 12px 34px rgba(0,0,0,.24);font-size:13px;font-weight:850;transition:transform .22s ease;z-index:20}
+    .toast.show{transform:translate(-50%,0)}
+    @media(max-height:710px){
+      .app{gap:7px;padding-top:calc(8px + env(safe-area-inset-top));padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+      .emoji-clue{min-height:150px}
+      .panel{padding:11px}
+    }
+    @media(max-width:390px){
+      .stats{gap:5px}
+      .stat{padding:7px 5px}
+      .stat b{font-size:15px}
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <div class="brand">
+        <div class="mark">😄</div>
+        <div>
+          <h1>Emoji Party</h1>
+          <p class="small" id="circleLabel">Standalone circle</p>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn secondary icon-btn" id="leaderBtn" aria-label="Open leaderboard">🏆</button>
+        <button class="btn secondary icon-btn" id="themeBtn" aria-label="Toggle theme">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v2.2M12 18.8V21M4.4 4.4 6 6M18 18l1.6 1.6M3 12h2.2M18.8 12H21M4.4 19.6 6 18M18 6l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="screen setup active" id="setupScreen">
+      <div class="panel grid">
+        <div>
+          <h2>Start guessing</h2>
+          <p class="small"><span id="clueCount">216</span> local clues across funny theme packs.</p>
+        </div>
+        <label>Player
+          <input id="playerName" maxlength="18" value="Player 1" autocomplete="off">
+        </label>
+        <div class="grid two">
+          <label>Theme
+            <select id="themeSelect"></select>
+          </label>
+          <label>Mode
+            <select id="modeSelect">
+              <option value="sprint">60s Sprint</option>
+              <option value="quick">12 Clues</option>
+              <option value="party">Party 20</option>
+            </select>
+          </label>
+        </div>
+        <button class="btn" id="startBtn">Start Party</button>
+      </div>
+    </section>
+
+    <section class="screen game" id="gameScreen">
+      <div class="stats">
+        <div class="stat"><b id="scoreText">0</b><span>score</span></div>
+        <div class="stat"><b id="streakText">0</b><span>streak</span></div>
+        <div class="stat"><b id="leftText">60</b><span id="leftLabel">sec</span></div>
+        <div class="stat"><b id="rightText">0</b><span>right</span></div>
+      </div>
+      <div class="panel clue-card">
+        <span class="theme-pill" id="themePill">Music</span>
+        <div class="emoji-clue" id="emojiClue">🎤👑</div>
+        <p class="hint" id="hintText"></p>
+      </div>
+      <div class="panel answer-box">
+        <input id="answerInput" placeholder="Type your guess" autocomplete="off">
+        <div class="actions">
+          <button class="btn secondary" id="hintBtn">Hint</button>
+          <button class="btn secondary" id="skipBtn">Skip</button>
+          <button class="btn pink" id="submitBtn">Submit</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="drawer panel" id="drawer">
+    <div class="between">
+      <div>
+        <h2>Leaderboard</h2>
+        <p class="small">Best local Emoji Party runs.</p>
+      </div>
+      <button class="btn secondary icon-btn" id="closeDrawer" aria-label="Close">×</button>
+    </div>
+    <div class="drawer-list" id="leaderList"></div>
+  </aside>
+
+  <div class="modal" id="resultModal">
+    <div class="panel modal-card">
+      <div>
+        <h2 id="resultTitle">Party complete</h2>
+        <p class="small" id="resultText">Nice guessing.</p>
+      </div>
+      <button class="btn" id="againBtn">Play Again</button>
+      <button class="btn secondary" id="setupBtn">Setup</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved</div>
+
+  <script>
+    const AppConfig = {
+      appId:"game-emoji-party",
+      storagePrefix:"kinetik_game_emoji_party",
+      leaderboardCollection:"leaderboard",
+      sessionCollection:"game_sessions"
+    };
+    const rawClues = [
+      ["music","🎤👑","Queen","A legendary band with a royal name."],["music","🕺🌕🚶","Michael Jackson","The moonwalk king."],["music","🧣💔🎸","Taylor Swift","A singer famous for eras and breakup songs."],["music","🐞🐞🐞🐞","The Beatles","Four insects, one iconic band."],["music","❄️▶️","Coldplay","A band with a chilly name."],["music","👋🌧️","Adele","Hello from the other side."],["music","💜🇰🇷🎤","BTS","A global K-pop group."],["music","🪐🎤","Bruno Mars","A singer with a planet in his name."],["music","👁️🖤","Billie Eilish","Known for moody pop and bold style."],["music","➕🎸","Ed Sheeran","A singer-songwriter with a guitar."],["music","💃🐺","Shakira","Her hips do not lie."],["music","🇯🇲🦁🎶","Bob Marley","Reggae legend."],["music","👑🕺🎙️","Elvis Presley","The king of rock and roll."],["music","🖤💗","Blackpink","A K-pop group with two colors."],["music","1️⃣➡️","One Direction","A boy band going one way."],["music","🌶️👯‍♀️","Spice Girls","A spicy pop group."],["music","2️⃣🪩","Dua Lipa","Dance pop star."],["music","🐉🎶","Imagine Dragons","A band with fantasy fire."],
+      ["cartoons","🧽🟨🌊","SpongeBob SquarePants","A sponge under the sea."],["cartoons","🐱🐭","Tom and Jerry","The classic cat and mouse chase."],["cartoons","🐕🔍👻","Scooby-Doo","A mystery-solving dog."],["cartoons","👨‍👩‍👧‍👦💛📺","The Simpsons","A yellow animated family."],["cartoons","⚡🐭🔴","Pokemon","Catch them all."],["cartoons","🤖🐱🚪","Doraemon","A robotic cat with gadgets."],["cartoons","🍥🥷","Naruto","A ninja who loves ramen."],["cartoons","🐉⚽","Dragon Ball","Power levels and dragon wishes."],["cartoons","🐭🧤","Mickey Mouse","The famous mouse with gloves."],["cartoons","🍌👓💛","Minions","Tiny yellow helpers."],["cartoons","🐷👧","Peppa Pig","A little pig and her family."],["cartoons","🐶🚓🚒","Paw Patrol","Pups on rescue missions."],["cartoons","🐶💙👧","Bluey","A blue dog family cartoon."],["cartoons","🧒🐶⏰","Adventure Time","A boy, a dog, and strange adventures."],["cartoons","🐰🦆🥕","Looney Tunes","Bugs, Daffy, and chaos."],["cartoons","👦⌚👽","Ben 10","A watch that turns a boy into aliens."],["cartoons","🦸‍♂️🦸‍♀️🏙️","Teen Titans","Young heroes together."],["cartoons","🐼🥋","Kung Fu Panda","A panda who learns martial arts."],
+      ["movies","🦁👑","The Lion King","A royal lion story."],["movies","🚢🧊💔","Titanic","A ship, an iceberg, and romance."],["movies","🦖🏝️","Jurassic Park","Dinosaurs return on an island."],["movies","⭐⚔️🚀","Star Wars","Space battles and glowing swords."],["movies","⚡👓🧙","Harry Potter","A wizard with a scar."],["movies","🕷️👨","Spider-Man","A web-slinging hero."],["movies","🦇👨🌃","Batman","A dark knight."],["movies","🦸‍♂️🟥🟦","Superman","Cape, strength, and flight."],["movies","🚗💨👮","Fast and Furious","Cars, speed, and family."],["movies","🐠🔎","Finding Nemo","A lost fish search."],["movies","🤠🚀🧸","Toy Story","Toys with secret lives."],["movies","🧞‍♂️🪔","Aladdin","A lamp and three wishes."],["movies","🌊🚣‍♀️🐔","Moana","A journey across the ocean."],["movies","🦸‍♀️🦸‍♂️🅰️","Avengers","A team of superheroes."],["movies","💙🌳🌌","Avatar","Blue people and another world."],["movies","🏠👦🎄","Home Alone","A kid defends the house."],["movies","🎲🌴🦁","Jumanji","A game becomes an adventure."],["movies","🏴‍☠️🛳️","Pirates of the Caribbean","Pirates and cursed treasure."],
+      ["food","🍕","Pizza","Round, cheesy, always popular."],["food","🍔","Burger","A sandwich with a patty."],["food","🍣","Sushi","Rice rolls from Japan."],["food","🌮","Tacos","Folded food with fillings."],["food","🍦","Ice Cream","Cold sweet dessert."],["food","🥞🍯","Pancakes","Breakfast stack."],["food","🍗🔥","Fried Chicken","Crispy bird."],["food","🍜","Noodles","Slurpy bowl food."],["food","🍩","Donut","Sweet ring."],["food","🍿🎬","Popcorn","Movie snack."],["food","🍚🥘🌶️","Biryani","Spiced rice dish."],["food","🥙🔥","Kebab","Grilled meat favorite."],["food","🍜🥚","Ramen","Noodle soup with toppings."],["food","🍛🌶️","Curry","Saucy spiced dish."],["food","🍫","Chocolate","Sweet cocoa treat."],["food","🥗","Salad","Fresh greens."],["food","☕","Coffee","Morning fuel."],["food","🧋","Bubble Tea","Tea with pearls."],
+      ["places","🗼🥐","Paris","City with the Eiffel Tower."],["places","🎡☔👑","London","Rain, royals, and a big wheel."],["places","🗽🚕","New York","City with a famous statue."],["places","🗼🍣","Tokyo","Japan's huge capital."],["places","🏙️🐪✨","Dubai","Skyscrapers and desert style."],["places","🇶🇦🏙️","Doha","Capital of Qatar."],["places","🔺🐫","Egypt","Pyramids and desert."],["places","🏝️🛵","Bali","Island holiday spot."],["places","🏛️🍝","Rome","Ancient ruins and pasta."],["places","🕋🌙","Saudi Arabia","Home of holy cities."],["places","🕌🎬🌶️","India","Big country, big culture."],["places","🐉🥢","China","Dragon symbol and chopsticks."],["places","🦘🌊","Australia","Kangaroos and beaches."],["places","⚽🌴🇧🇷","Brazil","Football and carnival energy."],["places","🍁🏔️","Canada","Maple leaf and mountains."],["places","🏝️🐠","Maldives","Clear water islands."],["places","🦁🌆","Singapore","Lion city."],["places","🧿☕","Turkey","Blue eyes and tea."],
+      ["sports","⚽🥅","Football","Kick the ball into the goal."],["sports","🏀⛹️","Basketball","Hoops and jump shots."],["sports","🎾","Tennis","Rackets and a net."],["sports","🎾🧱","Padel","Rackets, glass walls, doubles."],["sports","🏊‍♀️","Swimming","Race in the water."],["sports","🏃‍♂️💨","Running","Fast feet."],["sports","🚴‍♂️","Cycling","Pedal power."],["sports","⛳","Golf","Clubs, holes, patience."],["sports","🥊","Boxing","Gloves and punches."],["sports","🏏","Cricket","Bat, ball, wickets."],["sports","⚾","Baseball","Bats and bases."],["sports","🏐","Volleyball","Spikes over a net."],["sports","🏄‍♂️🌊","Surfing","Ride a wave."],["sports","🎿❄️","Skiing","Slide on snow."],["sports","♟️","Chess","The quiet strategy sport."],["sports","🎳","Bowling","Pins go down."],["sports","🏎️🏁","Formula 1","Fast cars and circuits."],["sports","🏸","Badminton","Shuttlecock game."],
+      ["jokes","🐔➡️🛣️","Chicken Crossing The Road","The oldest road joke."],["jokes","🚪✊😂","Knock Knock Joke","Someone is at the door."],["jokes","👨‍👧‍👦😂","Dad Joke","So bad it becomes good."],["jokes","🍌🧍💥","Banana Slip","Classic cartoon accident."],["jokes","🤡🎈","Clown","Silly performer."],["jokes","📞😈","Prank Call","A mischievous phone moment."],["jokes","💨🪑😂","Whoopee Cushion","A noisy seat trick."],["jokes","🧦❓🌀","Lost Socks","Laundry mystery."],["jokes","🐶📚","Dog Ate My Homework","The classic school excuse."],["jokes","😶🦗","Awkward Silence","Nobody knows what to say."],["jokes","👨🥸","Fake Moustache","Instant disguise."],["jokes","🤳😎","Mirror Selfie","Phone plus mirror pose."],["jokes","💇‍♂️😱","Bad Hair Day","Hair has its own plan."],["jokes","😴💼","Sleepy Meeting","Trying to stay awake."],["jokes","🌶️🔥😭","Spicy Food Regret","Too much chili."],["jokes","📱🤦","Autocorrect Fail","Phone changed the words."],["jokes","📅😩","Monday Mood","Weekend is gone."],["jokes","⏰🏃‍♂️💨","Late Excuse","Running behind again."],
+      ["animals","🐱","Cat","Independent little friend."],["animals","🐶","Dog","Loyal pet."],["animals","🦁","Lion","King of the jungle."],["animals","🐯","Tiger","Striped big cat."],["animals","🐘","Elephant","Huge animal with a trunk."],["animals","🐒","Monkey","Playful tree climber."],["animals","🐼","Panda","Black and white bamboo fan."],["animals","🐧","Penguin","Waddles on ice."],["animals","🐬","Dolphin","Smart ocean jumper."],["animals","🦈","Shark","Ocean predator."],["animals","🐋","Whale","Giant sea mammal."],["animals","🦒","Giraffe","Very long neck."],["animals","🦓","Zebra","Striped horse cousin."],["animals","🐊","Crocodile","Big snapping reptile."],["animals","🦉","Owl","Night bird."],["animals","🦅","Eagle","Powerful bird."],["animals","🐴","Horse","Runs and carries riders."],["animals","🐪","Camel","Desert traveler."],
+      ["school","➗📝😰","Math Test","Numbers under pressure."],["school","🔬🎪","Science Fair","Experiments on display."],["school","📚✏️","Homework","Work after school."],["school","🏃‍♀️⏰","Recess","Best break of the day."],["school","🚌🎒","School Bus","Ride to class."],["school","📚🤫","Library","Quiet book place."],["school","📝⏳","Exam","Timed test."],["school","👩‍🏫🍎","Teacher","Classroom leader."],["school","🎒","Backpack","Carries school stuff."],["school","🍱🥪","Lunchbox","Food from home."],["school","🎨🖌️","Art Class","Paint and creativity."],["school","🏺📜","History","Stories from the past."],["school","🗺️🌍","Geography","Maps and countries."],["school","🐝🔤","Spelling Bee","Word competition."],["school","👥📋","Group Project","Teamwork, maybe chaos."],["school","🚫🪑","Detention","After-school consequence."],["school","🎓🎉","Graduation","School finish celebration."],["school","📄😬","Report Card","Grades arrive."],
+      ["internet","📹🔥","Viral Video","Everyone is watching it."],["internet","🖼️😂","Meme","The internet's joke language."],["internet","🤳✨","Selfie","Camera turned around."],["internet","📺🔴","Livestream","Broadcasting right now."],["internet","📱⭐","Influencer","Online personality."],["internet","#️⃣📣","Hashtag","Social tag."],["internet","😄😂😍","Emoji","Tiny face language."],["internet","📶","WiFi","Invisible internet magic."],["internet","🛒📦","Online Shopping","Buy now, wait for delivery."],["internet","🎮🕹️","Gaming","Play on a screen."],["internet","🎙️🎧","Podcast","Talking in your ears."],["internet","💳🔁","Subscription","Pays again and again."],["internet","🔔📱","Notification","Phone wants attention."],["internet","🔐🤔","Password","Secret login words."],["internet","☁️💾","Cloud Storage","Files in the sky."],["internet","📧🗑️","Spam Email","Inbox junk."],["internet","📹👥","Video Call","Faces on screen."],["internet","📸🖥️","Screenshot","Picture of the screen."],
+      ["family","🎬🍿👨‍👩‍👧‍👦","Movie Night","Everyone watches together."],["family","🎲😂","Game Night","The table gets competitive."],["family","🎂🎈","Birthday Party","Cake and candles."],["family","🍽️👨‍👩‍👧‍👦","Family Dinner","Everyone at the table."],["family","🚗🧳","Road Trip","Long drive adventure."],["family","🧺🌳","Picnic","Food outside."],["family","🧺🧦","Laundry Day","Clothes everywhere."],["family","🛒📝","Grocery Run","Shopping for the house."],["family","📖🌙","Bedtime Story","Reading before sleep."],["family","📅🎉","Weekend Plans","What are we doing next?"],["family","😤👧👦","Sibling Fight","Tiny argument, big drama."],["family","📸👨‍👩‍👧‍👦","Family Photo","Everyone smile."],["family","🧹✅","Chores","House tasks."],["family","👵🏠","Grandma House","The place with snacks."],["family","👶🎁","Baby Shower","Party for a baby coming."],["family","🔥🍖","Barbecue","Grill and gathering."],["family","⛺🌌","Camping","Sleep outside."],["family","🛋️😴","Couch Nap","Accidental sleep."],
+      ["holidays","🌙🕌🎉","Eid","Celebration after Ramadan."],["holidays","🌙🍽️","Ramadan","Fasting month."],["holidays","🎄🎁","Christmas","Tree and gifts."],["holidays","🎆📅","New Year","Fireworks and countdown."],["holidays","🎃👻","Halloween","Costumes and spooky fun."],["holidays","💘🌹","Valentine's Day","Hearts and flowers."],["holidays","🎂🎁","Birthday","Your personal holiday."],["holidays","💍🎉","Wedding","Two people celebrate love."],["holidays","✈️🏖️","Vacation","Time away."],["holidays","🏖️☀️","Beach Day","Sand and sun."],["holidays","❄️⛄","Snow Day","Cold day off."],["holidays","🎇✨","Fireworks","Colorful sky explosions."],["holidays","🎁🔄","Gift Exchange","Swap presents."],["holidays","👨‍👩‍👧‍👦🎉","Family Reunion","Everyone shows up."],["holidays","🎓🎊","Graduation Party","Celebrate finishing school."],["holidays","🇶🇦🎆","National Day","Country celebration."],["holidays","🎡🎠","Carnival","Rides and games."],["holidays","🧺🥤","Picnic Day","Outdoor snack time."],
+      ["kinetik","📅✅","Calendar Plan","A plan saved for later."],["kinetik","⭕💬","Circle Chat","Private group talk."],["kinetik","🎾👥","Padel Match","Court time with players."],["kinetik","🗳️📅","Event Poll","Vote for the best plan."],["kinetik","🏆📈","Leaderboard","Scores ranked."],["kinetik","⏰✅","Reminder","Do not forget it."],["kinetik","👨‍👩‍👧‍👦⏳","Family Time","Reserved time together."],["kinetik","🧑‍🤝‍🧑🌙","Friends Night","Evening with friends."],["kinetik","⚡✉️","Quick Invite","Fast plan invitation."],["kinetik","📝👥","Shared List","Everyone can add items."],["kinetik","📸💭","Photo Memory","A remembered moment."],["kinetik","🗓️🎉","Weekend Plan","Fun for the weekend."],["kinetik","🍽️📋","Meal Plan","Food organized ahead."],["kinetik","✈️🧳","Travel Plan","Trip details together."],["kinetik","🔥✅","Habit Streak","Keep the routine going."],["kinetik","🎂⏰","Birthday Reminder","Do not miss the cake."],["kinetik","🎬🗳️","Movie Vote","Choose what to watch."],["kinetik","🎮🏅","Game Score","Save the win."]
+    ];
+    const modes = {
+      sprint:{label:"60s Sprint", seconds:60, total:null},
+      quick:{label:"12 Clues", seconds:null, total:12},
+      party:{label:"Party 20", seconds:null, total:20}
+    };
+    const themeLabels = {all:"Mixed",music:"Music",cartoons:"Cartoons",movies:"Movies",food:"Food",places:"Places",sports:"Sports",jokes:"Jokes",animals:"Animals",school:"School",internet:"Internet",family:"Family",holidays:"Holidays",kinetik:"Kinetik"};
+    const clues = rawClues.map((item,index) => ({id:"clue_" + index, theme:item[0], emojis:item[1], answer:item[2], hint:item[3], accepted:[item[2]]}));
+    const $ = (id) => document.getElementById(id);
+    const state = {
+      circleId:"standalone_demo",
+      circleType:"friends",
+      playerId:"local_player",
+      theme:localStorage.getItem(AppConfig.storagePrefix + "_theme") || "light",
+      playerName:"Player 1",
+      pack:"all",
+      mode:"sprint",
+      deck:[],
+      clue:null,
+      score:0,
+      streak:0,
+      correct:0,
+      seen:0,
+      hintShown:false,
+      timeLeft:60,
+      timer:null,
+      active:false
+    };
+    if (window.self !== window.top) document.body.classList.add("embedded");
+    document.documentElement.dataset.theme = state.theme;
+
+    const Bridge = {
+      send(type, payload){
+        if (window.parent && window.parent !== window) window.parent.postMessage({type, appId:AppConfig.appId, payload}, "*");
+      }
+    };
+
+    addEventListener("message", (event) => {
+      const msg = event.data || {};
+      if (msg.type !== "INIT_APP") return;
+      const ctx = msg.payload || {};
+      state.circleId = ctx.circleId || state.circleId;
+      state.circleType = ctx.circleType || state.circleType;
+      state.playerId = ctx.personId || state.playerId;
+      if (ctx.theme) setTheme(ctx.theme);
+      $("circleLabel").textContent = state.circleType + " circle";
+    });
+
+    function setTheme(theme){
+      state.theme = theme === "dark" ? "dark" : "light";
+      document.documentElement.dataset.theme = state.theme;
+      localStorage.setItem(AppConfig.storagePrefix + "_theme", state.theme);
+    }
+
+    function toast(message){
+      $("toast").textContent = message;
+      $("toast").classList.add("show");
+      Bridge.send("SHOW_TOAST", {message});
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => $("toast").classList.remove("show"), 1600);
+    }
+
+    function populateThemes(){
+      const themes = ["all", ...Array.from(new Set(clues.map((clue) => clue.theme)))];
+      $("themeSelect").innerHTML = themes.map((theme) => `<option value="${theme}">${themeLabels[theme]} (${countTheme(theme)})</option>`).join("");
+      $("clueCount").textContent = clues.length;
+    }
+
+    function countTheme(theme){ return theme === "all" ? clues.length : clues.filter((clue) => clue.theme === theme).length; }
+
+    function start(){
+      state.playerName = $("playerName").value.trim() || "Player 1";
+      state.pack = $("themeSelect").value;
+      state.mode = $("modeSelect").value;
+      state.deck = shuffle(clues.filter((clue) => state.pack === "all" || clue.theme === state.pack));
+      state.score = 0;
+      state.streak = 0;
+      state.correct = 0;
+      state.seen = 0;
+      state.hintShown = false;
+      state.timeLeft = modes[state.mode].seconds || 0;
+      state.active = true;
+      $("setupScreen").classList.remove("active");
+      $("gameScreen").classList.add("active");
+      clearInterval(state.timer);
+      if (modes[state.mode].seconds) state.timer = setInterval(tick, 1000);
+      nextClue();
+    }
+
+    function tick(){
+      if (!state.active) return;
+      state.timeLeft--;
+      renderStats();
+      if (state.timeLeft <= 0) finish();
+    }
+
+    function nextClue(){
+      if (modes[state.mode].total && state.seen >= modes[state.mode].total){
+        finish();
+        return;
+      }
+      if (!state.deck.length) state.deck = shuffle(clues.filter((clue) => state.pack === "all" || clue.theme === state.pack));
+      state.clue = state.deck.pop();
+      state.seen++;
+      state.hintShown = false;
+      $("answerInput").value = "";
+      $("hintText").textContent = "";
+      renderClue();
+      renderStats();
+      setTimeout(() => $("answerInput").focus(), 60);
+    }
+
+    function renderClue(){
+      $("themePill").textContent = themeLabels[state.clue.theme];
+      $("emojiClue").textContent = state.clue.emojis;
+    }
+
+    function renderStats(){
+      $("scoreText").textContent = state.score;
+      $("streakText").textContent = state.streak;
+      $("rightText").textContent = state.correct;
+      if (modes[state.mode].seconds){
+        $("leftText").textContent = Math.max(0,state.timeLeft);
+        $("leftLabel").textContent = "sec";
+      } else {
+        $("leftText").textContent = Math.max(0, modes[state.mode].total - state.seen + 1);
+        $("leftLabel").textContent = "left";
+      }
+    }
+
+    function submit(){
+      if (!state.active) return;
+      const guess = $("answerInput").value;
+      if (!guess.trim()){
+        toast("Type a guess first.");
+        return;
+      }
+      if (isCorrect(guess, state.clue)){
+        const gain = Math.max(40, 100 + state.streak * 12 - (state.hintShown ? 25 : 0));
+        state.score += gain;
+        state.streak++;
+        state.correct++;
+        toast("Correct +" + gain);
+        nextClue();
+      } else {
+        state.streak = 0;
+        $("answerInput").select();
+        toast("Not quite.");
+        renderStats();
+      }
+    }
+
+    function isCorrect(guess, clue){
+      const normalized = normalize(guess);
+      return clue.accepted.some((answer) => normalize(answer) === normalized);
+    }
+
+    function normalize(text){ return String(text).toLowerCase().replace(/&/g,"and").replace(/[^a-z0-9]/g,""); }
+
+    function hint(){
+      if (!state.clue || state.hintShown) {
+        toast("Hint already shown.");
+        return;
+      }
+      state.hintShown = true;
+      $("hintText").textContent = state.clue.hint;
+    }
+
+    function skip(){
+      if (!state.active) return;
+      state.score = Math.max(0, state.score - 10);
+      state.streak = 0;
+      toast("Answer: " + state.clue.answer);
+      nextClue();
+    }
+
+    function finish(){
+      if (!state.active) return;
+      state.active = false;
+      clearInterval(state.timer);
+      saveLeader();
+      $("resultTitle").textContent = "Party complete";
+      $("resultText").textContent = `${state.playerName} scored ${state.score} with ${state.correct} correct in ${modes[state.mode].label}.`;
+      $("resultModal").classList.add("show");
+      Bridge.send("DATA_CREATE", {
+        collection: AppConfig.sessionCollection,
+        payload: {circleId:state.circleId, appId:AppConfig.appId, playerName:state.playerName, mode:state.mode, theme:state.pack, score:state.score, correct:state.correct, createdAt:new Date().toISOString()}
+      });
+    }
+
+    function saveLeader(){
+      const leaders = readLeaders();
+      const key = state.playerName + "_" + state.mode + "_" + state.pack;
+      const previous = leaders[key];
+      if (!previous || state.score > previous.score){
+        leaders[key] = {playerName:state.playerName, mode:state.mode, theme:state.pack, score:state.score, correct:state.correct, updatedAt:new Date().toISOString()};
+        localStorage.setItem(AppConfig.storagePrefix + "_leaders", JSON.stringify(leaders));
+      }
+    }
+
+    function readLeaders(){
+      try { return JSON.parse(localStorage.getItem(AppConfig.storagePrefix + "_leaders") || "{}"); }
+      catch { return {}; }
+    }
+
+    function renderLeaders(){
+      const leaders = Object.values(readLeaders()).sort((a,b) => b.score - a.score || b.correct - a.correct || a.playerName.localeCompare(b.playerName));
+      $("leaderList").innerHTML = leaders.length ? leaders.map((leader,index) => `
+        <div class="leader">
+          <span class="rank">${index + 1}</span>
+          <div><b>${escapeHtml(leader.playerName)}</b><div class="small">${modes[leader.mode].label} · ${themeLabels[leader.theme]} · ${leader.correct} right</div></div>
+          <b>${leader.score}</b>
+        </div>
+      `).join("") : `<p class="small">No party scores yet. Play a round to start the board.</p>`;
+    }
+
+    function shuffle(items){
+      const copy = items.slice();
+      for (let i = copy.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function playAgain(){
+      $("resultModal").classList.remove("show");
+      start();
+    }
+
+    function setup(){
+      $("resultModal").classList.remove("show");
+      clearInterval(state.timer);
+      state.active = false;
+      $("gameScreen").classList.remove("active");
+      $("setupScreen").classList.add("active");
+    }
+
+    function escapeHtml(text){ return String(text).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    $("themeBtn").onclick = () => setTheme(state.theme === "dark" ? "light" : "dark");
+    $("leaderBtn").onclick = () => { renderLeaders(); $("drawer").classList.add("open"); };
+    $("closeDrawer").onclick = () => $("drawer").classList.remove("open");
+    $("startBtn").onclick = start;
+    $("submitBtn").onclick = submit;
+    $("hintBtn").onclick = hint;
+    $("skipBtn").onclick = skip;
+    $("againBtn").onclick = playAgain;
+    $("setupBtn").onclick = setup;
+    $("answerInput").addEventListener("keydown", (event) => { if (event.key === "Enter") submit(); });
+    populateThemes();
+    renderLeaders();
+  </script>
+</body>
+</html>

@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ff6fae">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Code Clash">
+  <title>Code Clash - Kinetik</title>
+  <script type="application/kinetik-app+json">
+  {
+    "appId": "game-code-clash",
+    "name": "Code Clash",
+    "shortName": "CodeClash",
+    "icon": "⚡",
+    "gradient": ["#ff6fae", "#6f8cff"],
+    "category": "games",
+    "tagline": "Crack the color code.",
+    "about": "A fast logic duel for family and friends. Guess the hidden color code with unlimited attempts, tactile marbles, hints, and a circle-ready leaderboard.",
+    "audience": "all",
+    "circleTypes": ["family", "friends"],
+    "worksWith": ["offline", "standalone"],
+    "status": "live",
+    "minMembers": 1
+  }
+  </script>
+  <style>
+    :root{
+      color-scheme:light;
+      --bg:#fff3f8;
+      --ink:#261827;
+      --muted:rgba(38,24,39,.62);
+      --panel:rgba(255,255,255,.78);
+      --soft:rgba(255,255,255,.58);
+      --line:rgba(56,32,61,.13);
+      --accent:#ff6fae;
+      --accent2:#6f8cff;
+      --mint:#48d6b5;
+      --danger:#df4e6f;
+      --shadow:0 22px 60px rgba(188,65,124,.17);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    [data-theme="dark"]{
+      color-scheme:dark;
+      --bg:#130c18;
+      --ink:#fff7fb;
+      --muted:rgba(255,247,251,.66);
+      --panel:rgba(31,20,39,.78);
+      --soft:rgba(255,255,255,.08);
+      --line:rgba(255,255,255,.13);
+      --shadow:0 24px 70px rgba(0,0,0,.38);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      min-height:100dvh;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 15% 8%,rgba(255,111,174,.24),transparent 34%),
+        radial-gradient(circle at 88% 10%,rgba(111,140,255,.18),transparent 31%),
+        linear-gradient(180deg,rgba(255,255,255,.25),transparent 48%),
+        var(--bg);
+      overflow:hidden;
+    }
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .app{
+      width:min(100%,680px);
+      height:100dvh;
+      margin:0 auto;
+      padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+      display:grid;
+      grid-template-rows:auto minmax(0,1fr);
+      gap:10px;
+      overflow:hidden;
+    }
+    .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .brand{display:flex;align-items:center;gap:9px;min-width:0}
+    .mark{width:38px;height:38px;border-radius:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 12px 30px rgba(255,111,174,.24);display:grid;place-items:center;color:white;font-size:22px;font-weight:950}
+    h1,h2,h3,p{margin:0}
+    h1{font-size:21px;line-height:1;font-weight:950;letter-spacing:0}
+    h2{font-size:18px;line-height:1.1}
+    h3{font-size:14px;line-height:1.1}
+    .small{font-size:12px;color:var(--muted);line-height:1.25}
+    .screen{display:none;min-height:0;overflow:hidden}
+    .screen.active{display:grid}
+    .setup{align-content:center;gap:12px}
+    .game{grid-template-rows:auto auto minmax(0,1fr) auto;gap:10px}
+    .panel{
+      border:1px solid var(--line);
+      background:var(--panel);
+      backdrop-filter:blur(24px) saturate(1.16);
+      box-shadow:var(--shadow);
+      border-radius:24px;
+      padding:14px;
+      overflow:hidden;
+    }
+    .grid{display:grid;gap:9px}
+    .two{grid-template-columns:1fr 1fr}
+    .row{display:flex;align-items:center;gap:8px}
+    .between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    label{display:grid;gap:6px;font-size:12px;font-weight:850;color:var(--muted)}
+    input,select{
+      width:100%;
+      min-height:44px;
+      border:1px solid var(--line);
+      background:var(--soft);
+      color:var(--ink);
+      border-radius:15px;
+      padding:11px 12px;
+      outline:none;
+    }
+    input:focus,select:focus{border-color:rgba(255,111,174,.5);box-shadow:0 0 0 4px rgba(255,111,174,.13)}
+    .btn{
+      min-height:44px;
+      border:0;
+      border-radius:15px;
+      padding:10px 13px;
+      color:white;
+      background:linear-gradient(135deg,var(--accent),#d955ff);
+      box-shadow:0 12px 28px rgba(255,111,174,.22);
+      font-weight:900;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      touch-action:manipulation;
+    }
+    .btn.secondary{background:var(--soft);border:1px solid var(--line);color:var(--ink);box-shadow:none}
+    .btn.danger{background:rgba(223,78,111,.12);border:1px solid rgba(223,78,111,.28);color:var(--danger);box-shadow:none}
+    .icon-btn{width:44px;height:44px;border-radius:15px;padding:0;flex:0 0 auto}
+    .secret-row,.guess-slots,.picker{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap}
+    .secret-card{display:grid;gap:10px;text-align:center}
+    .slot,.hidden-slot{
+      width:44px;
+      height:44px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:var(--soft);
+      display:grid;
+      place-items:center;
+      color:var(--muted);
+      font-weight:950;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.45);
+    }
+    .slot{cursor:pointer}
+    .hidden-slot.hint{color:white;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+    .marble{
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      border:3px solid rgba(255,255,255,.72);
+      box-shadow:0 9px 20px rgba(41,28,52,.18), inset 0 6px 10px rgba(255,255,255,.35);
+      display:inline-block;
+    }
+    .picker .marble-btn{
+      width:46px;
+      height:46px;
+      border:1px solid var(--line);
+      background:var(--panel);
+      border-radius:17px;
+      display:grid;
+      place-items:center;
+      padding:0;
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+    .guess-board{
+      min-height:0;
+      overflow:auto;
+      display:flex;
+      flex-direction:column-reverse;
+      gap:8px;
+      padding:2px;
+      overscroll-behavior:contain;
+    }
+    .guess-row{
+      display:grid;
+      grid-template-columns:auto auto;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      border:1px solid var(--line);
+      background:var(--soft);
+      border-radius:18px;
+      padding:9px;
+    }
+    .guess-marbles,.feedback{display:flex;align-items:center;gap:6px}
+    .feedback{min-width:90px;justify-content:center}
+    .pin{
+      width:16px;
+      height:16px;
+      border-radius:50%;
+      border:1px solid var(--line);
+      background:transparent;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.25);
+    }
+    .pin.black{background:#151923;border-color:#151923}
+    .pin.white{background:#fff;border-color:rgba(26,31,43,.25)}
+    [data-theme="dark"] .pin.white{background:#f7fbff}
+    .actions{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px}
+    .score-strip{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px}
+    .chip{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:7px 10px;color:var(--muted);font-size:12px;font-weight:800}
+    .drawer{
+      position:fixed;
+      inset:auto 10px calc(10px + env(safe-area-inset-bottom)) 10px;
+      max-width:660px;
+      margin:0 auto;
+      transform:translateY(120%);
+      transition:transform .22s ease;
+      z-index:10;
+    }
+    .drawer.open{transform:translateY(0)}
+    .drawer-list{max-height:48dvh;overflow:auto;display:grid;gap:7px;margin-top:10px}
+    .leader{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;border:1px solid var(--line);background:var(--soft);border-radius:15px;padding:9px}
+    .rank{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;font-weight:950;font-size:12px}
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      place-items:center;
+      background:rgba(8,12,20,.32);
+      backdrop-filter:blur(12px);
+      z-index:15;
+      padding:18px;
+    }
+    .modal.show{display:grid}
+    .modal-card{width:min(100%,360px);display:grid;gap:12px;text-align:center}
+    .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translate(-50%,120px);background:#24172a;color:white;border-radius:999px;padding:10px 14px;box-shadow:0 12px 34px rgba(0,0,0,.24);font-size:13px;font-weight:850;transition:transform .22s ease;z-index:20}
+    .toast.show{transform:translate(-50%,0)}
+    @media(max-width:390px){
+      .slot,.hidden-slot{width:39px;height:39px;border-radius:14px}
+      .picker .marble-btn{width:42px;height:42px}
+      .marble{width:30px;height:30px}
+      .guess-row{gap:7px}
+      .feedback{min-width:76px}
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <div class="brand">
+        <div class="mark">⚡</div>
+        <div>
+          <h1>Code Clash</h1>
+          <p class="small" id="circleLabel">Standalone circle</p>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn secondary icon-btn" id="leaderBtn" aria-label="Open leaderboard">🏆</button>
+        <button class="btn secondary icon-btn" id="themeBtn" aria-label="Toggle theme">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v2.2M12 18.8V21M4.4 4.4 6 6M18 18l1.6 1.6M3 12h2.2M18.8 12H21M4.4 19.6 6 18M18 6l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="screen setup active" id="setupScreen">
+      <div class="panel grid">
+        <div>
+          <h2>Start clash</h2>
+          <p class="small">Guess the hidden code. Attempts are unlimited.</p>
+        </div>
+        <label>Player
+          <input id="playerName" maxlength="18" value="Player 1" autocomplete="off">
+        </label>
+        <div class="grid two">
+          <label>Code maker
+            <select id="makerType">
+              <option value="ai">Kinetik AI</option>
+              <option value="human">Human</option>
+            </select>
+          </label>
+          <label>Mode
+            <select id="modeSelect">
+              <option value="classic">Classic</option>
+              <option value="easy">Easy</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+        </div>
+        <button class="btn" id="startBtn">Start</button>
+      </div>
+    </section>
+
+    <section class="screen setup" id="makerScreen">
+      <div class="panel grid">
+        <div>
+          <h2>Set secret code</h2>
+          <p class="small">Pass the phone to the code maker. The code hides when play starts.</p>
+        </div>
+        <div class="guess-slots" id="makerSlots"></div>
+        <div class="picker" id="makerPicker"></div>
+        <button class="btn" id="hideCodeBtn">Hide Code & Play</button>
+      </div>
+    </section>
+
+    <section class="screen game" id="gameScreen">
+      <div class="panel secret-card">
+        <div class="between">
+          <span class="chip" id="makerLabel">Kinetik AI</span>
+          <span class="chip" id="modeLabel">Classic</span>
+        </div>
+        <div class="secret-row" id="secretRow"></div>
+      </div>
+      <div class="score-strip">
+        <span class="chip" id="guessCount">0 guesses</span>
+        <span class="chip" id="streakText">Streak 0</span>
+      </div>
+      <div class="guess-board" id="guessBoard"></div>
+      <div class="panel grid">
+        <div class="guess-slots" id="currentSlots"></div>
+        <div class="picker" id="colorPicker"></div>
+        <div class="actions">
+          <button class="btn secondary" id="clearBtn">Clear</button>
+          <button class="btn secondary" id="hintBtn">Hint</button>
+          <button class="btn" id="submitBtn">Submit</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="drawer panel" id="drawer">
+    <div class="between">
+      <div>
+        <h2>Leaderboard</h2>
+        <p class="small">Best local Code Clash runs.</p>
+      </div>
+      <button class="btn secondary icon-btn" id="closeDrawer" aria-label="Close">×</button>
+    </div>
+    <div class="drawer-list" id="leaderList"></div>
+  </aside>
+
+  <div class="modal" id="resultModal">
+    <div class="panel modal-card">
+      <div>
+        <h2 id="resultTitle">Code cracked</h2>
+        <p class="small" id="resultText">Sharp work.</p>
+      </div>
+      <div class="secret-row" id="resultCode"></div>
+      <button class="btn" id="againBtn">Play Again</button>
+      <button class="btn secondary" id="setupBtn">Setup</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved</div>
+
+  <script>
+    const AppConfig = {
+      appId: "game-code-clash",
+      storagePrefix: "kinetik_game_code_clash",
+      leaderboardCollection: "leaderboard",
+      sessionCollection: "game_sessions"
+    };
+    const $ = (id) => document.getElementById(id);
+    const colors = [
+      {id:"rose", name:"Rose", hex:"#ff4f8b"},
+      {id:"sun", name:"Sun", hex:"#ffc847"},
+      {id:"mint", name:"Mint", hex:"#38d6a8"},
+      {id:"sky", name:"Sky", hex:"#43b8ff"},
+      {id:"violet", name:"Violet", hex:"#8b6cff"},
+      {id:"coral", name:"Coral", hex:"#ff7a59"},
+      {id:"lime", name:"Lime", hex:"#a8df4e"},
+      {id:"navy", name:"Navy", hex:"#32415f"}
+    ];
+    const modes = {
+      easy: {label:"Easy", slots:3, colors:5},
+      classic: {label:"Classic", slots:4, colors:6},
+      hard: {label:"Hard", slots:5, colors:8}
+    };
+    const state = {
+      circleId:"standalone_demo",
+      circleType:"friends",
+      playerId:"local_player",
+      theme:localStorage.getItem(AppConfig.storagePrefix + "_theme") || "light",
+      playerName:"Player 1",
+      makerType:"ai",
+      mode:"classic",
+      secret:[],
+      makerDraft:[],
+      current:[],
+      guesses:[],
+      hints:[],
+      streak:Number(localStorage.getItem(AppConfig.storagePrefix + "_streak") || 0),
+      startedAt:0
+    };
+    if (window.self !== window.top) document.body.classList.add("embedded");
+    document.documentElement.dataset.theme = state.theme;
+
+    const Bridge = {
+      send(type, payload){
+        if (window.parent && window.parent !== window) window.parent.postMessage({type, appId:AppConfig.appId, payload}, "*");
+      }
+    };
+
+    addEventListener("message", (event) => {
+      const msg = event.data || {};
+      if (msg.type !== "INIT_APP") return;
+      const ctx = msg.payload || {};
+      state.circleId = ctx.circleId || state.circleId;
+      state.circleType = ctx.circleType || state.circleType;
+      state.playerId = ctx.personId || state.playerId;
+      if (ctx.theme) setTheme(ctx.theme);
+      $("circleLabel").textContent = state.circleType + " circle";
+    });
+
+    function setTheme(theme){
+      state.theme = theme === "dark" ? "dark" : "light";
+      document.documentElement.dataset.theme = state.theme;
+      localStorage.setItem(AppConfig.storagePrefix + "_theme", state.theme);
+    }
+
+    function toast(message){
+      $("toast").textContent = message;
+      $("toast").classList.add("show");
+      Bridge.send("SHOW_TOAST", {message});
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => $("toast").classList.remove("show"), 1700);
+    }
+
+    function cfg(){ return modes[state.mode]; }
+    function palette(){ return colors.slice(0, cfg().colors); }
+    function marble(id, size = ""){
+      const color = colors.find((item) => item.id === id);
+      const hex = color ? color.hex : "transparent";
+      return `<span class="marble ${size}" title="${color ? color.name : ""}" style="background:${hex}"></span>`;
+    }
+
+    function showScreen(id){
+      ["setupScreen","makerScreen","gameScreen"].forEach((screen) => $(screen).classList.toggle("active", screen === id));
+    }
+
+    function start(){
+      state.playerName = $("playerName").value.trim() || "Player 1";
+      state.makerType = $("makerType").value;
+      state.mode = $("modeSelect").value;
+      state.secret = [];
+      state.current = Array(cfg().slots).fill(null);
+      state.guesses = [];
+      state.hints = [];
+      if (state.makerType === "human"){
+        state.makerDraft = Array(cfg().slots).fill(null);
+        renderMaker();
+        showScreen("makerScreen");
+      } else {
+        state.secret = randomCode();
+        beginPlay();
+      }
+    }
+
+    function randomCode(){
+      const ids = palette().map((c) => c.id);
+      return Array.from({length:cfg().slots}, () => ids[Math.floor(Math.random() * ids.length)]);
+    }
+
+    function beginPlay(){
+      state.current = Array(cfg().slots).fill(null);
+      state.guesses = [];
+      state.hints = [];
+      state.startedAt = Date.now();
+      $("makerLabel").textContent = state.makerType === "human" ? "Human maker" : "Kinetik AI";
+      $("modeLabel").textContent = cfg().label;
+      showScreen("gameScreen");
+      render();
+    }
+
+    function renderMaker(){
+      $("makerSlots").innerHTML = state.makerDraft.map((id,index) => `<button class="slot" data-maker-slot="${index}">${id ? marble(id) : "?"}</button>`).join("");
+      $("makerPicker").innerHTML = palette().map((color) => `<button class="marble-btn" data-maker-color="${color.id}" aria-label="${color.name}">${marble(color.id)}</button>`).join("");
+      document.querySelectorAll("[data-maker-slot]").forEach((button) => button.onclick = () => {
+        state.makerDraft[Number(button.dataset.makerSlot)] = null;
+        renderMaker();
+      });
+      document.querySelectorAll("[data-maker-color]").forEach((button) => button.onclick = () => {
+        const empty = state.makerDraft.findIndex((value) => !value);
+        state.makerDraft[empty === -1 ? state.makerDraft.length - 1 : empty] = button.dataset.makerColor;
+        renderMaker();
+      });
+    }
+
+    function render(){
+      renderSecret();
+      renderCurrent();
+      renderPicker();
+      renderGuesses();
+      $("guessCount").textContent = state.guesses.length + (state.guesses.length === 1 ? " guess" : " guesses");
+      $("streakText").textContent = "Streak " + state.streak;
+    }
+
+    function renderSecret(){
+      $("secretRow").innerHTML = state.secret.map((id,index) => {
+        const hinted = state.hints.includes(index);
+        return `<span class="hidden-slot ${hinted ? "hint" : ""}">${hinted ? marble(id) : "?"}</span>`;
+      }).join("");
+    }
+
+    function renderCurrent(){
+      $("currentSlots").innerHTML = state.current.map((id,index) => `<button class="slot" data-slot="${index}" aria-label="Guess slot ${index + 1}">${id ? marble(id) : "?"}</button>`).join("");
+      document.querySelectorAll("[data-slot]").forEach((button) => button.onclick = () => {
+        state.current[Number(button.dataset.slot)] = null;
+        renderCurrent();
+      });
+    }
+
+    function renderPicker(){
+      $("colorPicker").innerHTML = palette().map((color) => `<button class="marble-btn" data-color="${color.id}" aria-label="${color.name}">${marble(color.id)}</button>`).join("");
+      document.querySelectorAll("[data-color]").forEach((button) => button.onclick = () => addColor(button.dataset.color));
+    }
+
+    function renderGuesses(){
+      $("guessBoard").innerHTML = state.guesses.map((guess,index) => `
+        <div class="guess-row">
+          <div class="guess-marbles">${guess.code.map((id) => marble(id)).join("")}</div>
+          <div class="feedback" aria-label="Feedback for guess ${index + 1}">${guess.feedback.map((pin) => `<span class="pin ${pin}"></span>`).join("")}</div>
+        </div>
+      `).join("");
+    }
+
+    function addColor(id){
+      const empty = state.current.findIndex((value) => !value);
+      state.current[empty === -1 ? state.current.length - 1 : empty] = id;
+      renderCurrent();
+    }
+
+    function feedback(guess, secret){
+      const result = Array(guess.length).fill("");
+      const secretCounts = {};
+      guess.forEach((id,index) => {
+        if (id === secret[index]) result[index] = "black";
+        else secretCounts[secret[index]] = (secretCounts[secret[index]] || 0) + 1;
+      });
+      guess.forEach((id,index) => {
+        if (result[index]) return;
+        if (secretCounts[id] > 0){
+          result[index] = "white";
+          secretCounts[id]--;
+        }
+      });
+      return result;
+    }
+
+    function submit(){
+      if (state.current.some((value) => !value)){
+        toast("Fill every slot first.");
+        return;
+      }
+      const pins = feedback(state.current, state.secret);
+      state.guesses.push({code:state.current.slice(), feedback:pins});
+      const solved = pins.every((pin) => pin === "black");
+      state.current = Array(cfg().slots).fill(null);
+      render();
+      if (solved) finish();
+    }
+
+    function finish(){
+      const seconds = Math.max(1, Math.round((Date.now() - state.startedAt) / 1000));
+      state.streak++;
+      localStorage.setItem(AppConfig.storagePrefix + "_streak", String(state.streak));
+      const attempts = state.guesses.length;
+      saveLeader({playerName:state.playerName, mode:state.mode, attempts, seconds, streak:state.streak});
+      $("resultTitle").textContent = "Code cracked";
+      $("resultText").textContent = `${state.playerName} solved ${cfg().label} in ${attempts} ${attempts === 1 ? "guess" : "guesses"} and ${seconds}s.`;
+      $("resultCode").innerHTML = state.secret.map((id) => `<span class="hidden-slot hint">${marble(id)}</span>`).join("");
+      $("resultModal").classList.add("show");
+      Bridge.send("DATA_CREATE", {
+        collection: AppConfig.sessionCollection,
+        payload: {circleId:state.circleId, appId:AppConfig.appId, playerName:state.playerName, mode:state.mode, attempts, seconds, createdAt:new Date().toISOString()}
+      });
+    }
+
+    function saveLeader(run){
+      const leaders = readLeaders();
+      const key = run.playerName + "_" + run.mode;
+      const prev = leaders[key];
+      if (!prev || run.attempts < prev.attempts || (run.attempts === prev.attempts && run.seconds < prev.seconds)){
+        leaders[key] = {...run, updatedAt:new Date().toISOString()};
+        localStorage.setItem(AppConfig.storagePrefix + "_leaders", JSON.stringify(leaders));
+      }
+    }
+
+    function readLeaders(){
+      try { return JSON.parse(localStorage.getItem(AppConfig.storagePrefix + "_leaders") || "{}"); }
+      catch { return {}; }
+    }
+
+    function renderLeaders(){
+      const leaders = Object.values(readLeaders()).sort((a,b) => a.attempts - b.attempts || a.seconds - b.seconds || b.streak - a.streak);
+      $("leaderList").innerHTML = leaders.length ? leaders.map((leader,index) => `
+        <div class="leader">
+          <span class="rank">${index + 1}</span>
+          <div><b>${escapeHtml(leader.playerName)}</b><div class="small">${modes[leader.mode].label} · ${leader.seconds}s · streak ${leader.streak}</div></div>
+          <b>${leader.attempts}</b>
+        </div>
+      `).join("") : `<p class="small">No solved codes yet. Crack one to start the board.</p>`;
+    }
+
+    function hint(){
+      const hidden = state.secret.map((_,i) => i).filter((i) => !state.hints.includes(i));
+      if (!hidden.length){
+        toast("All hints revealed.");
+        return;
+      }
+      state.hints.push(hidden[Math.floor(Math.random() * hidden.length)]);
+      renderSecret();
+    }
+
+    function resetCurrent(){
+      state.current = Array(cfg().slots).fill(null);
+      renderCurrent();
+    }
+
+    function playAgain(){
+      $("resultModal").classList.remove("show");
+      if (state.makerType === "ai") state.secret = randomCode();
+      else state.secret = state.makerDraft.slice();
+      beginPlay();
+    }
+
+    function setup(){
+      $("resultModal").classList.remove("show");
+      showScreen("setupScreen");
+    }
+
+    function openLeaders(){
+      renderLeaders();
+      $("drawer").classList.add("open");
+    }
+
+    function escapeHtml(text){ return String(text).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    $("themeBtn").onclick = () => setTheme(state.theme === "dark" ? "light" : "dark");
+    $("leaderBtn").onclick = openLeaders;
+    $("closeDrawer").onclick = () => $("drawer").classList.remove("open");
+    $("startBtn").onclick = start;
+    $("hideCodeBtn").onclick = () => {
+      if (state.makerDraft.some((value) => !value)){
+        toast("Complete the secret code.");
+        return;
+      }
+      state.secret = state.makerDraft.slice();
+      beginPlay();
+    };
+    $("clearBtn").onclick = resetCurrent;
+    $("hintBtn").onclick = hint;
+    $("submitBtn").onclick = submit;
+    $("againBtn").onclick = playAgain;
+    $("setupBtn").onclick = setup;
+    renderLeaders();
+  </script>
+</body>
+</html>
