@@ -69,12 +69,12 @@ html[data-theme="light"]{
 /* per-circle accent set by JS */
 html{--acc:#22d3ee;--acc2:#818cf8;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;height:100dvh;overscroll-behavior:none}
+html,body{height:100%;height:100dvh;overscroll-behavior:none;background:var(--bg0)}
 body{font-family:var(--font);color:var(--text);background:
   radial-gradient(120% 90% at 80% -10%,color-mix(in srgb,var(--acc) 16%,transparent),transparent 55%),
   radial-gradient(120% 100% at 0% 100%,color-mix(in srgb,var(--acc2) 13%,transparent),transparent 55%),
   linear-gradient(170deg,var(--bg1),var(--bg0) 55%,var(--bg2));
-  position:fixed;top:0;left:0;right:0;bottom:0;height:100dvh;overflow:hidden;transition:background .6s;
+  position:fixed;top:0;left:0;right:0;bottom:0;height:var(--app-height);overflow:hidden;transition:background .6s;
   font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 #bg3d{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.85}
 button{font-family:var(--font);color:inherit;background:none;border:none;cursor:pointer;font-size:inherit}
@@ -134,7 +134,7 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 .persona b{font-size:15px}.persona span:not(.av){display:block;font-size:12px;color:var(--dim)}
 #login .priv{font-size:12px;color:var(--faint);text-align:center;line-height:1.5}
 /* ============ SHELL ============ */
-#shell{position:fixed;top:0;left:0;right:0;bottom:0;height:100dvh;z-index:10;display:flex;flex-direction:column;padding-top:var(--sat)}
+#shell{position:fixed;top:0;left:0;right:0;bottom:0;height:var(--app-height);z-index:10;display:flex;flex-direction:column;padding-top:var(--sat)}
 #topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 10px;gap:10px}
 #topbar .brand{font-weight:800;font-size:19px;letter-spacing:-.02em}
 #topbar .brand i{font-style:normal;background:linear-gradient(120deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -248,7 +248,7 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 .durprev b{color:var(--acc);font-weight:700}
 .evchip.multi{background:repeating-linear-gradient(135deg,var(--acc),var(--acc) 7px,color-mix(in srgb,var(--acc) 78%,#000) 7px,color-mix(in srgb,var(--acc) 78%,#000) 14px)}
 /* ============ ASK (full-screen overlay, WhatsApp pattern) ============ */
-#askScreen{position:fixed;top:0;left:0;right:0;height:100dvh;z-index:60;display:none;flex-direction:column;
+#askScreen{position:fixed;top:0;left:0;right:0;height:var(--app-height);z-index:60;display:none;flex-direction:column;
   background:radial-gradient(120% 80% at 80% -10%,color-mix(in srgb,var(--acc) 13%,transparent),transparent 55%),
   radial-gradient(110% 90% at 0% 100%,color-mix(in srgb,var(--acc2) 10%,transparent),transparent 55%),var(--bg0)}
 #askScreen.on{display:flex}
@@ -305,7 +305,7 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 .appdots{display:flex;gap:6px;justify-content:center;align-items:center;padding:12px 0 2px;flex:0 0 auto}
 .appdots span{width:6px;height:6px;border-radius:50%;background:var(--brd2);transition:all var(--dur1)}
 .appdots span.on{background:var(--dim);width:7px;height:7px}
-.appgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:6px 2px;align-content:start}
+.appgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:6px 2px;align-content:start}
 .appico{display:flex;flex-direction:column;align-items:center;gap:7px;transition:transform var(--dur1) var(--ease)}
 .appico:active{transform:scale(.9)}
 .appico .ic{width:100%;aspect-ratio:1;max-width:74px;border-radius:26%;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 10px 26px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.35)}
@@ -331,7 +331,7 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 .mono[data-n="2"]{font-size:.74em}
 .mono[data-n="3"]{font-size:.52em;letter-spacing:0}
 /* store — full-screen app (back button, nav hidden) */
-#storeScreen{position:fixed;top:0;left:0;right:0;height:100dvh;z-index:60;display:none;flex-direction:column;
+#storeScreen{position:fixed;top:0;left:0;right:0;height:var(--app-height);z-index:60;display:none;flex-direction:column;
   background:radial-gradient(120% 80% at 80% -10%,color-mix(in srgb,var(--acc) 10%,transparent),transparent 55%),var(--bg0)}
 #storeScreen.on{display:flex}
 #storeBody{flex:1;overflow-y:auto;padding:16px 18px calc(28px + var(--sab));-webkit-overflow-scrolling:touch}
@@ -399,7 +399,7 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 /* board inline add */
 .dayadd{width:19px;height:19px;border-radius:50%;background:color-mix(in srgb,var(--acc) 13%,transparent);color:var(--acc);font-size:13px;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;margin-top:3px}
 /* ============ MONTH (full-screen, HowAbout-style) ============ */
-#monthScreen{position:fixed;top:0;left:0;right:0;height:100dvh;z-index:60;display:none;flex-direction:column;
+#monthScreen{position:fixed;top:0;left:0;right:0;height:var(--app-height);z-index:60;display:none;flex-direction:column;
   background:radial-gradient(120% 80% at 80% -10%,color-mix(in srgb,var(--acc) 11%,transparent),transparent 55%),var(--bg0)}
 #monthScreen.on{display:flex}
 #monthBody{flex:1;overflow-y:auto;padding:14px 14px calc(26px + var(--sab));-webkit-overflow-scrolling:touch}
@@ -521,7 +521,7 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 .iconbtn:active{transform:scale(.88)}
 .iconbtn svg{width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 /* ============ CREATE MOMENT (full-screen) ============ */
-#createScreen{position:fixed;top:0;left:0;right:0;height:100dvh;z-index:62;display:none;flex-direction:column;
+#createScreen{position:fixed;top:0;left:0;right:0;height:var(--app-height);z-index:62;display:none;flex-direction:column;
   background:radial-gradient(120% 80% at 80% -10%,color-mix(in srgb,var(--acc) 11%,transparent),transparent 55%),var(--bg0)}
 #createScreen.on{display:flex}
 #createScreen .prog{height:3px;background:transparent;flex:0 0 auto}
@@ -556,7 +556,7 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 .crad .dot{width:9px;height:9px;border-radius:50%;background:var(--acc);margin-left:auto;opacity:0}
 .crad.on .dot{opacity:1}
 /* ============ STORY VIEWER ============ */
-#storyView{position:fixed;top:0;left:0;right:0;height:100dvh;z-index:72;display:none;flex-direction:column;background:#06080f}
+#storyView{position:fixed;top:0;left:0;right:0;height:var(--app-height);z-index:72;display:none;flex-direction:column;background:#06080f}
 #storyView.on{display:flex}
 #storyView .bars{display:flex;gap:4px;padding:calc(10px + var(--sat)) 12px 8px;flex:0 0 auto}
 #storyView .bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.28);overflow:hidden}
@@ -573,7 +573,7 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 #storyView .nav span{flex:1}
 .confetti{position:fixed;width:9px;height:9px;z-index:73;pointer-events:none;border-radius:2px}
 /* ============ CIRCLE CHAT (full-screen, WhatsApp-style) ============ */
-#chatScreen{position:fixed;top:0;left:0;right:0;height:100dvh;z-index:64;display:none;flex-direction:column;
+#chatScreen{position:fixed;top:0;left:0;right:0;height:var(--app-height);z-index:64;display:none;flex-direction:column;
   background:radial-gradient(120% 70% at 80% -10%,color-mix(in srgb,var(--acc) 9%,transparent),transparent 55%),var(--bg0)}
 #chatScreen.on{display:flex}
 #chatBody{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:7px;padding:14px 14px 6px;-webkit-overflow-scrolling:touch}
@@ -601,7 +601,7 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 .cbtn:active{transform:scale(.88)}
 .cbtn svg{width:18px;height:18px;stroke:var(--acc);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 /* app host */
-#appHost{position:fixed;top:0;left:0;right:0;height:100dvh;z-index:70;display:none;flex-direction:column;background:var(--bg0)}
+#appHost{position:fixed;top:0;left:0;right:0;height:var(--app-height);z-index:70;display:none;flex-direction:column;background:var(--bg0)}
 #appHost.on{display:flex}
 #appHostBar{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + var(--sat)) 16px 10px;background:var(--glass2);backdrop-filter:blur(20px);border-bottom:1px solid var(--brd2)}
 #appHostBar b{font-size:15px}
@@ -644,7 +644,7 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 #logoutBtn:active{transform:scale(.97)}
 #logoutBtn svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 /* ============ SHEETS & TOAST ============ */
-#sheetLayer{position:fixed;top:0;left:0;right:0;height:100dvh;z-index:80;display:none}
+#sheetLayer{position:fixed;top:0;left:0;right:0;height:var(--app-height);z-index:80;display:none}
 #sheetLayer.on{display:block}
 #scrim{position:absolute;inset:0;background:rgba(4,7,16,.45);backdrop-filter:blur(3px)}
 #sheet{position:absolute;left:0;right:0;bottom:0;max-height:84%;border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:10px 20px calc(22px + var(--sab));display:flex;flex-direction:column}
@@ -669,7 +669,7 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 /* desktop */
 @media(min-width:900px){
   .view{padding-left:32px;padding-right:32px}
-  .appgrid{grid-template-columns:repeat(6,1fr)}
+  .appgrid{grid-template-columns:repeat(6,minmax(0,1fr))}
 }
 @media(prefers-reduced-motion:reduce){
   *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
