@@ -413,7 +413,7 @@ h1,h2,h3,p{margin:0}
       <div class="sectlabel">Your quest</div>
       <div class="path" id="path"></div>
       <div class="lgcard" id="goLeague">
-        <div class="lghead"><b>Family League</b><span>This week ›</span></div>
+        <div class="lghead"><b>Circle League</b><span>This week ›</span></div>
         <div id="leaguePrev"></div>
       </div>
     </div>
@@ -480,7 +480,7 @@ h1,h2,h3,p{margin:0}
   <!-- LEAGUE -->
   <section class="screen" id="s-league">
     <div class="safetop"></div>
-    <header class="sheethead"><button class="iconbtn" id="leagueBack">‹</button><h2>Family League</h2></header>
+    <header class="sheethead"><button class="iconbtn" id="leagueBack">‹</button><h2>Circle League</h2></header>
     <div class="scroll"><p style="font-size:13px;color:var(--muted);font-weight:650;margin:2px 2px 14px">This week's XP across the circle. Every lesson you finish climbs the board.</p><div id="leagueFull"></div></div>
   </section>
 
@@ -532,11 +532,13 @@ if(embedded)document.body.classList.add("embedded");
 const Bridge={
   embedded, reqs:{}, rid:0,
   send(type,payload){try{if(embedded&&window.parent&&window.parent!==window)window.parent.postMessage({type,appId:APP_ID,payload},"*");}catch(e){}},
-  list(collection){ return new Promise(res=>{ if(!embedded)return res(null);
+  request(type,msg){ return new Promise(res=>{ if(!embedded)return res(null);
       const reqId=APP_ID+"_"+(++this.rid); this.reqs[reqId]=res;
-      try{window.parent.postMessage({type:"DATA_LIST",appId:APP_ID,collection,reqId},"*");}catch(e){return res(null);}
+      try{window.parent.postMessage(Object.assign({type,appId:APP_ID,reqId},msg||{}),"*");}catch(e){return res(null);}
       setTimeout(()=>{if(this.reqs[reqId]){delete this.reqs[reqId];res(null);}},2500); }); },
-  create(collection,payload){ if(embedded)try{window.parent.postMessage({type:"DATA_CREATE",appId:APP_ID,collection,payload},"*");}catch(e){} }
+  list(collection,opts){return this.request("DATA_LIST",Object.assign({collection},opts||{}));},
+  create(collection,payload,opts){return this.request("DATA_CREATE",Object.assign({collection,payload},opts||{}));},
+  update(id,payload){return this.request("DATA_UPDATE",{id,payload});}
 };
 addEventListener("message",e=>{
   const m=e.data||{}; if(m.type==="INIT_APP"&&m.payload)applyCtx(m.payload);
@@ -544,22 +546,59 @@ addEventListener("message",e=>{
 });
 
 /* ===================== STATE ===================== */
-const DEFAULT={theme:"light",xp:0,gems:50,starterGemsGranted:false,streak:0,lastDay:"",day:"",dayXp:0,crowns:{},facts:{},sessions:[],lastLessonAt:"",sound:true,freeze:0,boost:0,owned:{classic:1,spark:1,sunny:1,bounce:1},equipped:{outfit:"classic",effect:"spark",room:"sunny",dance:"bounce"}};
+const DEFAULT={theme:"light",xp:0,gems:50,starterGemsGranted:false,streak:0,lastDay:"",day:"",dayXp:0,crowns:{},facts:{},sessions:[],questClaims:{},lastLessonAt:"",sound:true,freeze:0,boost:0,owned:{classic:1,spark:1,sunny:1,bounce:1},equipped:{outfit:"classic",effect:"spark",room:"sunny",dance:"bounce"}};
+const STATE_COLLECTION="times_state";
+let remoteStateId="", remoteSaveTimer=null, hydratingRemote=false;
+let remoteCatalogId="";
 let S=load();
 S.owned=Object.assign({},DEFAULT.owned,S.owned||{});
 S.equipped=Object.assign({},DEFAULT.equipped,S.equipped||{});
+S.questClaims=Object.assign({},S.questClaims||{});
 if(!S.starterGemsGranted){S.gems=Math.max(Number(S.gems)||0,50);S.starterGemsGranted=true;save();}
 function load(){try{return Object.assign({},DEFAULT,JSON.parse(localStorage.getItem(PREFIX+"_state")||"{}"));}catch(e){return Object.assign({},DEFAULT);}}
-function save(){try{localStorage.setItem(PREFIX+"_state",JSON.stringify(S));}catch(e){}}
-let CTX={circleId:"standalone",circleType:"family",personId:"me",personName:"You",people:[]};
+function save(){try{localStorage.setItem(PREFIX+"_state",JSON.stringify(S));}catch(e){} scheduleRemoteSave();}
+function statePayload(){return Object.assign({},S,{_savedAt:new Date().toISOString()});}
+function recordPayload(rec){if(!rec)return{}; if(rec.payload&&typeof rec.payload==="object")return rec.payload; try{return JSON.parse(rec.payloadJson||"{}");}catch(e){return{};}}
+function scheduleRemoteSave(){
+  if(!Bridge.embedded||hydratingRemote)return;
+  clearTimeout(remoteSaveTimer);
+  remoteSaveTimer=setTimeout(async()=>{
+    const payload=statePayload();
+    try{
+      if(remoteStateId)await Bridge.update(remoteStateId,payload);
+      else{const rows=await Bridge.create(STATE_COLLECTION,payload,{scope:"person",ownerPersonId:true});if(rows&&rows[0])remoteStateId=rows[0].id;}
+    }catch(e){}
+  },450);
+}
+async function hydrateRemoteState(){
+  if(!Bridge.embedded)return;
+  hydratingRemote=true;
+  try{
+    const rows=await Bridge.list(STATE_COLLECTION,{scope:"person",ownerPersonId:true});
+    const rec=rows&&rows[0]; if(rec){remoteStateId=rec.id;S=Object.assign({},DEFAULT,recordPayload(rec));S.owned=Object.assign({},DEFAULT.owned,S.owned||{});S.equipped=Object.assign({},DEFAULT.equipped,S.equipped||{});S.questClaims=Object.assign({},S.questClaims||{});localStorage.setItem(PREFIX+"_state",JSON.stringify(S));}
+  }catch(e){} finally{hydratingRemote=false;}
+  applyCosmetics();renderHome();renderQuests();if($("#s-syllabus").classList.contains("on"))renderSyllabus();if($("#s-shop").classList.contains("on"))renderShop();
+}
+async function syncShopCatalog(){
+  if(!Bridge.embedded)return;
+  try{
+    const rows=await Bridge.list("shop_catalog",{ownerPersonId:false});
+    const rec=rows&&rows[0];
+    if(rec){remoteCatalogId=rec.id;const p=recordPayload(rec);if(Array.isArray(p.items)&&p.items.length)SHOP=p.items;}
+    else{const made=await Bridge.create("shop_catalog",{version:1,items:SHOP,createdAt:new Date().toISOString()},{ownerPersonId:false});if(made&&made[0])remoteCatalogId=made[0].id;}
+  }catch(e){}
+  if($("#s-shop").classList.contains("on"))renderShop();
+}
+let CTX={userId:"",userName:"",circleId:"standalone",circleName:"",circleType:"family",personId:"me",personName:"You",role:"member",roleLabel:"Member",isLeader:false,isCoLeader:false,isCircleAdmin:false,isAdult:false,isKid:true,people:[]};
 function applyCtx(p){
+  CTX=Object.assign({},CTX,p||{});
   CTX.circleId=p.circleId||CTX.circleId; CTX.circleType=p.circleType||CTX.circleType;
   CTX.personId=p.personId||p.memberId||CTX.personId;
   CTX.people=Array.isArray(p.people)?p.people:[];
   const me=CTX.people.find(x=>x.id===CTX.personId); CTX.personName=(me&&me.name)||p.personName||"You";
   if(p.theme)setTheme(p.theme);
-  $("#homeSub").textContent=cap(CTX.circleType)+" circle · keep your streak alive";
-  loadLeague();
+  $("#homeSub").textContent=(CTX.circleName?CTX.circleName+" · ":"")+cap(CTX.circleType)+" circle";
+  hydrateRemoteState();syncShopCatalog();loadLeague();
 }
 function cap(s){return s?s[0].toUpperCase()+s.slice(1):s;}
 
@@ -667,8 +706,10 @@ function renderHome(){
   $("#cGems").textContent=S.gems;
   $("#cXp").textContent=S.xp;
   const fluent=allFacts().filter(fc=>isFluent(fget(fc[0],fc[1]))).length;
-  $("#coachLine").textContent=S.dayXp>=GOAL_XP?"Your flame is safe today!":fluent>12?"Kiki found more speed sparks!":"Ready for a number quest?";
-  $("#coachSub").textContent=S.dayXp>=GOAL_XP?"Pop into a lesson for bonus crowns, or check the Syllabus for slow facts.":"Win crowns, build your streak, and make tricky facts feel easy.";
+  $("#coachLine").textContent="Hello, "+(CTX.personName||"friend");
+  $("#coachSub").textContent=CTX.isCircleAdmin?
+    "Leader view · check the syllabus, fluency, timing, and Circle League progress.":
+    (S.dayXp>=GOAL_XP?"Your flame is safe today! Pop into a lesson for bonus crowns.":"Win crowns, build your streak, and make tricky facts feel easy.");
   const pct=clamp(Math.round(S.dayXp/GOAL_XP*100),0,100);
   $("#goalArc").setAttribute("stroke-dasharray",(pct*0.973)+" 100");
   $("#goalTxt").textContent=pct+"%";
@@ -752,13 +793,24 @@ function renderQuests(){
     {ic:"⚡",title:"Speed sparks",desc:"Answer 5 facts in under 3 seconds.",cur:Math.min(fast,5),max:5,done:fast>=5,reward:"Kiki dance"}
   ];
   const done=quests.filter(q=>q.done).length;
+  const claim=S.questClaims&&S.questClaims[today()];
   $("#questDone").textContent=done+"/3";
-  $("#questCoach").textContent=done===3?"Quest chest is glowing!":bestAcc>=90?"That accuracy was sharp!":"Three tiny wins today.";
+  $("#questCoach").textContent=claim?"Surprise claimed!":done===3?"Quest chest is glowing!":bestAcc>=90?"That accuracy was sharp!":"Three tiny wins today.";
   $("#questBody").innerHTML=quests.map(q=>`<div class="quest-card ${q.done?"done":""}">
     <div class="quest-top"><div class="quest-ic">${q.done?"✓":q.ic}</div><div class="quest-main"><b>${q.title}</b><p>${q.desc}</p></div><div class="quest-reward">${q.reward}</div></div>
     <div class="meter"><i style="width:${Math.round(q.cur/q.max*100)}%"></i></div>
     <div class="lesson-foot"><div class="weak">${q.cur}/${q.max} complete</div><span class="status-pill ${q.done?"good":""}">${q.done?"Done":"In progress"}</span></div>
-  </div>`).join("")+`<div class="chest"><div><b>${done===3?"Daily chest unlocked":"Daily chest"}</b><p>${done===3?"Amazing work today. Come back tomorrow for a fresh run.":"Complete all three quests to light it up."}</p></div><div class="box">${done===3?"🎉":"🎁"}</div></div>`;
+  </div>`).join("")+`<div class="chest"><div><b>${claim?"You found "+claim.label:done===3?"Daily chest unlocked":"Daily chest"}</b><p>${claim?"Saved to your Kiki account.":done===3?"Open it for surprise diamonds or a shop item.":"Complete all three quests to light it up."}</p>${done===3&&!claim?'<button class="mini-btn" id="claimQuest">Open chest</button>':""}</div><div class="box">${claim?"💎":done===3?"🎉":"🎁"}</div></div>`;
+  const cq=$("#claimQuest");if(cq)cq.onclick=claimDailyReward;
+}
+function claimDailyReward(){
+  const d=today(); if(S.questClaims&&S.questClaims[d])return;
+  const unowned=SHOP.filter(it=>it.kind!=="power"&&!it.free&&!S.owned[shopKey(it)]);
+  let reward;
+  if(unowned.length&&Math.random()<.35){const it=pick(unowned);S.owned[shopKey(it)]=1;reward={type:"item",itemId:shopKey(it),label:it.name};}
+  else{const amount=5+Math.floor(Math.random()*11);S.gems+=amount;reward={type:"gems",amount,label:amount+" diamonds"};}
+  S.questClaims=S.questClaims||{};S.questClaims[d]=Object.assign({claimedAt:new Date().toISOString()},reward);
+  save();Snd.win();UI.toast("Surprise: "+reward.label+"!");renderQuests();renderHome();
 }
 
 /* ===================== LESSON FLOW ===================== */
@@ -992,7 +1044,7 @@ function renderLeaguePrev(){$("#leaguePrev").innerHTML=fallbackLeague().slice(0,
 function renderLeagueFull(){$("#leagueFull").innerHTML=fallbackLeague().map((p,i)=>leagueRow(p,i+1)).join("");}
 
 /* ===================== SHOP ===================== */
-const SHOP=[
+let SHOP=[
   {id:"classic",kind:"outfit",ic:"✨",name:"Classic Kiki",desc:"Kiki's bright everyday look.",cost:0,free:true},
   {id:"crown",kind:"outfit",ic:"👑",name:"Tiny Crown",desc:"Kiki wears a royal crown during lessons.",cost:8},
   {id:"cape",kind:"outfit",ic:"🦸",name:"Super Cape",desc:"A heroic look for speedy answers.",cost:12},

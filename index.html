@@ -701,7 +701,7 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
     <h1>Welcome to <i style="font-style:normal;background:linear-gradient(120deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Kinetik</i></h1>
     <p class="sub">Only the people you invite. Nothing else. No feed, no ads.</p>
     <div id="personaList" style="display:flex;flex-direction:column;gap:9px"></div>
-    <input class="fld" id="pinFld" type="password" inputmode="numeric" placeholder="PIN" maxlength="6">
+    <input class="fld" id="pinFld" type="password" placeholder="Password / PIN" autocomplete="current-password">
     <button class="btn" id="loginBtn" disabled>Continue</button>
     <p class="priv">Private circles for family &amp; friends.<br>Members only ever see the circles they belong to.</p>
   </div>
@@ -855,6 +855,7 @@ const SHEET_COLLECTIONS={
    + this curated list. Keep the file names here matching real files for offline use. */
 /*KINETIK_APPS_START*/
 const BUILTIN_APP_CATALOG=[
+  {"id":"times-table-quest","name":"Times Table Quest","shortName":"Times Tables","file":"App_ProductivityTimesTableQuest_Wow.html","glyph":"✖️","gradient":["#ffb545","#ff5d8f"],"tagline":"Fast multiplication quests.","status":"live","allowed":["family","friends"],"active":true,"category":"productivity","audience":"kids","worksWith":["offline","standalone"],"minMembers":1,"desc":"A playful multiplication drill with hearts, XP, streaks, crowns, avatar rewards, timing, syllabus progress, and Circle League support."},
   {"id":"productivity-poll","name":"Event Poll","shortName":"Poll","file":"App_ProductivityPoll.html","glyph":"🗳️","gradient":["#8b5cf6","#d946ef"],"tagline":"Find the best time, fast.","status":"live","allowed":["family","friends"],"active":true,"category":"productivity","audience":"all","worksWith":["calendar"],"minMembers":2,"desc":"Propose dates, let everyone in the circle vote with one tap, and watch the bars race. Close the poll and the winning time lands on the shared calendar automatically."},
   {"id":"game-circle-chess","name":"Circle Chess","shortName":"Chess","file":"App_GameCircleChess.html","glyph":"♟️","gradient":["#4f7cff","#63d6b5"],"tagline":"Quiet strategy for your circle.","status":"live","allowed":["family","friends"],"active":true,"category":"games","audience":"all","worksWith":["offline","standalone"],"minMembers":1,"desc":"A polished chess match for family and friends. Play pass-and-play or challenge a simple local Kinetik AI with circle-ready leaderboard support."},
   {"id":"game-code-clash","name":"Code Clash","shortName":"CodeClash","file":"App_GameCodeClash.html","glyph":"⚡","gradient":["#ff6fae","#6f8cff"],"tagline":"Crack the color code.","status":"live","allowed":["family","friends"],"active":true,"category":"games","audience":"all","worksWith":["offline","standalone"],"minMembers":1,"desc":"A fast logic duel for family and friends. Guess the hidden color code with unlimited attempts, tactile marbles, hints, and a circle-ready leaderboard."},
@@ -995,7 +996,7 @@ const appGlyph=a=>({store:"◎","padel-americano":"🎾","event-poll":"🗳️",
 const activeRow=r=>r.active===undefined||r.active===""||boolVal(r.active);
 function fromSheet(col,row){
   const r={...row};
-  if(col==="users")return {...r,personId:r.personId||r.defaultPersonId,pin:String(r.pin??r.passwordDemo??"").trim()};
+  if(col==="users")return {...r,personId:r.personId||r.defaultPersonId,pin:String(r.pin??r.passwordDemo??"").trim(),active:activeRow(r)};
   if(col==="circles")return {...r,accent:r.accent||splitGradient(r.color),active:activeRow(r)};
   if(col==="routines")return {...r,participantPersonIds:jsonVal(r.participantPersonIdsJson,r.participantPersonIds||[]),dayOfWeek:dayVal(r.dayOfWeek),preparation:jsonVal(r.preparationJson,r.preparation||[]),active:activeRow(r)};
   if(col==="events")return {...r,participantPersonIds:jsonVal(r.participantPersonIdsJson,r.participantPersonIds||[]),preparation:jsonVal(r.preparationJson,r.preparation||[]),active:activeRow(r)};
@@ -1127,8 +1128,18 @@ const Session={KEY:"kinetik_session",
 const ROLE_LABEL={owner:"Leader",coleader:"Co-leader",admin:"Co-leader",adult:"Member",member:"Member",viewer:"Viewer",child:"Viewer"};
 const ROLE_PERM={owner:"full_control",coleader:"manage",member:"edit_own",viewer:"read_only"};
 const Perm={
-  allowedCircleIds(userId){return DB.d.circleMembers.filter(m=>m.userId===userId).map(m=>m.circleId);},
-  role(userId,circleId){const m=DB.d.circleMembers.find(m=>m.userId===userId&&m.circleId===circleId);return m?m.role:null;},
+  membership(userId,circleId){return DB.d.circleMembers.find(m=>m.userId===userId&&m.circleId===circleId&&m.active!==false)||null;},
+  allowedCircleIds(userId){return DB.d.circleMembers.filter(m=>m.userId===userId&&m.active!==false).map(m=>m.circleId);},
+  role(userId,circleId){const m=this.membership(userId,circleId);return m?m.role:null;},
+  roleContext(userId,circleId){
+    const m=this.membership(userId,circleId),role=m&&m.role||"viewer",person=m&&DataAPI.get("people",m.personId);
+    const isLeader=role==="owner",isCoLeader=role==="coleader"||role==="admin";
+    const birthYear=person&&Number(person.birthYear),age=birthYear?(new Date().getFullYear()-birthYear):null;
+    const c=DataAPI.get("circles",circleId);
+    const isKid=role==="child"||role==="viewer"||(c&&c.type==="family"&&role==="member"&&(!age||age<18));
+    return {role,roleLabel:ROLE_LABEL[role]||"Member",permission:m&&m.permission||ROLE_PERM[role]||"read_only",
+      isLeader,isCoLeader,isCircleAdmin:isLeader||isCoLeader,isAdult:role==="adult"||isLeader||isCoLeader||(age!=null&&age>=18),isKid,age};
+  },
   canEditCalendar(userId,circleId){return["owner","coleader","admin","adult","member"].includes(this.role(userId,circleId));},
   canManageMembers(userId,circleId){return["owner","coleader","admin"].includes(this.role(userId,circleId));}
 };
@@ -2734,16 +2745,30 @@ const AppHost={cur:null,
     $("#appHostDone").onclick=()=>this.close();
     $("#appFrame").addEventListener("load",()=>{
       if(!this.cur)return;
+      const u=DataAPI.get("users",S.userId),p=me(),c=circle(),roles=Perm.roleContext(S.userId,S.circleId);
       $("#appFrame").contentWindow.postMessage({type:"INIT_APP",payload:{
-        circleId:S.circleId,circleType:circle().type,personId:S.personId,role:Perm.role(S.userId,S.circleId),
+        userId:S.userId,userName:u&&u.displayName||"",username:u&&u.username||"",
+        personId:S.personId,personName:p&&p.displayName||"",
+        circleId:S.circleId,circleName:c&&c.name||"",circleType:c&&c.type||"",
+        role:roles.role,roleLabel:roles.roleLabel,permission:roles.permission,
+        isLeader:roles.isLeader,isCoLeader:roles.isCoLeader,isCircleAdmin:roles.isCircleAdmin,isAdult:roles.isAdult,isKid:roles.isKid,age:roles.age,
         theme:document.documentElement.dataset.theme,appId:this.cur.id,backendMode:DB.d.settings.backendMode,apiUrl:DB.d.settings.apiUrl,
-        people:circlePeople().map(p=>({id:p.id,name:p.displayName,color:p.color}))
+        people:circlePeople().map(p=>({id:p.id,name:p.displayName,color:p.color,birthYear:p.birthYear||""}))
       }},"*");
     });
     addEventListener("message",e=>{
       const m=e.data||{};const reply=p=>{try{$("#appFrame").contentWindow.postMessage(p,"*")}catch(x){}};
-      if(m.type==="DATA_LIST"){const items=DataAPI.list("appRecords").filter(r=>r.circleId===S.circleId&&r.appId===m.appId&&r.collection===m.collection&&!r.deleted);reply({type:"DATA_RESULT",reqId:m.reqId,items});}
-      else if(m.type==="DATA_CREATE"){const r=DataAPI.create("appRecords",{circleId:S.circleId,appId:m.appId,collection:m.collection,payload:m.payload,deleted:false});reply({type:"DATA_RESULT",reqId:m.reqId,items:[r]});}
+      if(m.type==="DATA_LIST"){
+        let items=DataAPI.list("appRecords").filter(r=>r.circleId===S.circleId&&r.appId===m.appId&&r.collection===m.collection&&!r.deleted);
+        if(m.scope==="person"||m.ownerPersonId===true)items=items.filter(r=>r.ownerPersonId===S.personId);
+        else if(typeof m.ownerPersonId==="string")items=items.filter(r=>r.ownerPersonId===m.ownerPersonId);
+        reply({type:"DATA_RESULT",reqId:m.reqId,items});
+      }
+      else if(m.type==="DATA_CREATE"){
+        const ownerPersonId=m.ownerPersonId===false?"":(typeof m.ownerPersonId==="string"?m.ownerPersonId:S.personId);
+        const r=DataAPI.create("appRecords",{circleId:S.circleId,appId:m.appId,collection:m.collection,ownerPersonId,payload:m.payload,deleted:false});
+        reply({type:"DATA_RESULT",reqId:m.reqId,items:[r]});
+      }
       else if(m.type==="DATA_UPDATE"){const r=DataAPI.update("appRecords",m.id,{payload:m.payload});reply({type:"DATA_RESULT",reqId:m.reqId,items:[r]});}
       else if(m.type==="DATA_REMOVE"){DataAPI.update("appRecords",m.id,{deleted:true});reply({type:"DATA_RESULT",reqId:m.reqId,items:[]});}
       else if(m.type==="SHOW_TOAST")Toast.show(m.message||"");
@@ -2984,6 +3009,7 @@ const LastUser={KEY:"kinetik_last_user",
   clear(){localStorage.removeItem(this.KEY);}
 };
 function finishLogin(user){
+  if(!user||!user.active)return Toast.show("Account is inactive");
   S.userId=user.id;S.personId=user.personId;
   S.circleId=Perm.allowedCircleIds(user.id)[0];
   LastUser.save(user);
@@ -2993,7 +3019,7 @@ function finishLogin(user){
 function tryLogin(u){
   const pin=$("#pinFld").value.trim();
   const savedPin=String(u.pin??"").trim();
-  if(savedPin&&pin!==savedPin)return Toast.show("Wrong PIN");
+  if(savedPin&&pin!==savedPin)return Toast.show("Wrong password");
   finishLogin(u);
 }
 function showSignup(list){
@@ -3033,17 +3059,23 @@ function showSignup(list){
   };
   Motion.reveal("#login .panel");
 }
+function showNoAccounts(list){
+  $("#pinFld").value="";$("#pinFld").placeholder="Password / PIN";$("#loginBtn").textContent="Continue";$("#loginBtn").disabled=true;
+  list.innerHTML=`<p style="font-size:13.5px;color:var(--faint);line-height:1.45;margin:0">No active accounts were found in Google Sheets yet. Ask the circle Leader to add a user account first.</p>`;
+  Motion.reveal("#login .panel");
+}
 function showLogin(){
   $("#login").classList.remove("hide");
   const list=$("#personaList");list.innerHTML="";
-  if(!DB.d.users.length){showSignup(list);return;}
+  const activeUsers=DB.d.users.filter(u=>u.active!==false);
+  if(!activeUsers.length){showNoAccounts(list);return;}
   const last=LastUser.get();
-  const lastUser=last&&DB.d.users.find(u=>u.id===last.id);
+  const lastUser=last&&activeUsers.find(u=>u.id===last.id);
   if(lastUser)showWelcomeBack(list,lastUser);else showManualLogin(list);
   Motion.reveal("#login .panel");
 }
 function showWelcomeBack(list,u){
-  $("#pinFld").value="";$("#pinFld").placeholder="PIN";
+  $("#pinFld").value="";$("#pinFld").placeholder="Password / PIN";
   $("#loginBtn").textContent="Continue";$("#loginBtn").disabled=false;
   const cids=Perm.allowedCircleIds(u.id);
   list.innerHTML=`<div class="persona on" style="pointer-events:none">
@@ -3055,15 +3087,14 @@ function showWelcomeBack(list,u){
   setTimeout(()=>$("#pinFld").focus(),120);
 }
 function showManualLogin(list){
-  $("#pinFld").value="";$("#pinFld").placeholder="PIN";
+  $("#pinFld").value="";$("#pinFld").placeholder="Password / PIN";
   $("#loginBtn").textContent="Continue";$("#loginBtn").disabled=false;
   list.innerHTML=`<input class="fld" id="unameFld" placeholder="Username or email" autocomplete="username" autocapitalize="none">
-    <button id="newAcc" style="font-size:12.5px;font-weight:600;color:var(--acc);padding:2px 0;width:100%;text-align:center">New here? Create an account</button>`;
-  $("#newAcc").onclick=()=>showSignup(list);
+    <p style="font-size:12.5px;color:var(--faint);line-height:1.45;margin:0;text-align:center">Use your existing Kinetik account. New accounts are added by the circle Leader.</p>`;
   $("#loginBtn").onclick=()=>{
     const q=$("#unameFld").value.trim().toLowerCase();
     if(!q)return Toast.show("Type your username or email");
-    const u=DB.d.users.find(u2=>[u2.username,u2.email,u2.displayName].some(v=>String(v||"").toLowerCase()===q));
+    const u=DB.d.users.filter(u2=>u2.active!==false).find(u2=>[u2.username,u2.email,u2.displayName].some(v=>String(v||"").toLowerCase()===q));
     if(!u)return Toast.show("No account found — ask your circle Leader");
     tryLogin(u);
   };
