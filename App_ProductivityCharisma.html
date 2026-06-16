@@ -465,7 +465,7 @@ const QUOTES=[
 const DEFAULT={theme:"light",warmth:28,competence:28,xp:0,sessions:0,streak:0,lastDay:"",activeDays:[],
   mastery:{},insights:[],badges:[],seenScn:[],reflections:[],weekFocus:null,weekStart:""};
 let S=load();
-function load(){try{const o=Object.assign({},DEFAULT,JSON.parse(localStorage.getItem(PREFIX+"_state")||"{}"));o.mastery=o.mastery||{};return o;}catch(e){return Object.assign({},DEFAULT);}}
+function load(){try{const raw=localStorage.getItem(PREFIX+"_state");const o=Object.assign({},DEFAULT,JSON.parse(raw||"{}"));o.mastery=o.mastery||{};if(!raw)o.theme=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";return o;}catch(e){return Object.assign({},DEFAULT);}}
 function save(){try{localStorage.setItem(PREFIX+"_state",JSON.stringify(S));}catch(e){}}
 
 let CTX={circleType:"family",personId:"me",personName:""};
