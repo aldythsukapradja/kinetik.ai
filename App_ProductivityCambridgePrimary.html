@@ -259,6 +259,13 @@
     const uid = (prefix) => prefix + "_" + Math.random().toString(36).slice(2,9);
     const norm = (value) => String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();
     const clone = (value) => JSON.parse(JSON.stringify(value));
+    const CAMBRIDGE_SHOP = [
+      {id:"bookmark-sapphire", name:"Sapphire Bookmark", type:"bookmark", cost:18},
+      {id:"badge-reader", name:"Careful Reader Badge", type:"badge", cost:20},
+      {id:"badge-math", name:"Number Explorer Badge", type:"badge", cost:20},
+      {id:"desk-calm", name:"Calm Study Desk", type:"desk", cost:28},
+      {id:"pen-gold", name:"Gold Revision Pen", type:"tool", cost:16}
+    ];
 
     const SUBJECTS = [
       {id:"english",name:"English",code:"0058",short:"Eng",color:["#14b8a6","#4f46e5"],strands:["Reading","Writing","Speaking and Listening"],source:"https://www.cambridgeinternational.org/programmes-and-qualifications/cambridge-primary/curriculum/english/"},
@@ -346,6 +353,7 @@
         activeTab:"today",
         activeProfileId:"baginda",
         filters:{subject:"math"},
+        rewards:{gems:50,inventory:{},claims:{},starterGemsGranted:true},
         profiles:[
           {id:"baginda",name:"Baginda",avatar:"B",color:"#4f46e5",stage:5},
           {id:"keyla",name:"Keyla",avatar:"K",color:"#06b6d4",stage:2}
@@ -362,11 +370,11 @@
 
     const Bridge = {
       embedded: window.parent && window.parent !== window,
-      context:{circleId:"standalone_demo",circleType:"family",personId:"local_person",role:"parent",theme:"light",backendMode:"local"},
+      context:{circleId:"standalone_demo",circleName:"Standalone",circleType:"family",personId:"local_person",personName:"Local Learner",role:"parent",roleLabel:"Parent",isKid:false,isAdult:true,isLeader:false,isCoLeader:false,theme:"light",backendMode:"local",people:[]},
       send(type, payload={}){
         if(!this.embedded) return;
-        const msg = {type, appId:APP_ID, payload};
-        if(type === "SHOW_TOAST") msg.message = payload.message || "";
+        const msg = {type, appId:APP_ID, ...payload};
+        if(type === "SHOW_TOAST" && !msg.message) msg.message = payload.message || "";
         window.parent.postMessage(msg, "*");
       }
     };
@@ -390,6 +398,7 @@
     let selectedAnswer = null;
     let orderAnswer = [];
     let checked = false;
+    let questionStartedAt = 0;
 
     function readStore(){
       try{return JSON.parse(localStorage.getItem(STORE_KEY) || "null") || defaultStore();}
@@ -402,9 +411,14 @@
         ...raw,
         filters:{...base.filters,...(raw.filters || {})},
         profiles:Array.isArray(raw.profiles) && raw.profiles.length ? raw.profiles : base.profiles,
+        rewards:{...base.rewards,...(raw.rewards || {}),inventory:{...base.rewards.inventory,...((raw.rewards || {}).inventory || {})},claims:{...base.rewards.claims,...((raw.rewards || {}).claims || {})}},
         progress:raw.progress || {},
         overrides:raw.overrides || {}
       };
+      if(!merged.rewards.starterGemsGranted){
+        merged.rewards.gems = Number(merged.rewards.gems || 0) + 50;
+        merged.rewards.starterGemsGranted = true;
+      }
       merged.profiles = merged.profiles.map(normalizeProfile);
       return merged;
     }
@@ -420,6 +434,25 @@
       p.stage = Math.min(6, Math.max(1, Number(p.stage) || 1));
       p.stageBySubject = {english:p.stage,math:p.stage,science:p.stage,french:p.stage};
       return p;
+    }
+    function syncProfilesFromContext(){
+      const people = Array.isArray(Bridge.context.people) ? Bridge.context.people : [];
+      if(!people.length) return;
+      let changed = false;
+      people.forEach((person, index) => {
+        if(!person.id || state.profiles.some((profile) => profile.id === person.id)) return;
+        const color = person.color || SUBJECTS[index % SUBJECTS.length].color[0];
+        state.profiles.push(normalizeProfile({id:person.id,name:person.name || "Learner",avatar:(person.name || "L")[0].toUpperCase(),color,stage:1}));
+        changed = true;
+      });
+      if(Bridge.context.isKid && Bridge.context.personId && state.profiles.some((profile) => profile.id === Bridge.context.personId)){
+        state.activeProfileId = Bridge.context.personId;
+        changed = true;
+      } else if(!state.profiles.some((profile) => profile.id === state.activeProfileId)){
+        state.activeProfileId = state.profiles[0]?.id || "";
+        changed = true;
+      }
+      if(changed) save();
     }
     function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
     function lessons(){
@@ -474,6 +507,7 @@
       if(Bridge.embedded) document.body.classList.add("embedded");
       document.documentElement.dataset.theme = state.theme;
       LearningBackendAdapter.mode = Bridge.embedded ? "bridge-v1" : state.backendMode;
+      syncProfilesFromContext();
       wire();
       renderAll();
       addEventListener("message", onMessage);
@@ -489,7 +523,8 @@
       }
       state.backendMode = "bridge-v1";
       LearningBackendAdapter.mode = "bridge-v1";
-      $("contextLine").textContent = `${Bridge.context.circleType || "family"} circle`;
+      syncProfilesFromContext();
+      $("contextLine").textContent = contextLabel();
       save();
       renderAll();
     }
@@ -502,11 +537,15 @@
       $("lessonAction").onclick = lessonAction;
       $("sheetClose").onclick = closeSheet;
       $("scrim").onclick = closeSheet;
+      renderNavLabels();
+      $("lessonBack").innerHTML = icon("back");
+    }
+
+    function renderNavLabels(){
       document.querySelector("[data-tab='today']").innerHTML = icon("today") + "Today";
       document.querySelector("[data-tab='path']").innerHTML = icon("path") + "Path";
       document.querySelector("[data-tab='practice']").innerHTML = icon("practice") + "Practice";
-      document.querySelector("[data-tab='parent']").innerHTML = icon("parent") + "Parent";
-      $("lessonBack").innerHTML = icon("back");
+      document.querySelector("[data-tab='parent']").innerHTML = icon("parent") + (Bridge.context.isKid ? "Guide" : "Parent");
     }
 
     function switchTab(tab){
@@ -519,6 +558,7 @@
 
     function renderAll(){
       renderTop();
+      renderNavLabels();
       ["today","path","practice","parent"].forEach(renderView);
       switchTab(state.activeTab || "today");
     }
@@ -531,7 +571,14 @@
     function renderTop(){
       $("themeBtn").innerHTML = icon(state.theme === "dark" ? "sun" : "moon");
       $("profileSelect").innerHTML = state.profiles.map((item) => `<option value="${item.id}" ${item.id === state.activeProfileId ? "selected" : ""}>${esc(item.name)}</option>`).join("");
-      $("contextLine").textContent = Bridge.embedded ? `${Bridge.context.circleType || "family"} circle` : "Standalone local mode";
+      $("contextLine").textContent = contextLabel();
+    }
+
+    function contextLabel(){
+      if(!Bridge.embedded) return "Standalone local mode";
+      const name = Bridge.context.personName || profile()?.name || "Learner";
+      const circleName = Bridge.context.circleName || `${Bridge.context.circleType || "family"} circle`;
+      return `Hello, ${name} · ${circleName}`;
     }
 
     function renderToday(){
@@ -540,6 +587,7 @@
       const prog = progress();
       const totalDone = Object.values(prog.lessonStatus).filter((item) => item.mastered).length;
       const weak = weakObjectives();
+      const reward = cambridgeRewardStatus();
       $("todayBody").innerHTML = `
         <section class="hero">
           ${heroSvg()}
@@ -555,6 +603,11 @@
           <div class="stat"><b>${prog.mistakes.length}</b><span>review</span></div>
         </section>
         <section class="card glass grid">
+          <div class="between"><div><span class="label">Daily chest</span><h2>${reward.claimed ? "Reward opened" : "Surprise reward"}</h2><p class="small">${reward.ready ? "A lesson today unlocks diamonds or a study item." : "Complete one lesson today to unlock the chest."}</p></div><span class="chip on">${state.rewards.gems} diamonds</span></div>
+          <div class="progress-bar"><i style="width:${reward.ready ? 100 : 0}%"></i></div>
+          <button class="btn secondary" id="claimReward" ${reward.ready && !reward.claimed ? "" : "disabled"}>${reward.claimed ? "Opened" : "Open chest"}</button>
+        </section>
+        <section class="card glass grid">
           <div class="between"><div><span class="label">Recommended - ${esc(rec.subject)} ${rec.subjectCode}</span><h2>${esc(rec.title)}</h2><p class="small">${esc(rec.explanation.slice(0,150))}...</p></div><span class="chip on">${esc(rec.strand)}</span></div>
           <div class="progress-bar"><i style="width:${lessonStatus(rec.lessonId).best}%"></i></div>
           <button class="btn" data-start="${rec.lessonId}">Continue Lesson</button>
@@ -563,7 +616,34 @@
           <div class="between"><h3>Needs review</h3><span class="small">${weak.length || "clear"}</span></div>
           ${weak.length ? weak.map((item) => `<button class="lesson-card" data-start="${item.lesson.lessonId}"><span class="label">${esc(item.lesson.subject)} - Stage ${item.lesson.stage}</span><b>${esc(item.title)}</b><div class="progress-bar"><i style="width:${item.value}%"></i></div></button>`).join("") : `<div class="empty">No weak objectives yet. Complete a lesson to start tracking mastery.</div>`}
         </section>`;
+      $("claimReward").onclick = claimCambridgeReward;
       bindStarts($("todayBody"));
+    }
+
+    function cambridgeRewardStatus(){
+      const key = DAY();
+      const ready = progress().attempts.some((attempt) => String(attempt.finishedAt || "").slice(0,10) === key);
+      return {ready, claimed:!!state.rewards.claims[key]};
+    }
+
+    function claimCambridgeReward(){
+      const status = cambridgeRewardStatus();
+      const key = DAY();
+      if(!status.ready || status.claimed) return;
+      const unowned = CAMBRIDGE_SHOP.filter((item) => !state.rewards.inventory[item.id]);
+      let reward;
+      if(unowned.length && Math.random() > .45){
+        reward = {type:"item", item:unowned[Math.floor(Math.random() * unowned.length)]};
+        state.rewards.inventory[reward.item.id] = true;
+      } else {
+        reward = {type:"gems", amount:8 + Math.floor(Math.random() * 12)};
+        state.rewards.gems += reward.amount;
+      }
+      state.rewards.claims[key] = reward;
+      save();
+      LearningBackendAdapter.emit("cambridge_rewards", {profileId:profile().id,reward,claimedAt:new Date().toISOString()});
+      toast(reward.type === "gems" ? `Surprise: ${reward.amount} diamonds` : `Surprise item: ${reward.item.name}`);
+      renderToday();
     }
 
     function averageMastery(){
@@ -634,6 +714,22 @@
 
     function renderParent(){
       const p = profile();
+      if(Bridge.embedded && Bridge.context.isKid){
+        $("parentBody").innerHTML = `
+          <section class="card glass grid">
+            <span class="label">Guide view</span>
+            <h2>${esc(p.name)}</h2>
+            <p class="small">Your leader or co-leader can adjust stages, profiles and lesson content. Your work here still saves to your own profile.</p>
+          </section>
+          <section class="stats">
+            ${SUBJECTS.map((item) => `<div class="stat"><b>${subjectCoverage(item.id)}%</b><span>${item.short}</span></div>`).join("")}
+          </section>
+          <section class="card glass grid">
+            <div class="between"><h3>Study rewards</h3><span class="chip on">${state.rewards.gems} diamonds</span></div>
+            ${CAMBRIDGE_SHOP.map((item) => `<div class="profile-card between"><span><b>${esc(item.name)}</b><span class="small" style="display:block">${state.rewards.inventory[item.id] ? "Unlocked" : `${item.cost} diamonds`}</span></span><span class="chip ${state.rewards.inventory[item.id] ? "on" : ""}">${esc(item.type)}</span></div>`).join("")}
+          </section>`;
+        return;
+      }
       $("parentBody").innerHTML = `
         <section class="card glass grid">
           <div class="between"><div><span class="label">Parent dashboard</span><h2>${esc(p.name)}</h2><p class="small">One Cambridge stage controls English, Math, Science and French.</p></div><button class="btn secondary" id="addProfile">Add child</button></div>
@@ -672,13 +768,14 @@
     function startLesson(lessonId){
       const item = lessonById(lessonId);
       if(!item) return toast("Lesson not found");
-      activeSession = {lesson:item,index:-1,score:0,answers:[],misses:[],mode:"intro",startedAt:new Date().toISOString()};
+      activeSession = {lesson:item,index:-1,score:0,answers:[],misses:[],timings:[],mode:"intro",startedAt:new Date().toISOString()};
+      questionStartedAt = 0;
       $("lessonScreenTitle").textContent = item.title;
       $("lessonScreenSub").textContent = `${item.subject} ${item.subjectCode} - Stage ${item.stage} - ${item.strand}`;
       $("lessonScreen").classList.add("on");
       renderLessonIntro();
     }
-    function closeLesson(){ $("lessonScreen").classList.remove("on"); activeSession = null; selectedAnswer = null; orderAnswer = []; checked = false; renderAll(); }
+    function closeLesson(){ $("lessonScreen").classList.remove("on"); activeSession = null; selectedAnswer = null; orderAnswer = []; checked = false; questionStartedAt = 0; renderAll(); }
     function renderLessonIntro(){
       const item = activeSession.lesson;
       $("feedbackBox").className = "feedback";
@@ -707,6 +804,7 @@
       checked = false;
       if(activeSession.index >= activeSession.lesson.exercises.length){ finishLesson(); return; }
       activeSession.mode = "question";
+      questionStartedAt = Date.now();
       renderQuestion();
     }
     function renderQuestion(){
@@ -739,13 +837,15 @@
     function checkAnswer(){
       const q = activeSession.lesson.exercises[activeSession.index];
       const result = evaluate(q);
+      const elapsedMs = questionStartedAt ? Date.now() - questionStartedAt : 0;
       checked = true;
-      activeSession.answers.push({questionId:q.id,correct:result.correct,answer:result.answerText});
+      activeSession.answers.push({questionId:q.id,correct:result.correct,answer:result.answerText,elapsedMs});
+      activeSession.timings.push({questionId:q.id,type:q.type,prompt:q.prompt,correct:result.correct,elapsedMs});
       if(result.correct) activeSession.score += 1;
-      else activeSession.misses.push({lessonId:activeSession.lesson.lessonId,lessonTitle:activeSession.lesson.title,subject:activeSession.lesson.subject,prompt:q.prompt,answerText:result.expectedText,at:new Date().toISOString()});
+      else activeSession.misses.push({lessonId:activeSession.lesson.lessonId,lessonTitle:activeSession.lesson.title,subject:activeSession.lesson.subject,prompt:q.prompt,answerText:result.expectedText,elapsedMs,at:new Date().toISOString()});
       paintAnswers(q, result);
       $("feedbackBox").className = "feedback " + (result.correct ? "good" : "bad");
-      $("feedbackBox").textContent = result.correct ? "Correct. Nice work." : `Review: ${result.expectedText}`;
+      $("feedbackBox").textContent = result.correct ? `Correct in ${formatDuration(elapsedMs)}.` : `Review: ${result.expectedText} · ${formatDuration(elapsedMs)}`;
       $("lessonAction").textContent = activeSession.index + 1 >= activeSession.lesson.exercises.length ? "Finish" : "Next";
     }
     function evaluate(q){
@@ -776,19 +876,22 @@
     function finishLesson(){
       const item = activeSession.lesson;
       const pct = Math.round((activeSession.score / item.exercises.length) * 100);
+      const finishedAt = new Date().toISOString();
+      const durationMs = Math.max(0, Date.parse(finishedAt) - Date.parse(activeSession.startedAt));
+      const avgQuestionMs = Math.round(activeSession.timings.reduce((sum, item) => sum + (item.elapsedMs || 0), 0) / Math.max(1, activeSession.timings.length));
       const prog = progress();
       const old = lessonStatus(item.lessonId);
-      prog.lessonStatus[item.lessonId] = {attempts:(old.attempts || 0) + 1,best:Math.max(old.best || 0, pct),mastered:pct >= item.mastery.passPercent,lastScore:pct,lastAt:new Date().toISOString()};
+      prog.lessonStatus[item.lessonId] = {attempts:(old.attempts || 0) + 1,best:Math.max(old.best || 0, pct),mastered:pct >= item.mastery.passPercent,lastScore:pct,lastAt:finishedAt,lastDurationMs:durationMs,avgQuestionMs};
       prog.mistakes = [...activeSession.misses, ...prog.mistakes].slice(0,80);
       prog.lastLessonId = item.lessonId;
       if(prog.lastStudyDate !== DAY()){ prog.streak += 1; prog.lastStudyDate = DAY(); }
       item.objectives.forEach((obj) => LearningBackendAdapter.saveMastery(profile().id, obj.id, Math.max(masteryValue(obj.id), pct)));
-      LearningBackendAdapter.recordAttempt({profileId:profile().id,lessonId:item.lessonId,subject:item.subject,stage:item.stage,scorePercent:pct,correct:activeSession.score,total:item.exercises.length,misses:activeSession.misses,startedAt:activeSession.startedAt,finishedAt:new Date().toISOString()});
+      LearningBackendAdapter.recordAttempt({profileId:profile().id,lessonId:item.lessonId,subject:item.subject,stage:item.stage,scorePercent:pct,correct:activeSession.score,total:item.exercises.length,misses:activeSession.misses,timings:activeSession.timings,durationMs,avgQuestionMs,startedAt:activeSession.startedAt,finishedAt});
       activeSession.mode = "done";
       $("lessonAction").textContent = "Done";
       $("feedbackBox").className = "feedback " + (pct >= item.mastery.passPercent ? "good" : "bad");
       $("feedbackBox").textContent = pct >= item.mastery.passPercent ? "Mastery reached." : "Saved for review.";
-      $("lessonBody").innerHTML = `<section class="card glass grid"><span class="label">Result</span><h2>${pct}%</h2><p class="muted">${activeSession.score} of ${item.exercises.length} correct in ${esc(item.title)}.</p><div class="progress-bar"><i style="width:${pct}%"></i></div>${activeSession.misses.length ? `<div class="grid"><h3>Review next</h3>${activeSession.misses.map((miss) => `<div class="feedback bad">${esc(miss.prompt)}<br><span class="small">Answer: ${esc(miss.answerText)}</span></div>`).join("")}</div>` : `<div class="feedback good">No mistakes this round.</div>`}</section>`;
+      $("lessonBody").innerHTML = `<section class="card glass grid"><span class="label">Result</span><h2>${pct}%</h2><p class="muted">${activeSession.score} of ${item.exercises.length} correct in ${esc(item.title)}. Time: ${formatDuration(durationMs)} · average ${formatDuration(avgQuestionMs)}.</p><div class="progress-bar"><i style="width:${pct}%"></i></div>${activeSession.misses.length ? `<div class="grid"><h3>Review next</h3>${activeSession.misses.map((miss) => `<div class="feedback bad">${esc(miss.prompt)}<br><span class="small">Answer: ${esc(miss.answerText)} · ${formatDuration(miss.elapsedMs || 0)}</span></div>`).join("")}</div>` : `<div class="feedback good">No mistakes this round.</div>`}</section>`;
       toast("Progress saved");
       Bridge.send("SHOW_TOAST", {message:"Cambridge progress saved"});
     }
@@ -856,6 +959,14 @@
       $("toast").classList.add("on");
       clearTimeout(toast.timer);
       toast.timer = setTimeout(() => $("toast").classList.remove("on"), 2200);
+    }
+    function formatDuration(ms){
+      ms = Number(ms) || 0;
+      if(ms < 1000) return `${ms}ms`;
+      if(ms < 60000) return `${(ms / 1000).toFixed(ms < 10000 ? 1 : 0)}s`;
+      const minutes = Math.floor(ms / 60000);
+      const seconds = Math.round((ms % 60000) / 1000);
+      return `${minutes}m ${seconds}s`;
     }
     function shuffle(array){
       const out = array.slice();

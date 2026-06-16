@@ -1,11 +1,442 @@
-<!--
+import fs from "node:fs";
+import path from "node:path";
+
+const ROOT = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Za-z]:)/, "$1");
+
+const apps = [
+  {
+    file: "App_GameClockTrainer.html",
+    appId: "clock-trainer",
+    name: "Clock Trainer",
+    shortName: "Clock",
+    icon: "CT",
+    glyph: "clock",
+    category: "kids",
+    audience: "children and parents",
+    tagline: "Read time with a cheerful clock buddy.",
+    about: "A kid-friendly analog time quest with timed recognition, elapsed-time missions, syllabus progress, and clock-themed rewards.",
+    analog: "Montessori clock trainers, Todo Math, Khan Academy Kids",
+    theme: ["#0ea5e9", "#7c3aed", "#f59e0b"],
+    mood: "Time Adventure",
+    companion: {name: "Tiko", role: "clock buddy", shape: "clock"},
+    nav: ["Learn", "Syllabus", "Quests", "Circle", "Shop"],
+    collectionPrefix: "clock_trainer",
+    lessonVerb: "time mission",
+    timeLabel: "read speed",
+    shopTitle: "Clock Studio",
+    leagueTitle: "Circle Time League",
+    visual: "clock",
+    lessons: [
+      {
+        id: "clock-o-half",
+        title: "O'clock and Half Past",
+        subtitle: "Read the big landmarks first.",
+        icon: "12",
+        reward: 8,
+        questions: [
+          {kind: "Read", prompt: "What time is shown?", choices: ["5:00", "6:00", "5:30", "4:00"], answer: 0, explain: "The minute hand is at 12, so it is exactly five.", hour: 5, minute: 0, timeLimit: 10000},
+          {kind: "Read", prompt: "What time is shown?", choices: ["7:00", "6:30", "7:30", "8:30"], answer: 2, explain: "The minute hand is on 6, so it is half past seven.", hour: 7, minute: 30, timeLimit: 10000},
+          {kind: "Set", prompt: "Which clock says half past two?", choices: ["2:30", "3:30", "2:00", "1:30"], answer: 0, explain: "Half past two is 2:30.", hour: 2, minute: 30, timeLimit: 11000}
+        ]
+      },
+      {
+        id: "clock-quarters",
+        title: "Quarter Clues",
+        subtitle: "Use 3 and 9 as minute markers.",
+        icon: "15",
+        reward: 10,
+        questions: [
+          {kind: "Quarter", prompt: "What time is shown?", choices: ["3:15", "4:15", "3:45", "2:15"], answer: 0, explain: "The minute hand points to 3, so it is quarter past.", hour: 3, minute: 15, timeLimit: 10000},
+          {kind: "Quarter", prompt: "What time is shown?", choices: ["9:45", "10:45", "10:15", "11:45"], answer: 1, explain: "The minute hand points to 9, which means 45 minutes.", hour: 10, minute: 45, timeLimit: 10000},
+          {kind: "Language", prompt: "Quarter to 8 means...", choices: ["7:45", "8:15", "8:45", "7:15"], answer: 0, explain: "Quarter to 8 is fifteen minutes before 8.", hour: 7, minute: 45, timeLimit: 12000}
+        ]
+      },
+      {
+        id: "clock-five-min",
+        title: "Five-Minute Steps",
+        subtitle: "Count around the clock by fives.",
+        icon: "05",
+        reward: 12,
+        questions: [
+          {kind: "Five", prompt: "What time is shown?", choices: ["6:10", "6:50", "5:10", "7:10"], answer: 0, explain: "The minute hand is on 2, so count 10 minutes.", hour: 6, minute: 10, timeLimit: 12000},
+          {kind: "Five", prompt: "What time is shown?", choices: ["11:25", "10:25", "11:05", "12:25"], answer: 0, explain: "The minute hand is on 5, so it is 25 minutes.", hour: 11, minute: 25, timeLimit: 12000},
+          {kind: "Fast", prompt: "The minute hand points to 8. How many minutes?", choices: ["35", "40", "45", "8"], answer: 1, explain: "8 times 5 is 40.", hour: 1, minute: 40, timeLimit: 12000}
+        ]
+      },
+      {
+        id: "clock-elapsed",
+        title: "Elapsed Time",
+        subtitle: "Jump from one time to the next.",
+        icon: "+",
+        reward: 14,
+        questions: [
+          {kind: "Elapsed", prompt: "It is 2:00. In 30 minutes it will be...", choices: ["2:30", "3:00", "1:30", "2:15"], answer: 0, explain: "Add 30 minutes to 2:00.", hour: 2, minute: 0, timeLimit: 14000},
+          {kind: "Elapsed", prompt: "Class starts at 8:15 and ends at 9:00. How long?", choices: ["30 minutes", "45 minutes", "15 minutes", "1 hour"], answer: 1, explain: "From 8:15 to 9:00 is 45 minutes.", hour: 8, minute: 15, timeLimit: 15000},
+          {kind: "Schedule", prompt: "Dinner is at 6:30. It is 6:00 now. How long to wait?", choices: ["10 minutes", "20 minutes", "30 minutes", "60 minutes"], answer: 2, explain: "6:00 to 6:30 is 30 minutes.", hour: 6, minute: 0, timeLimit: 14000}
+        ]
+      }
+    ],
+    shop: [
+      {id: "face-rainbow", name: "Rainbow Face", type: "face", cost: 16, joy: "Tiko shines in bright colors."},
+      {id: "hands-gold", name: "Gold Hands", type: "tool", cost: 18, joy: "The clock hands sparkle."},
+      {id: "watch-cape", name: "Watch Cape", type: "outfit", cost: 24, joy: "A tiny hero cape for time missions."},
+      {id: "room-sky", name: "Sky Clock Room", type: "room", cost: 28, joy: "A calm room full of floating clocks."},
+      {id: "dance-tick", name: "Tick-Tock Dance", type: "dance", cost: 20, joy: "Tiko bounces after correct answers."}
+    ]
+  },
+  {
+    file: "App_GameDataDetective.html",
+    appId: "data-detective",
+    name: "Data Detective",
+    shortName: "Data",
+    icon: "DD",
+    glyph: "detective",
+    category: "kids",
+    audience: "children learning data reasoning",
+    tagline: "Solve data mysteries with evidence cards.",
+    about: "A detective-style data reasoning app for charts, patterns, outliers, fair samples, and clear conclusions.",
+    analog: "Brilliant, DataCamp, Khan Academy data lessons",
+    theme: ["#0891b2", "#4f46e5", "#f97316"],
+    mood: "Case Board",
+    companion: {name: "Dara", role: "data detective", shape: "detective"},
+    nav: ["Cases", "Syllabus", "Quests", "Circle", "Shop"],
+    collectionPrefix: "data_detective",
+    lessonVerb: "case",
+    timeLabel: "case time",
+    shopTitle: "Detective Kit",
+    leagueTitle: "Circle Case League",
+    visual: "data",
+    lessons: [
+      {
+        id: "data-chart-clues",
+        title: "Chart Clues",
+        subtitle: "Read bars, labels, and totals.",
+        icon: "bar",
+        reward: 10,
+        questions: [
+          {kind: "Bars", prompt: "Votes: pizza 5, sushi 2, pasta 4. What wins?", choices: ["Sushi", "Pasta", "Pizza", "Tie"], answer: 2, explain: "Pizza has the highest count.", values: [5,2,4], labels: ["Pizza","Sushi","Pasta"], timeLimit: 13000},
+          {kind: "Compare", prompt: "Apples 7, bananas 3. How many more apples?", choices: ["3", "4", "7", "10"], answer: 1, explain: "7 minus 3 is 4.", values: [7,3], labels: ["Apples","Bananas"], timeLimit: 14000},
+          {kind: "Table", prompt: "A table says red=6, blue=6. What is true?", choices: ["Red wins", "Blue wins", "They tie", "No data"], answer: 2, explain: "Both colors have the same count.", values: [6,6], labels: ["Red","Blue"], timeLimit: 13000}
+        ]
+      },
+      {
+        id: "data-patterns",
+        title: "Patterns and Outliers",
+        subtitle: "Spot the number that does not fit.",
+        icon: "line",
+        reward: 12,
+        questions: [
+          {kind: "Trend", prompt: "3000, 4200, 5200, 6500. What is happening?", choices: ["Going down", "Going up", "No pattern", "Impossible"], answer: 1, explain: "Each number is higher than the previous one.", values: [3,4.2,5.2,6.5], timeLimit: 13000},
+          {kind: "Outlier", prompt: "Scores: 8, 9, 8, 10, 2. Which is unusual?", choices: ["8", "9", "10", "2"], answer: 3, explain: "Two is far away from the other scores.", values: [8,9,8,10,2], timeLimit: 14000},
+          {kind: "Average", prompt: "Most scores are around 9, but one score is 1. What should you check?", choices: ["Outlier", "Title", "Color", "Font"], answer: 0, explain: "An unusual value can change the story.", values: [9,10,8,1], timeLimit: 15000}
+        ]
+      },
+      {
+        id: "data-fair-survey",
+        title: "Fair Survey",
+        subtitle: "Ask the right people before deciding.",
+        icon: "fair",
+        reward: 12,
+        questions: [
+          {kind: "Sample", prompt: "To know favorite sports, who should you ask?", choices: ["Only tennis players", "Different classmates", "One sibling", "Nobody"], answer: 1, explain: "A fair sample includes different people.", values: [1,5,1], timeLimit: 15000},
+          {kind: "Bias", prompt: "A survey about lunch asks only pizza fans. Problem?", choices: ["Biased sample", "Too many colors", "Perfect data", "No question"], answer: 0, explain: "Only asking pizza fans makes the result unfair.", values: [8,1,1], timeLimit: 15000},
+          {kind: "Conclusion", prompt: "20 of 25 children choose water. Best conclusion?", choices: ["Most choose water", "Nobody drinks water", "Everyone chose juice", "Data is empty"], answer: 0, explain: "20 out of 25 is most of the group.", values: [20,5], timeLimit: 13000}
+        ]
+      },
+      {
+        id: "data-story",
+        title: "Data Story",
+        subtitle: "Turn evidence into a careful sentence.",
+        icon: "story",
+        reward: 14,
+        questions: [
+          {kind: "Evidence", prompt: "Which sentence uses evidence?", choices: ["Blue has 9 votes, so it leads.", "Blue is cool.", "I like blue.", "Maybe red."], answer: 0, explain: "It names the data and the conclusion.", values: [9,4,6], timeLimit: 16000},
+          {kind: "Mislead", prompt: "A graph starts at 90 instead of 0 and looks huge. What should you check?", choices: ["Scale", "Emoji", "Paper size", "Weather"], answer: 0, explain: "The scale can exaggerate differences.", values: [91,92,93], timeLimit: 16000},
+          {kind: "Claim", prompt: "Best claim for 3, 5, 8, 13?", choices: ["The numbers increase", "The numbers decrease", "All are equal", "No numbers"], answer: 0, explain: "Each value is larger than the one before.", values: [3,5,8,13], timeLimit: 14000}
+        ]
+      }
+    ],
+    shop: [
+      {id: "hat-detective", name: "Detective Hat", type: "outfit", cost: 18, joy: "Dara looks ready for a case."},
+      {id: "tool-magnifier", name: "Magic Magnifier", type: "tool", cost: 20, joy: "Clues glow on the board."},
+      {id: "badge-evidence", name: "Evidence Badge", type: "badge", cost: 16, joy: "A badge for careful conclusions."},
+      {id: "room-caseboard", name: "Case Board Room", type: "room", cost: 28, joy: "String, notes, and bright data cards."},
+      {id: "dance-solved", name: "Case Solved Dance", type: "dance", cost: 22, joy: "A happy spin after solving evidence."}
+    ]
+  },
+  {
+    file: "App_ProductivityCodePhilosophyKids.html",
+    appId: "code-philosophy-kids",
+    name: "Code Philosophy Kids",
+    shortName: "Code",
+    icon: "CP",
+    glyph: "robot",
+    category: "kids",
+    audience: "children learning coding habits",
+    tagline: "Think like a careful, kind coder.",
+    about: "A playful coding habits path for sequencing, loops, debugging, conditionals, and thoughtful technology choices.",
+    analog: "Code.org, ScratchJr, Brilliant, Duolingo learning path",
+    theme: ["#7c3aed", "#06b6d4", "#22c55e"],
+    mood: "Code Dojo",
+    companion: {name: "Nori", role: "debug robot", shape: "robot"},
+    nav: ["Learn", "Syllabus", "Quests", "Circle", "Shop"],
+    collectionPrefix: "code_philosophy",
+    lessonVerb: "thinking drill",
+    timeLabel: "focus time",
+    shopTitle: "Robot Lab",
+    leagueTitle: "Circle Logic League",
+    visual: "code",
+    lessons: [
+      {
+        id: "code-sequence",
+        title: "Think In Steps",
+        subtitle: "Computers need clear order.",
+        icon: "1-2",
+        reward: 10,
+        questions: [
+          {kind: "Sequence", prompt: "Which order helps a sandwich robot?", choices: ["Eat, open, spread", "Open, spread, close", "Close, open, spread", "Skip every step"], answer: 1, explain: "Programs need steps in the right order.", code: ["open bread", "spread jam", "close bread"], timeLimit: 18000},
+          {kind: "Model", prompt: "A program is most like...", choices: ["A recipe", "A cloud only", "A mystery box", "A broken toy"], answer: 0, explain: "Recipes and programs both follow ordered instructions.", code: ["step 1", "step 2", "done"], timeLimit: 18000},
+          {kind: "Predict", prompt: "If steps are swapped, the program may...", choices: ["Still always work", "Do the wrong thing", "Become a cake", "Need no testing"], answer: 1, explain: "Order changes behavior.", code: ["move", "turn", "move"], timeLimit: 18000}
+        ]
+      },
+      {
+        id: "code-loops",
+        title: "Loop Lab",
+        subtitle: "Repeat patterns without messy code.",
+        icon: "loop",
+        reward: 12,
+        questions: [
+          {kind: "Loop", prompt: "A dance repeats clap-step four times. Coding idea?", choices: ["Loop", "Crash", "Password", "Pixel"], answer: 0, explain: "Loops repeat a pattern.", code: ["repeat 4", " clap", " step"], timeLimit: 18000},
+          {kind: "Why", prompt: "Why use a loop?", choices: ["Less repeated code", "More confusion", "Hide the goal", "Break everything"], answer: 0, explain: "Loops keep repeated instructions tidy.", code: ["repeat", "draw square"], timeLimit: 18000},
+          {kind: "Stop", prompt: "A loop needs to know...", choices: ["When to stop", "Your favorite snack", "The weather", "Nothing"], answer: 0, explain: "Good loops have a stopping rule or count.", code: ["while energy > 0", "run"], timeLimit: 18000}
+        ]
+      },
+      {
+        id: "code-debug",
+        title: "Debug Kindly",
+        subtitle: "Fix one thing at a time.",
+        icon: "bug",
+        reward: 12,
+        questions: [
+          {kind: "Debug", prompt: "Robot turns left instead of right. First move?", choices: ["Check one step", "Delete all code", "Blame robot", "Quit"], answer: 0, explain: "Debugging works best one step at a time.", code: ["turnLeft()", "expected right"], timeLimit: 18000},
+          {kind: "Question", prompt: "A helpful debugging question is...", choices: ["What changed?", "Who can I blame?", "Can I ignore it?", "Why test?"], answer: 0, explain: "Asking what changed narrows the bug.", code: ["before works", "after breaks"], timeLimit: 18000},
+          {kind: "Kindness", prompt: "A friend is stuck. Best help?", choices: ["Give a hint", "Take over", "Laugh", "Walk away"], answer: 0, explain: "A hint helps them learn and keeps it kind.", code: ["hint", "try again"], timeLimit: 18000}
+        ]
+      },
+      {
+        id: "code-if",
+        title: "If Then Choices",
+        subtitle: "Let programs react to the world.",
+        icon: "if",
+        reward: 14,
+        questions: [
+          {kind: "Condition", prompt: "If it is raining, take an umbrella. Coding idea?", choices: ["Condition", "Loop", "Sprite", "Password"], answer: 0, explain: "An if-statement chooses based on a condition.", code: ["if raining", " take umbrella"], timeLimit: 18000},
+          {kind: "Boolean", prompt: "A true/false value is often called...", choices: ["Boolean", "Triangle", "Recipe", "Volume"], answer: 0, explain: "Booleans are true or false values.", code: ["isReady = true"], timeLimit: 18000},
+          {kind: "Ethics", prompt: "Before sharing a program that uses names, you should check...", choices: ["Privacy", "Shoe size", "The moon", "Nothing"], answer: 0, explain: "Careful coders protect people's information.", code: ["ask permission", "protect data"], timeLimit: 19000}
+        ]
+      }
+    ],
+    shop: [
+      {id: "skin-neon", name: "Neon Robot Skin", type: "outfit", cost: 18, joy: "Nori glows during logic wins."},
+      {id: "tool-debugger", name: "Tiny Debugger", type: "tool", cost: 22, joy: "A tool belt for bug hunts."},
+      {id: "badge-kindcoder", name: "Kind Coder Badge", type: "badge", cost: 16, joy: "A badge for helping friends learn."},
+      {id: "room-dojo", name: "Code Dojo", type: "room", cost: 30, joy: "A calm dojo with puzzle tiles."},
+      {id: "dance-compile", name: "Compile Dance", type: "dance", cost: 20, joy: "Nori celebrates when the idea runs."}
+    ]
+  },
+  {
+    file: "App_GameLadderRush.html",
+    appId: "game-ladder-rush",
+    name: "Ladder Rush",
+    shortName: "Ladder",
+    icon: "LR",
+    glyph: "ladder",
+    category: "games",
+    audience: "family game circles",
+    tagline: "Race the board with quiz boosts.",
+    about: "A board-race learning game with challenge cards, animated path movement, comeback ladders, and circle-friendly rewards.",
+    analog: "Snakes and Ladders, Mario Party mini-games, Kahoot family play",
+    theme: ["#f43f5e", "#f59e0b", "#2563eb"],
+    mood: "Game Night",
+    companion: {name: "Rafi", role: "rush token", shape: "token"},
+    nav: ["Play", "Rules", "Quests", "Circle", "Shop"],
+    collectionPrefix: "ladder_rush",
+    lessonVerb: "board card",
+    timeLabel: "turn timer",
+    shopTitle: "Board Shop",
+    leagueTitle: "Circle Game Night League",
+    visual: "ladder",
+    lessons: [
+      {
+        id: "ladder-board",
+        title: "Board Rules",
+        subtitle: "Ladders, slides, and exact finish.",
+        icon: "board",
+        reward: 10,
+        questions: [
+          {kind: "Board", prompt: "You land on a ladder. What happens?", choices: ["Climb up", "Go back", "Skip forever", "Lose all points"], answer: 0, explain: "Ladders move you forward.", spaces: [4,12], timeLimit: 12000},
+          {kind: "Rule", prompt: "Need 4 to finish, roll 6. Friendly house rule?", choices: ["Bounce back", "Quit", "Restart", "Ignore board"], answer: 0, explain: "Bouncing keeps the ending tense.", spaces: [16,22], timeLimit: 13000},
+          {kind: "Fair", prompt: "A fair game means...", choices: ["Everyone gets turns", "Only one player rolls", "Hide the dice", "Change rules secretly"], answer: 0, explain: "Clear turns keep game night happy.", spaces: [8,18], timeLimit: 13000}
+        ]
+      },
+      {
+        id: "ladder-boosts",
+        title: "Boost Cards",
+        subtitle: "Use quiz wins to move farther.",
+        icon: "boost",
+        reward: 12,
+        questions: [
+          {kind: "Boost", prompt: "Correct challenge gives +3. You are on 7. New space?", choices: ["8", "9", "10", "11"], answer: 2, explain: "7 plus 3 is 10.", spaces: [7,10], timeLimit: 12000},
+          {kind: "Choice", prompt: "Best comeback boost for a player far behind?", choices: ["Bonus challenge", "Lose a turn", "Hide board", "Stop game"], answer: 0, explain: "Bonus challenges create comeback moments.", spaces: [3,9], timeLimit: 13000},
+          {kind: "Risk", prompt: "A risky shortcut should feel...", choices: ["Exciting but fair", "Impossible", "Secret", "Mean"], answer: 0, explain: "Good board games give clear risk and reward.", spaces: [12,20], timeLimit: 14000}
+        ]
+      },
+      {
+        id: "ladder-comeback",
+        title: "Comeback Math",
+        subtitle: "Count spaces and plan the next roll.",
+        icon: "+",
+        reward: 14,
+        questions: [
+          {kind: "Count", prompt: "You are on 14. Finish is 20. How many spaces?", choices: ["4", "5", "6", "7"], answer: 2, explain: "20 minus 14 is 6.", spaces: [14,20], timeLimit: 13000},
+          {kind: "Roll", prompt: "Roll 2 then climb +5. Total move?", choices: ["2", "5", "7", "10"], answer: 2, explain: "2 plus 5 is 7.", spaces: [5,12], timeLimit: 12000},
+          {kind: "Plan", prompt: "You need an exact 3. Which roll finishes?", choices: ["3", "4", "5", "6"], answer: 0, explain: "Exact finish needs exactly three spaces.", spaces: [17,20], timeLimit: 12000}
+        ]
+      },
+      {
+        id: "ladder-game-night",
+        title: "Game Night Spirit",
+        subtitle: "Win with energy and kindness.",
+        icon: "team",
+        reward: 12,
+        questions: [
+          {kind: "Team", prompt: "A friend falls behind. What keeps it fun?", choices: ["Cheer them on", "Laugh loudly", "Skip them", "End game"], answer: 0, explain: "Game night stays fun when everyone feels included.", spaces: [2,6], timeLimit: 13000},
+          {kind: "Rule", prompt: "Before starting, players should...", choices: ["Agree rules", "Hide dice", "Change turns", "Ignore board"], answer: 0, explain: "Shared rules avoid arguments.", spaces: [1,4], timeLimit: 12000},
+          {kind: "Finish", prompt: "Winning well means...", choices: ["Celebrate and thank players", "Boast forever", "Change score", "Leave immediately"], answer: 0, explain: "Kind winners make people want to play again.", spaces: [20,24], timeLimit: 13000}
+        ]
+      }
+    ],
+    shop: [
+      {id: "dice-spark", name: "Spark Dice", type: "tool", cost: 18, joy: "Every roll leaves a bright trail."},
+      {id: "token-hero", name: "Hero Token", type: "outfit", cost: 20, joy: "Rafi becomes the board hero."},
+      {id: "ladder-rainbow", name: "Rainbow Ladders", type: "badge", cost: 22, joy: "Ladders glow after a boost."},
+      {id: "room-arcade", name: "Arcade Board", type: "room", cost: 30, joy: "A game-night board with lights."},
+      {id: "dance-victory", name: "Victory Hop", type: "dance", cost: 20, joy: "Rafi hops when the turn goes well."}
+    ]
+  },
+  {
+    file: "App_ProductivityAgenticAI.html",
+    appId: "agentic-ai-tutorial",
+    name: "Agentic AI Tutorial",
+    shortName: "Agent",
+    icon: "AI",
+    glyph: "agent",
+    category: "professional learning",
+    audience: "older learners and leaders",
+    tagline: "Run the agent loop like a mission controller.",
+    about: "A polished micro-course for agent planning, tool choice, observation, critique, verification, and safe handoff.",
+    analog: "DeepLearning.AI, Coursera, Brilliant, professional labs",
+    theme: ["#111827", "#2563eb", "#14b8a6"],
+    mood: "Mission Control",
+    companion: {name: "Ari", role: "agent module", shape: "agent"},
+    nav: ["Learn", "Map", "Missions", "Circle", "Lab"],
+    collectionPrefix: "agentic_ai",
+    lessonVerb: "mission",
+    timeLabel: "decision time",
+    shopTitle: "Agent Lab",
+    leagueTitle: "Circle Agent League",
+    visual: "agent",
+    mature: true,
+    lessons: [
+      {
+        id: "agent-loop",
+        title: "Agent Loop",
+        subtitle: "Plan, act, observe, decide.",
+        icon: "loop",
+        reward: 10,
+        questions: [
+          {kind: "Loop", prompt: "After an agent acts with a tool, what comes next?", choices: ["Observe result", "Forget goal", "Stop always", "Change identity"], answer: 0, explain: "Agents observe results before deciding the next step.", flow: ["Plan","Tool","Observe","Decide"], timeLimit: 18000},
+          {kind: "Control", prompt: "A good agent loop should keep checking...", choices: ["The user's goal", "Random facts", "The font size", "Nothing"], answer: 0, explain: "The goal anchors every tool call and decision.", flow: ["Goal","Plan","Check"], timeLimit: 18000},
+          {kind: "Stop", prompt: "The agent should stop when...", choices: ["The task is verified", "It feels bored", "One token passes", "The first guess appears"], answer: 0, explain: "A verified result is ready for handoff.", flow: ["Verify","Handoff"], timeLimit: 18000}
+        ]
+      },
+      {
+        id: "agent-tools",
+        title: "Tool Choice",
+        subtitle: "Choose the source that reduces risk.",
+        icon: "tool",
+        reward: 12,
+        questions: [
+          {kind: "Docs", prompt: "A task needs exact current docs. Best action?", choices: ["Browse official docs", "Guess from memory", "Ignore source", "Ask no one"], answer: 0, explain: "Fresh official docs reduce stale answers.", flow: ["Need","Source","Answer"], timeLimit: 19000},
+          {kind: "Local", prompt: "A repo question should start by reading...", choices: ["The actual files", "An unrelated blog", "A horoscope", "Nothing"], answer: 0, explain: "Local source beats assumptions.", flow: ["Repo","Inspect","Patch"], timeLimit: 18000},
+          {kind: "Ask", prompt: "When a tool can cause a risky external action, the agent should...", choices: ["Get confirmation", "Click anyway", "Hide it", "Pretend"], answer: 0, explain: "Some actions need clear user approval.", flow: ["Risk","Confirm","Act"], timeLimit: 19000}
+        ]
+      },
+      {
+        id: "agent-critique",
+        title: "Critique and Repair",
+        subtitle: "Find gaps before the user does.",
+        icon: "qa",
+        reward: 14,
+        questions: [
+          {kind: "Review", prompt: "The agent writes code. What should happen before final?", choices: ["Verify behavior", "Delete tests", "Skip review", "Change topic"], answer: 0, explain: "Verification catches errors before handoff.", flow: ["Build","Test","Review"], timeLimit: 18000},
+          {kind: "Hallucination", prompt: "The agent cites a fact it did not check. What is the issue?", choices: ["Unsupported claim", "Great evidence", "Enough proof", "No risk"], answer: 0, explain: "Claims need support from source or observation.", flow: ["Claim","Source","Confidence"], timeLimit: 19000},
+          {kind: "Repair", prompt: "A test fails after an edit. Best next step?", choices: ["Read failure and patch", "Ignore it", "Hide output", "Declare success"], answer: 0, explain: "Failures point to the next useful repair.", flow: ["Fail","Inspect","Fix"], timeLimit: 18000}
+        ]
+      },
+      {
+        id: "agent-handoff",
+        title: "Safe Handoff",
+        subtitle: "Tell the truth about what changed.",
+        icon: "ship",
+        reward: 14,
+        questions: [
+          {kind: "Final", prompt: "A strong final answer includes...", choices: ["What changed and what was tested", "Only excitement", "Hidden risks", "No context"], answer: 0, explain: "The user needs outcome and verification.", flow: ["Summary","Tests","Risk"], timeLimit: 18000},
+          {kind: "Boundary", prompt: "If the agent could not run tests, it should...", choices: ["Say so clearly", "Invent results", "Stay silent", "Blame user"], answer: 0, explain: "Honest limits keep trust intact.", flow: ["Limit","Report"], timeLimit: 18000},
+          {kind: "Role", prompt: "Leader/co-leader views are useful for...", choices: ["Admin and progress insight", "Changing facts", "Skipping safety", "Hiding records"], answer: 0, explain: "Roles can shape dashboards and permissions.", flow: ["Role","Permission","View"], timeLimit: 19000}
+        ]
+      }
+    ],
+    shop: [
+      {id: "module-planner", name: "Planner Module", type: "tool", cost: 20, joy: "Ari highlights the next plan step."},
+      {id: "skin-terminal", name: "Terminal Skin", type: "outfit", cost: 18, joy: "Mission control gets a crisp console look."},
+      {id: "badge-verified", name: "Verified Badge", type: "badge", cost: 22, joy: "A badge for checked work."},
+      {id: "room-mission", name: "Mission Room", type: "room", cost: 32, joy: "Ari works from a focused command room."},
+      {id: "dance-deploy", name: "Deploy Pulse", type: "dance", cost: 20, joy: "A quiet pulse when a mission ships."}
+    ]
+  }
+];
+
+function manifest(app){
+  return {
+    appId: app.appId,
+    name: app.name,
+    shortName: app.shortName,
+    icon: app.glyph === "clock" ? "🕐" : app.glyph === "detective" ? "🔎" : app.glyph === "robot" ? "🧩" : app.glyph === "ladder" ? "🎲" : "🤖",
+    gradient: [app.theme[0], app.theme[1]],
+    category: app.category,
+    tagline: app.tagline,
+    about: app.about,
+    audience: app.audience,
+    circleTypes: app.mature ? ["family", "learning", "work"] : ["family", "learning"],
+    worksWith: ["offline", "standalone", "embedded", "AppRecords"],
+    status: "live",
+    minMembers: 1
+  };
+}
+
+function html(app){
+  const meta = manifest(app);
+  const title = `${app.name} - Kinetik Quest`;
+  const themeColor = app.mature ? "#0f172a" : "#f7fbff";
+  return `<!--
 KINETIK APP STANDARD v0.5
 
 PRODUCT:
 Kinetik is a private life app for Family and Friends circles.
 
 APP:
-Code Philosophy Kids is a tailored Quest Core mini app.
+${app.name} is a tailored Quest Core mini app.
 
 ARCHITECTURE:
 - Single self-contained HTML file.
@@ -15,7 +446,7 @@ ARCHITECTURE:
 - Uses localStorage as an offline fallback.
 
 DATA:
-- AppRecords collections: code_philosophy_state, code_philosophy_attempts, code_philosophy_shop_catalog.
+- AppRecords collections: ${app.collectionPrefix}_state, ${app.collectionPrefix}_attempts, ${app.collectionPrefix}_shop_catalog.
 - Progress is scoped to ownerPersonId.
 -->
 <!doctype html>
@@ -23,44 +454,19 @@ DATA:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f7fbff">
+  <meta name="theme-color" content="${themeColor}">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Code">
-  <title>Code Philosophy Kids - Kinetik Quest</title>
+  <meta name="apple-mobile-web-app-title" content="${escapeHtml(app.shortName)}">
+  <title>${escapeHtml(title)}</title>
   <script type="application/kinetik-app+json">
-{
-  "appId": "code-philosophy-kids",
-  "name": "Code Philosophy Kids",
-  "shortName": "Code",
-  "icon": "🧩",
-  "gradient": [
-    "#7c3aed",
-    "#06b6d4"
-  ],
-  "category": "kids",
-  "tagline": "Think like a careful, kind coder.",
-  "about": "A playful coding habits path for sequencing, loops, debugging, conditionals, and thoughtful technology choices.",
-  "audience": "children learning coding habits",
-  "circleTypes": [
-    "family",
-    "learning"
-  ],
-  "worksWith": [
-    "offline",
-    "standalone",
-    "embedded",
-    "AppRecords"
-  ],
-  "status": "live",
-  "minMembers": 1
-}
+${JSON.stringify(meta, null, 2)}
   </script>
   <style>
     :root{
       color-scheme:light;
       --bg:#f6f8fc;--bg2:#eef3fb;--ink:#101827;--muted:#667085;--faint:#98a2b3;
       --panel:#ffffff;--soft:#edf2f7;--line:rgba(16,24,39,.12);
-      --a:#7c3aed;--b:#06b6d4;--c:#22c55e;
+      --a:${app.theme[0]};--b:${app.theme[1]};--c:${app.theme[2]};
       --good:#16a34a;--warn:#f59e0b;--bad:#e11d48;--shadow:0 16px 42px rgba(31,41,55,.14);
       --navh:calc(74px + env(safe-area-inset-bottom,0px));
       font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -82,7 +488,7 @@ DATA:
     .hero-stats{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}.mini{height:30px;border-radius:999px;padding:0 10px;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.17);border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:900}
     .companion{position:sticky;top:0;z-index:3;margin-bottom:12px}.companion .stage{border-radius:8px}
     .stage{min-width:142px;min-height:132px;border-radius:8px;padding:12px;background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 84%,var(--a)),var(--panel));border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 8px 24px rgba(0,0,0,.08)}
-    .avatar{width:104px;height:104px;position:relative;display:grid;place-items:center;animation:bob 2.8s ease-in-out infinite}.avatar-core{width:78px;height:78px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:inset 0 -10px 0 rgba(0,0,0,.12),0 16px 28px rgba(0,0,0,.14);position:relative}.avatar-core:before,.avatar-core:after{content:"";position:absolute;background:white}.avatar-core:before{width:11px;height:11px;border-radius:50%;left:20px;top:28px}.avatar-core:after{width:11px;height:11px;border-radius:50%;right:20px;top:28px}.avatar-smile{position:absolute;left:50%;top:52px;width:28px;height:14px;border:4px solid white;border-top:0;border-radius:0 0 18px 18px;transform:translateX(-50%)}.avatar-hat{position:absolute;top:1px;left:50%;transform:translateX(-50%);width:58px;height:22px;border-radius:6px;background:var(--c);box-shadow:0 7px 0 rgba(0,0,0,.12)}.avatar-tool{position:absolute;right:-4px;bottom:20px;width:28px;height:28px;border-radius:50%;background:var(--panel);border:5px solid var(--c);box-shadow:0 0 0 2px rgba(0,0,0,.08)}.avatar-room{position:absolute;inset:10px;border-radius:8px;border:2px dashed color-mix(in srgb,var(--c) 60%,transparent);opacity:.55}.avatar-dance{animation:dance 1s ease-in-out infinite}
+    .avatar{width:104px;height:104px;position:relative;display:grid;place-items:center;animation:bob 2.8s ease-in-out infinite}.avatar-core{width:78px;height:78px;border-radius:${app.glyph === "agent" ? "12px" : "50%"};background:linear-gradient(135deg,var(--a),var(--b));box-shadow:inset 0 -10px 0 rgba(0,0,0,.12),0 16px 28px rgba(0,0,0,.14);position:relative}.avatar-core:before,.avatar-core:after{content:"";position:absolute;background:white}.avatar-core:before{width:11px;height:11px;border-radius:50%;left:20px;top:28px}.avatar-core:after{width:11px;height:11px;border-radius:50%;right:20px;top:28px}.avatar-smile{position:absolute;left:50%;top:52px;width:28px;height:14px;border:4px solid white;border-top:0;border-radius:0 0 18px 18px;transform:translateX(-50%)}.avatar-hat{position:absolute;top:1px;left:50%;transform:translateX(-50%);width:58px;height:22px;border-radius:6px;background:var(--c);box-shadow:0 7px 0 rgba(0,0,0,.12)}.avatar-tool{position:absolute;right:-4px;bottom:20px;width:28px;height:28px;border-radius:50%;background:var(--panel);border:5px solid var(--c);box-shadow:0 0 0 2px rgba(0,0,0,.08)}.avatar-room{position:absolute;inset:10px;border-radius:8px;border:2px dashed color-mix(in srgb,var(--c) 60%,transparent);opacity:.55}.avatar-dance{animation:dance 1s ease-in-out infinite}
     @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}@keyframes dance{0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(4deg) translateY(-8px)}}
     .grid{display:grid;gap:10px}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.three{grid-template-columns:repeat(3,minmax(0,1fr))}
     .card{border-radius:8px;background:var(--panel);border:1px solid var(--line);box-shadow:0 8px 22px rgba(15,23,42,.07);padding:13px}.card h3{font-size:15px}.muted{font-size:12px;line-height:1.38;color:var(--muted);font-weight:720}
@@ -107,8 +513,8 @@ DATA:
 <body>
   <main class="app">
     <header class="top">
-      <div class="mark">CP</div>
-      <div class="title"><h1>Code Philosophy Kids</h1><p id="contextLine">Standalone circle</p></div>
+      <div class="mark">${escapeHtml(app.icon)}</div>
+      <div class="title"><h1>${escapeHtml(app.name)}</h1><p id="contextLine">Standalone circle</p></div>
       <button class="topbtn" id="topAction" type="button" aria-label="Pause or theme">◆</button>
     </header>
     <section class="main" id="main"></section>
@@ -117,7 +523,7 @@ DATA:
   <div class="pause-layer" id="pauseLayer">
     <div class="pause-card">
       <span class="label">Paused</span>
-      <h2>Code Philosophy Kids</h2>
+      <h2>${escapeHtml(app.name)}</h2>
       <p class="muted" id="pauseLine">Take a calm breath.</p>
       <div class="pause-actions"><button class="primary" id="resumeBtn" type="button">Resume</button><button class="buy owned" id="quitBtn" type="button">Exit</button></div>
     </div>
@@ -126,7 +532,7 @@ DATA:
   <script>
     (function(){
       "use strict";
-      const App = {"file":"App_ProductivityCodePhilosophyKids.html","appId":"code-philosophy-kids","name":"Code Philosophy Kids","shortName":"Code","icon":"CP","glyph":"robot","category":"kids","audience":"children learning coding habits","tagline":"Think like a careful, kind coder.","about":"A playful coding habits path for sequencing, loops, debugging, conditionals, and thoughtful technology choices.","analog":"Code.org, ScratchJr, Brilliant, Duolingo learning path","theme":["#7c3aed","#06b6d4","#22c55e"],"mood":"Code Dojo","companion":{"name":"Nori","role":"debug robot","shape":"robot"},"nav":["Learn","Syllabus","Quests","Circle","Shop"],"collectionPrefix":"code_philosophy","lessonVerb":"thinking drill","timeLabel":"focus time","shopTitle":"Robot Lab","leagueTitle":"Circle Logic League","visual":"code","lessons":[{"id":"code-sequence","title":"Think In Steps","subtitle":"Computers need clear order.","icon":"1-2","reward":10,"questions":[{"kind":"Sequence","prompt":"Which order helps a sandwich robot?","choices":["Eat, open, spread","Open, spread, close","Close, open, spread","Skip every step"],"answer":1,"explain":"Programs need steps in the right order.","code":["open bread","spread jam","close bread"],"timeLimit":18000},{"kind":"Model","prompt":"A program is most like...","choices":["A recipe","A cloud only","A mystery box","A broken toy"],"answer":0,"explain":"Recipes and programs both follow ordered instructions.","code":["step 1","step 2","done"],"timeLimit":18000},{"kind":"Predict","prompt":"If steps are swapped, the program may...","choices":["Still always work","Do the wrong thing","Become a cake","Need no testing"],"answer":1,"explain":"Order changes behavior.","code":["move","turn","move"],"timeLimit":18000}]},{"id":"code-loops","title":"Loop Lab","subtitle":"Repeat patterns without messy code.","icon":"loop","reward":12,"questions":[{"kind":"Loop","prompt":"A dance repeats clap-step four times. Coding idea?","choices":["Loop","Crash","Password","Pixel"],"answer":0,"explain":"Loops repeat a pattern.","code":["repeat 4"," clap"," step"],"timeLimit":18000},{"kind":"Why","prompt":"Why use a loop?","choices":["Less repeated code","More confusion","Hide the goal","Break everything"],"answer":0,"explain":"Loops keep repeated instructions tidy.","code":["repeat","draw square"],"timeLimit":18000},{"kind":"Stop","prompt":"A loop needs to know...","choices":["When to stop","Your favorite snack","The weather","Nothing"],"answer":0,"explain":"Good loops have a stopping rule or count.","code":["while energy > 0","run"],"timeLimit":18000}]},{"id":"code-debug","title":"Debug Kindly","subtitle":"Fix one thing at a time.","icon":"bug","reward":12,"questions":[{"kind":"Debug","prompt":"Robot turns left instead of right. First move?","choices":["Check one step","Delete all code","Blame robot","Quit"],"answer":0,"explain":"Debugging works best one step at a time.","code":["turnLeft()","expected right"],"timeLimit":18000},{"kind":"Question","prompt":"A helpful debugging question is...","choices":["What changed?","Who can I blame?","Can I ignore it?","Why test?"],"answer":0,"explain":"Asking what changed narrows the bug.","code":["before works","after breaks"],"timeLimit":18000},{"kind":"Kindness","prompt":"A friend is stuck. Best help?","choices":["Give a hint","Take over","Laugh","Walk away"],"answer":0,"explain":"A hint helps them learn and keeps it kind.","code":["hint","try again"],"timeLimit":18000}]},{"id":"code-if","title":"If Then Choices","subtitle":"Let programs react to the world.","icon":"if","reward":14,"questions":[{"kind":"Condition","prompt":"If it is raining, take an umbrella. Coding idea?","choices":["Condition","Loop","Sprite","Password"],"answer":0,"explain":"An if-statement chooses based on a condition.","code":["if raining"," take umbrella"],"timeLimit":18000},{"kind":"Boolean","prompt":"A true/false value is often called...","choices":["Boolean","Triangle","Recipe","Volume"],"answer":0,"explain":"Booleans are true or false values.","code":["isReady = true"],"timeLimit":18000},{"kind":"Ethics","prompt":"Before sharing a program that uses names, you should check...","choices":["Privacy","Shoe size","The moon","Nothing"],"answer":0,"explain":"Careful coders protect people's information.","code":["ask permission","protect data"],"timeLimit":19000}]}],"shop":[{"id":"skin-neon","name":"Neon Robot Skin","type":"outfit","cost":18,"joy":"Nori glows during logic wins."},{"id":"tool-debugger","name":"Tiny Debugger","type":"tool","cost":22,"joy":"A tool belt for bug hunts."},{"id":"badge-kindcoder","name":"Kind Coder Badge","type":"badge","cost":16,"joy":"A badge for helping friends learn."},{"id":"room-dojo","name":"Code Dojo","type":"room","cost":30,"joy":"A calm dojo with puzzle tiles."},{"id":"dance-compile","name":"Compile Dance","type":"dance","cost":20,"joy":"Nori celebrates when the idea runs."}]};
+      const App = ${JSON.stringify(app)};
       const Config = {stateKey:"kinetik_quest_" + App.appId + "_state",stateCollection:App.collectionPrefix + "_state",attemptsCollection:App.collectionPrefix + "_attempts",catalogCollection:App.collectionPrefix + "_shop_catalog"};
       const $ = (id) => document.getElementById(id);
       const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -492,9 +898,20 @@ DATA:
       function DAY(){ return new Date().toISOString().slice(0,10); }
       function titleCase(v){ v = String(v || ""); return v.charAt(0).toUpperCase() + v.slice(1); }
       function formatMs(ms){ if(!ms) return "0s"; if(ms < 1000) return ms + "ms"; return (ms/1000).toFixed(ms < 10000 ? 1 : 0) + "s"; }
-      function esc(v){ return String(v == null ? "" : v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c];}); }
-      function escAttr(v){ return esc(v).replace(/\x60/g,"&#096;"); }
+      function esc(v){ return String(v == null ? "" : v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","'":"&#039;"}[c];}); }
+      function escAttr(v){ return esc(v).replace(/\\x60/g,"&#096;"); }
     })();
   </script>
 </body>
 </html>
+`;
+}
+
+function escapeHtml(value){
+  return String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
+}
+
+for(const app of apps){
+  fs.writeFileSync(path.join(ROOT, app.file), html(app), "utf8");
+  console.log(`wrote ${app.file}`);
+}
