@@ -13,7 +13,8 @@ powershell -NoProfile -Command "$names = Get-ChildItem -Filter 'App_*.html' | So
 echo Refreshed SEED_FILES in index.html
 
 echo Starting Kinetik at http://localhost:5500  (close this window to stop)
-start "" http://localhost:5500/index.html
+REM Open the browser only AFTER the server is accepting connections (avoids a dead "can't connect" tab).
+start "" powershell -NoProfile -WindowStyle Hidden -Command "$n=0; while($n -lt 60){ try{ (New-Object Net.Sockets.TcpClient).Connect('localhost',5500); break }catch{ Start-Sleep -Milliseconds 250; $n++ } }; Start-Process 'http://localhost:5500/index.html'"
 
 where python >nul 2>nul
 if %errorlevel%==0 (

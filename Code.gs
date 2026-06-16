@@ -40,7 +40,7 @@ POST actions: uploadMedia, createMemoryLine, listMemoryLines,
   Production must use Firebase/Supabase private storage + authenticated access.
 - Stories are PERMANENT (family memory vault — no 24h expiry). expiresAt column
   is reserved/blank for a future optional ephemeral mode.
-- Validation: Memory Line caption >= 10 chars. Story title 3-40 chars.
+- Validation: Memory Line caption >= 1 char. Story title 3-40 chars.
 
 REDEPLOY NOTE: after pasting this file, use Deploy > Manage deployments >
 edit (pencil) > Version: New version — the web app URL stays the same.
@@ -55,7 +55,7 @@ var SHEETS = [
 
 /* Moments media pipeline config */
 var MEDIA_ROOT = "Kinetik_Media";
-var STORY_MIN_TITLE = 3, STORY_MAX_TITLE = 40, MEMORY_MIN_CAPTION = 10;
+var STORY_MIN_TITLE = 3, STORY_MAX_TITLE = 40, MEMORY_MIN_CAPTION = 1;
 var MEMORY_MIN_TITLE = 2, MEMORY_MAX_TITLE = 60, COMMENT_MAX = 300;
 
 var HEADERS = {

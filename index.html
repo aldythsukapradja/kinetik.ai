@@ -1866,10 +1866,9 @@ const Create={type:"memory-line",items:[],
     <div class="seg"><button data-t="memory-line" class="${!isMoment?"on":""}">Memory Line</button><button data-t="moment" class="${isMoment?"on":""}">Moment</button></div>
     <div id="mediaSlot">${this.items.length?this.previewHtml():this.dropHtml()}</div>
     <div class="cfield"><div class="lbl">Title <span style="color:var(--bad)">*</span></div>
-      <input class="fld" id="cTitle" maxlength="${isMoment?40:60}" placeholder="${isMoment?"Name this highlight":"Give this memory a name"}"><div class="cc" id="ccTitle">0 / ${isMoment?40:60} · min ${isMoment?3:2}</div></div>
+      <input class="fld" id="cTitle" maxlength="${isMoment?40:60}" placeholder="${isMoment?"Name this highlight":"Give this memory a name"}"><div class="cc" id="ccTitle">0 / ${isMoment?40:60}</div></div>
     <div class="cfield"><div class="lbl">Caption${isMoment?"":' <span style="color:var(--bad)">*</span>'}</div>
-      <textarea class="fld" id="cCap" rows="3" placeholder="${isMoment?"Add a note (optional)":"Write at least 10 characters…"}"></textarea>
-      ${isMoment?"":'<div class="cc" id="ccCap">0 / min 10</div>'}</div>
+      <textarea class="fld" id="cCap" rows="3" placeholder="${isMoment?"Add a note (optional)":"Add a caption…"}"></textarea></div>
     <div class="cfield"><div class="lbl">Share to</div>
       ${myCircles.map(c=>`<button class="crad ${c.id===this.circleId?"on":""}" data-c="${c.id}"><span class="av" style="width:26px;height:26px;font-size:11px;background:${c.accent?c.accent[0]:"var(--acc)"}">${esc(c.name[0])}</span>${esc(c.name)}<span class="dot"></span></button>`).join("")}
       <button class="crad ${this.circleId==="__me"?"on":""}" data-c="__me"><span class="av" style="width:26px;height:26px;font-size:11px;background:#64748b">${esc(me()?me().displayName[0]:"M")}</span>Only Me<span class="dot"></span></button></div>
@@ -1881,8 +1880,8 @@ const Create={type:"memory-line",items:[],
     const addm=$("#mediaSlot .maddmore");if(addm)addm.onclick=()=>$("#filePick").click();
     $$("#mediaSlot .mstrip .rm").forEach(b=>b.onclick=()=>{const i=+b.dataset.i,it=this.items[i];if(it)try{URL.revokeObjectURL(it.url);}catch(e){}this.items.splice(i,1);this.render();this.validate();});
     const minT=isMoment?3:2,maxT=isMoment?40:60;
-    const tt=$("#cTitle");if(tt)tt.oninput=()=>{const n=tt.value.trim().length;$("#ccTitle").textContent=n+" / "+maxT+" · min "+minT;$("#ccTitle").classList.toggle("bad",n>0&&n<minT);this.validate();};
-    const cc=$("#cCap");if(cc&&!isMoment)cc.oninput=()=>{const n=cc.value.trim().length;$("#ccCap").textContent=n+" / min 10";$("#ccCap").classList.toggle("bad",n>0&&n<10);this.validate();};
+    const tt=$("#cTitle");if(tt)tt.oninput=()=>{const n=tt.value.trim().length;$("#ccTitle").textContent=n+" / "+maxT;$("#ccTitle").classList.toggle("bad",n>0&&n<minT);this.validate();};
+    const cc=$("#cCap");if(cc&&!isMoment)cc.oninput=()=>this.validate();
     this.validate();
   },
   dropHtml(){const multi=this.type!=="moment";return `<button class="dropzone"><svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 16v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg><b>Upload photo${multi?"s":""}</b><span>JPEG / PNG / WebP · up to ${MAX_IMG_MB}MB${multi?` · up to ${MAX_PHOTOS}`:""}</span></button>`;},
@@ -1929,27 +1928,31 @@ const Create={type:"memory-line",items:[],
       }else Toast.show("Couldn't read that image — try a smaller JPEG or PNG");
     }
   },
-  async compress(file){
-    /* Prefer createImageBitmap: decodes off the main thread, handles iPhone HEIC, and is
-       NOT subject to the lazy-image-load intervention that can stall <img>.onload forever. */
-    let src=null,W=0,H=0,close=null,revoke=null;
-    if(window.createImageBitmap){
-      try{const bmp=await createImageBitmap(file);src=bmp;W=bmp.width;H=bmp.height;close=()=>{try{bmp.close&&bmp.close();}catch(e){}};}catch(e){src=null;}
-    }
-    if(!src){
-      src=await new Promise((resolve,reject)=>{
-        const img=new Image();img.decoding="sync";const url=URL.createObjectURL(file);revoke=()=>URL.revokeObjectURL(url);
-        img.onload=()=>resolve(img);img.onerror=()=>{revoke();reject(new Error("decode failed"));};img.src=url;
-      });
-      W=src.naturalWidth||src.width;H=src.naturalHeight||src.height;
-    }
-    if(!W||!H){if(close)close();if(revoke)revoke();throw new Error("decode failed");}
-    const scale=Math.min(1,MAX_EDGE/Math.max(W,H)),w=Math.max(1,Math.round(W*scale)),h=Math.max(1,Math.round(H*scale));
-    const cv=document.createElement("canvas");cv.width=w;cv.height=h;
-    cv.getContext("2d").drawImage(src,0,0,w,h);
-    if(close)close();if(revoke)revoke();
-    const blob=await new Promise((resolve,reject)=>cv.toBlob(b=>b?resolve(b):reject(new Error("encode failed")),"image/jpeg",.82));
-    return {blob};
+  /* Decode + downscale to JPEG. Uses a plain <img> (reliable on iOS Safari, incl. HEIC)
+     and is HARD-BOUNDED by a timeout so it can never hang the upload — if anything stalls
+     we reject and addOne() falls back to uploading the original bytes. (createImageBitmap
+     is intentionally NOT used: it can hang indefinitely on iOS Safari for some photos.) */
+  compress(file){
+    return new Promise((resolve,reject)=>{
+      const url=URL.createObjectURL(file); let done=false;
+      const cleanup=()=>{try{URL.revokeObjectURL(url);}catch(e){}};
+      const fail=m=>{if(done)return;done=true;cleanup();reject(new Error(m||"decode failed"));};
+      const ok=blob=>{if(done)return;done=true;cleanup();resolve({blob});};
+      const to=setTimeout(()=>fail("decode timeout"),7000);
+      const img=new Image(); img.decoding="async";
+      img.onload=()=>{ if(done)return; clearTimeout(to);
+        try{
+          const W=img.naturalWidth||img.width,H=img.naturalHeight||img.height;
+          if(!W||!H)return fail("empty image");
+          const scale=Math.min(1,MAX_EDGE/Math.max(W,H)),w=Math.max(1,Math.round(W*scale)),h=Math.max(1,Math.round(H*scale));
+          const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+          cv.getContext("2d").drawImage(img,0,0,w,h);
+          cv.toBlob(b=>b?ok(b):fail("encode failed"),"image/jpeg",.82);
+        }catch(e){fail(e&&e.message);}
+      };
+      img.onerror=()=>fail("decode error");
+      img.src=url;
+    });
   },
   validate(){
     const ok=this.items.length&&this.circleId&&this.textOk();
@@ -1958,7 +1961,7 @@ const Create={type:"memory-line",items:[],
   textOk(){
     const t=$("#cTitle");
     if(this.type==="moment")return t&&t.value.trim().length>=3;
-    const c=$("#cCap");return t&&t.value.trim().length>=2&&c&&c.value.trim().length>=10;
+    const c=$("#cCap");return t&&t.value.trim().length>=2&&c&&c.value.trim().length>=1;
   },
   blobToBase64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]);r.onerror=rej;r.readAsDataURL(blob);});},
   async post(){
@@ -2006,7 +2009,7 @@ const Create={type:"memory-line",items:[],
 };
 $("#createBack").onclick=()=>Create.close();
 $("#createPost").onclick=()=>Create.post();
-$("#filePick").onchange=e=>{const files=e.target.files;e.target.value="";Create.addFiles(files);};
+$("#filePick").onchange=e=>{const files=[...e.target.files];e.target.value="";Create.addFiles(files);};
 /* celebratory confetti on a fresh post */
 function burst(){
   if(!Motion.ok())return;
@@ -2081,11 +2084,11 @@ function editPost(postId){
   Sheet.open("Edit post",w);
   const tt=w.querySelector("#epT"),tc=w.querySelector("#epTC"),t=w.querySelector("#epCap"),cc=w.querySelector("#epCC"),go=w.querySelector("#epGo");
   const upd=()=>{const tn=tt.value.trim().length,cn=t.value.trim().length;
-    tc.textContent=tn+" / 60 · min 2";tc.classList.toggle("bad",tn<2);
-    cc.textContent=cn+" / min 10";cc.classList.toggle("bad",cn<10);go.disabled=tn<2||cn<10;};
+    tc.textContent=tn+" / 60";tc.classList.toggle("bad",tn>0&&tn<2);
+    cc.textContent="";cc.classList.toggle("bad",cn===0);go.disabled=tn<2||cn<1;};
   tt.oninput=upd;t.oninput=upd;upd();
   go.onclick=async()=>{
-    const title=tt.value.trim(),cap=t.value.trim();if(title.length<2||cap.length<10)return;
+    const title=tt.value.trim(),cap=t.value.trim();if(title.length<2||cap.length<1)return;
     go.disabled=true;go.textContent="Saving…";
     try{
       await MomentsService.editMemoryLine({postId,title,caption:cap});
