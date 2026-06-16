@@ -1,156 +1,515 @@
-<!--
-KINETIK APP STANDARD v0.4
-
-PRODUCT:
-Kinetik is a private life app for Family and Friends circles.
-
-APP:
-Cook Simple is a polished standalone Kinetik mini app.
-Analog inspiration: Tasty, SideChef, Kitchen Stories.
-
-IMPORTANT:
-- This app closely follows proven interaction patterns from the analog target.
-- It does not copy protected logos, mascots, names, exact artwork, or exact trade dress.
-- It keeps distinct Kinetik branding, icons, colors, and data contracts.
-
-ARCHITECTURE:
-- Single self-contained HTML file.
-- Inline CSS and vanilla JavaScript only.
-- No external frameworks, CDNs, build step, or backend dependency.
-- Works directly from a local HTML file.
-- Works embedded inside the Kinetik shell iframe.
-- Uses AppBridge messages for future parent-shell persistence.
-- Uses localStorage for direct-file progress and history.
-
-KINETIK INTEGRATION:
-- Detects embedded mode with window.self !== window.top.
-- Listens for INIT_APP messages.
-- Accepts circleId, circleType, memberId, personId, theme, and context.
-- Sends DATA_CREATE, DATA_UPDATE, OPEN_APP, and SHOW_TOAST bridge messages when relevant.
-
-DATA:
-- Storage prefix: kinetik_polished_cook_simple.
-- App-specific future records should be stored in AppRecords with circleId, appId, collection, and payloadJson.
-- This app must not access another circle's data.
-
-React/TypeScript app scale-up note:
-- This single-file app should later become a React feature module or standalone route.
-- It must keep using AppBridge/DataAPI contracts.
-- It must not access another circle's data.
-- It must store app-specific data in AppRecords using circleId, appId, collection, payloadJson.
--->
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f7faff">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Cook Simple">
-  <title>Cook Simple - Kinetik Polished</title>
-  <script type="application/kinetik-app+json">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cook Simple - Kinetik</title>
+<script type="application/kinetik-app+json">
 {
   "appId": "cook-simple",
   "name": "Cook Simple",
-  "shortName": "CS",
+  "shortName": "Cook",
   "icon": "🍳",
-  "gradient": [
-    "#ff8b3d",
-    "#f35d9f"
-  ],
-  "category": "life",
-  "tagline": "Swipe-style recipe coaching for busy family meals.",
-  "about": "A visual recipe app with ingredient prep, step cards, timers, and cooked history.",
-  "audience": "family and friends circles",
-  "circleTypes": [
-    "family",
-    "friends",
-    "learning",
-    "work"
-  ],
-  "worksWith": [
-    "offline",
-    "standalone",
-    "embedded",
-    "local progress"
-  ],
+  "gradient": ["#ff8b3d", "#f35d9f"],
+  "category": "productivity",
+  "tagline": "Your circle's shared kitchen.",
+  "about": "Browse family recipes by cuisine, follow step-by-step cards with timers, and send the ingredients straight to Grocery Buddy. Schedule a meal to the calendar or start a dinner vote in Event Poll — all optional, all one tap.",
+  "audience": "all",
+  "circleTypes": ["family", "friends"],
+  "worksWith": ["offline", "standalone", "calendar"],
   "status": "live",
   "minMembers": 1
 }
-  </script>
-  <style>
-    :root{color-scheme:light;--bg:#f5f8ff;--bg2:#edf3ff;--ink:#111827;--muted:#6b7280;--faint:#9ca3af;--panel:rgba(255,255,255,.88);--solid:#fff;--line:rgba(17,24,39,.1);--a:#ff8b3d;--b:#f35d9f;--good:#18b978;--warn:#f59e0b;--bad:#ef4444;--shadow:0 22px 58px rgba(35,52,92,.15);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    [data-theme=dark]{color-scheme:dark;--bg:#08101b;--bg2:#101827;--ink:#f8fbff;--muted:#b9c3d2;--faint:#7e8aa2;--panel:rgba(18,26,42,.82);--solid:#111827;--line:rgba(255,255,255,.12);--shadow:0 22px 58px rgba(0,0,0,.35)}
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;width:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink)}body{background:radial-gradient(circle at 12% -8%,color-mix(in srgb,var(--a) 22%,transparent),transparent 34%),radial-gradient(circle at 94% 0%,color-mix(in srgb,var(--b) 18%,transparent),transparent 32%),linear-gradient(180deg,var(--bg),var(--bg2))}button,input{font:inherit}button{border:0;color:inherit;cursor:pointer}h1,h2,h3,p{margin:0}.app{height:100dvh;max-width:780px;margin:0 auto;display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden}.top{padding:calc(12px + env(safe-area-inset-top,0px)) 16px 10px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px}.mark{width:46px;height:46px;border-radius:16px;color:white;display:grid;place-items:center;font-size:12px;font-weight:950;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 16px 32px color-mix(in srgb,var(--a) 24%,transparent)}.title{min-width:0}.title h1{font-size:22px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title p{margin-top:5px;color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.iconbtn{width:42px;height:42px;border-radius:15px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 10px 24px rgba(0,0,0,.06)}.content{min-height:0;overflow-y:auto;overflow-x:hidden;padding:6px 16px 18px;scrollbar-width:none}.content::-webkit-scrollbar,.hscroll::-webkit-scrollbar{display:none}.hero{position:relative;overflow:hidden;border-radius:30px;padding:18px;color:white;background:radial-gradient(circle at 14% 0%,rgba(255,255,255,.34),transparent 31%),linear-gradient(135deg,var(--a),var(--b));box-shadow:var(--shadow)}.hero:after{content:"";position:absolute;right:-42px;bottom:-78px;width:172px;height:172px;border-radius:50%;border:30px solid rgba(255,255,255,.14)}.hero>*{position:relative;z-index:1}.kicker{font-size:11px;letter-spacing:1.8px;font-weight:950;text-transform:uppercase;opacity:.74}.hero h2{margin-top:8px;font-size:29px;line-height:1;letter-spacing:0}.hero p{margin-top:9px;color:rgba(255,255,255,.82);font-size:13px;line-height:1.35;font-weight:750}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:16px}.stat{min-height:62px;padding:10px;border-radius:18px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(14px)}.stat b{font-size:20px}.stat span{display:block;margin-top:6px;color:rgba(255,255,255,.78);font-size:11px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .tabs{position:sticky;top:0;z-index:2;margin:14px 0;padding:4px;border-radius:18px;background:rgba(255,255,255,.64);border:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;backdrop-filter:blur(20px)}[data-theme=dark] .tabs{background:rgba(18,26,42,.74)}.tab{height:40px;border-radius:14px;background:transparent;color:var(--muted);font-size:13px;font-weight:950}.tab.active{color:var(--ink);background:var(--solid);box-shadow:0 8px 18px rgba(0,0,0,.08)}.screen{display:none}.screen.active{display:block;animation:rise .24s ease both}@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.panel{border-radius:28px;background:var(--panel);border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.08);padding:15px;margin-bottom:12px;backdrop-filter:blur(20px)}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.panel h3{font-size:16px}.muted{color:var(--muted);font-size:12px;font-weight:760;line-height:1.35}.chip{display:inline-flex;align-items:center;height:29px;padding:0 10px;border-radius:999px;background:color-mix(in srgb,var(--a) 10%,transparent);border:1px solid color-mix(in srgb,var(--a) 17%,transparent);color:var(--a);font-size:11px;font-weight:950}.grid{display:grid;gap:10px}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.tile,.choice{width:100%;border-radius:22px;background:var(--solid);border:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.06);padding:13px;text-align:left;transition:transform .18s ease,border-color .18s ease}.tile:active,.choice:active,.primary:active,.secondary:active,.iconbtn:active{transform:scale(.98)}.tile b{display:block;font-size:14px;line-height:1.15}.tile span{display:block;margin-top:6px;color:var(--muted);font-size:12px;font-weight:750;line-height:1.3}.visual{min-height:168px;border-radius:26px;background:radial-gradient(circle at 22% 20%,color-mix(in srgb,var(--a) 18%,transparent),transparent 32%),linear-gradient(135deg,color-mix(in srgb,var(--a) 8%,var(--solid)),color-mix(in srgb,var(--b) 8%,var(--solid)));border:1px solid var(--line);display:grid;place-items:center;margin-bottom:13px;overflow:hidden}.visual svg{width:min(250px,82vw);height:150px}.prompt{font-size:24px;line-height:1.08;margin-top:10px}.choices{display:grid;gap:10px;margin-top:14px}.choice{font-size:15px;font-weight:900;min-height:58px;border-width:2px}.choice.selected{border-color:var(--a);background:color-mix(in srgb,var(--a) 9%,var(--solid))}.choice.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--solid))}.choice.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--solid))}.feedback{display:none;margin-top:12px;border-radius:20px;padding:13px;background:color-mix(in srgb,var(--a) 8%,var(--solid));border:1px solid var(--line)}.feedback.show{display:block}.feedback b{font-size:14px}.feedback p{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.35;font-weight:750}.meter{height:9px;border-radius:999px;background:rgba(120,140,160,.16);overflow:hidden;margin-top:10px}.meter i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--a),var(--b));transition:width .28s ease}.hscroll{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none}.appcard{flex:0 0 70%;min-height:150px;color:white;background:linear-gradient(135deg,var(--x),var(--y));border:0}.appicon{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-weight:950}.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}.check{width:34px;height:34px;border-radius:13px;display:grid;place-items:center;background:rgba(120,140,160,.14);border:1px solid var(--line);font-weight:950;color:transparent}.done .check{color:white;background:linear-gradient(135deg,var(--good),var(--a));border-color:transparent}.done .row-label{text-decoration:line-through;color:var(--muted)}.row-label{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.inputrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}.input{height:48px;border-radius:17px;border:1px solid var(--line);padding:0 13px;background:var(--solid);color:var(--ink)}.bottom{padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--bg) 94%,transparent) 35%,var(--bg));backdrop-filter:blur(18px)}.primary,.secondary{min-height:52px;border-radius:18px;font-size:15px;font-weight:950;display:inline-flex;align-items:center;justify-content:center;gap:8px}.primary{color:white;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 16px 32px color-mix(in srgb,var(--a) 24%,transparent)}.primary:disabled{opacity:.5;box-shadow:none}.secondary{min-width:56px;background:var(--panel);border:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.06)}.toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom,0px));transform:translate(-50%,18px);opacity:0;max-width:min(340px,calc(100vw - 32px));padding:12px 14px;border-radius:999px;background:rgba(17,24,39,.92);color:white;font-size:13px;font-weight:850;box-shadow:0 18px 42px rgba(0,0,0,.22);transition:opacity .22s ease,transform .22s ease;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
-    .clock{width:158px;height:158px;border-radius:50%;background:var(--solid);border:8px solid color-mix(in srgb,var(--a) 22%,white);position:relative;box-shadow:0 18px 38px rgba(0,0,0,.13)}.hand{position:absolute;left:50%;top:50%;height:5px;border-radius:999px;background:var(--ink);transform-origin:left center}.hour{width:43px}.minute{width:60px;background:var(--a)}.pin{position:absolute;left:50%;top:50%;width:13px;height:13px;border-radius:50%;background:var(--b);transform:translate(-50%,-50%)}.tick{position:absolute;left:50%;top:50%;font-size:12px;font-weight:950;color:var(--muted)}
-    @media (min-width:720px){.content{padding-inline:24px}.two{grid-template-columns:repeat(3,minmax(0,1fr))}.appcard{flex-basis:38%}}@media (max-width:370px){.top{padding-inline:12px}.hero h2{font-size:25px}.prompt{font-size:22px}.two{grid-template-columns:1fr}.appcard{flex-basis:82%}}@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
-  </style>
+</script>
+<meta name="theme-color" content="#ff8b3d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+:root{
+  --radius-sm:14px; --radius-md:20px; --radius-lg:28px;
+  --font:Inter,ui-sans-serif,system-ui,-apple-system,"SF Pro Display","Segoe UI",sans-serif;
+  --dur1:.2s; --dur2:.38s; --ease:cubic-bezier(.32,.72,.28,1);
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  --safeb:max(var(--sab),8px); --navh:calc(64px + var(--safeb));
+  --acc:#ff8b3d; --acc2:#f35d9f;
+}
+html[data-theme="dark"]{ --bg0:#0c0608;--bg1:#170a10;--bg2:#241019;--text:#fff1ea;
+  --dim:rgba(255,241,234,.62);--faint:rgba(255,241,234,.4);
+  --glass:rgba(40,20,28,.55);--glass2:rgba(48,24,34,.72);
+  --brd:rgba(255,255,255,.1);--brd2:rgba(255,255,255,.16);
+  --shadow:0 24px 80px rgba(0,0,0,.45);--chip:rgba(255,255,255,.07);
+  --ok:#34d399;--warn:#fbbf24;--bad:#fb7185; color-scheme:dark; }
+html[data-theme="light"]{ --bg0:#fff5ef;--bg1:#ffeee6;--bg2:#ffe4ee;--text:#2a121b;
+  --dim:rgba(42,18,27,.7);--faint:rgba(42,18,27,.46);
+  --glass:rgba(255,255,255,.66);--glass2:rgba(255,255,255,.86);
+  --brd:rgba(255,255,255,.78);--brd2:rgba(200,140,160,.28);
+  --shadow:0 24px 70px rgba(150,70,100,.18);--chip:rgba(120,40,70,.06);
+  --ok:#059669;--warn:#d97706;--bad:#e11d48; color-scheme:light; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;height:100dvh;overscroll-behavior:none}
+body{font-family:var(--font);color:var(--text);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(120% 80% at 10% -8%,color-mix(in srgb,var(--acc) 18%,transparent),transparent 46%),
+    radial-gradient(120% 80% at 92% -4%,color-mix(in srgb,var(--acc2) 16%,transparent),transparent 42%),
+    linear-gradient(180deg,var(--bg1),var(--bg0));}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+::-webkit-scrollbar{display:none}*{scrollbar-width:none}
+
+.app{height:100dvh;display:flex;flex-direction:column;max-width:640px;margin:0 auto;position:relative}
+.top{display:flex;align-items:center;gap:11px;padding:calc(12px + var(--sat)) 16px 8px}
+.mark{width:40px;height:40px;border-radius:14px;flex:0 0 auto;display:grid;place-items:center;font-size:21px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 10px 24px color-mix(in srgb,var(--acc) 34%,transparent)}
+.top .ttl{min-width:0;flex:1}
+.top h1{font-size:19px;letter-spacing:-.02em;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .sub{font-size:11.5px;color:var(--faint);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;flex:0 0 auto;
+  background:var(--chip);border:1px solid var(--brd2);color:var(--text);transition:transform var(--dur1) var(--ease)}
+.iconbtn:active{transform:scale(.92)}
+
+.view{flex:1;overflow-y:auto;padding:6px 16px calc(var(--navh) + 16px)}
+.glass{background:var(--glass);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);
+  border:1px solid var(--brd);box-shadow:var(--shadow);border-radius:var(--radius-md)}
+.card{padding:15px}
+.lbl{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:11px 18px;
+  font-weight:700;font-size:14px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;
+  box-shadow:0 8px 26px color-mix(in srgb,var(--acc) 35%,transparent);transition:transform var(--dur1) var(--ease)}
+.btn:active{transform:scale(.96)}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.btn.ghost{background:var(--chip);border:1px solid var(--brd2);color:var(--text);box-shadow:none}
+.btn.sm{padding:8px 13px;font-size:12.5px}
+.btn.block{width:100%}
+
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:700;
+  background:var(--chip);border:1px solid transparent;color:var(--dim);transition:all var(--dur1);white-space:nowrap}
+.chip:active{transform:scale(.95)}
+.chip.on{background:color-mix(in srgb,var(--acc) 18%,transparent);color:var(--text);border-color:color-mix(in srgb,var(--acc) 45%,transparent)}
+.chiprow{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px}
+.chiprow .chip{flex:0 0 auto}
+
+.av{width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font-size:10.5px;font-weight:800;color:#fff;
+  flex:0 0 auto;border:2px solid rgba(255,255,255,.25)}
+
+input.fld,select.fld,textarea.fld{width:100%;background:var(--chip);border:1px solid var(--brd2);border-radius:13px;padding:12px 13px;
+  font-size:14px;outline:none;transition:border-color var(--dur1)}
+input.fld:focus,select.fld:focus,textarea.fld:focus{border-color:color-mix(in srgb,var(--acc) 55%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 12%,transparent)}
+
+/* recipe cards (discover) */
+.search{position:relative;margin:8px 0 6px}
+.search input{padding-left:40px}
+.search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--faint)}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:4px}
+.rcard{padding:13px;text-align:left;display:flex;flex-direction:column;gap:7px;min-height:128px;cursor:pointer;
+  transition:transform var(--dur1) var(--ease)}
+.rcard:active{transform:scale(.97)}
+.rcard .rico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 80%,#fff),var(--acc2))}
+.rcard .rt{font-weight:800;font-size:14.5px;line-height:1.2;letter-spacing:-.01em}
+.rcard .rm{font-size:11px;color:var(--faint);font-weight:700;margin-top:auto;display:flex;gap:8px;flex-wrap:wrap}
+.stars{color:var(--warn);font-size:11px}
+
+/* hero (tonight) */
+.bighero{padding:18px;color:#fff;border-radius:var(--radius-lg);background:linear-gradient(135deg,var(--acc),var(--acc2));
+  box-shadow:0 18px 44px color-mix(in srgb,var(--acc2) 36%,transparent);position:relative;overflow:hidden;margin:8px 0 14px}
+.bighero:after{content:"";position:absolute;right:-40px;top:-40px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.12)}
+.bighero .em{font-size:46px;z-index:1;position:relative;filter:drop-shadow(0 6px 12px rgba(0,0,0,.2))}
+.bighero h2{font-size:23px;letter-spacing:-.02em;z-index:1;position:relative;margin-top:6px}
+.bighero .meta{display:flex;gap:8px;margin-top:11px;z-index:1;position:relative;flex-wrap:wrap}
+.bighero .meta b{background:rgba(255,255,255,.2);border-radius:11px;padding:6px 11px;font-size:12px;font-weight:800;backdrop-filter:blur(6px)}
+.bighero .acts{display:flex;gap:8px;margin-top:14px;z-index:1;position:relative;flex-wrap:wrap}
+.heroact{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:999px;
+  padding:9px 14px;font-weight:800;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;backdrop-filter:blur(8px);transition:transform var(--dur1)}
+.heroact:active{transform:scale(.94)}
+.heroact.solid{background:#fff;color:var(--acc2)}
+
+.subtabs{display:flex;gap:7px;margin-bottom:12px}
+.subtabs button{flex:1;padding:9px;border-radius:13px;background:var(--chip);border:1px solid var(--brd2);font-weight:800;font-size:12.5px;color:var(--dim)}
+.subtabs button.on{background:color-mix(in srgb,var(--acc) 16%,transparent);border-color:color-mix(in srgb,var(--acc) 45%,transparent);color:var(--text)}
+
+.ing{display:flex;align-items:center;gap:11px;padding:11px 13px;margin-bottom:8px}
+.ing .ic{width:24px;height:24px;border-radius:8px;border:2px solid var(--brd2);flex:0 0 auto;display:grid;place-items:center;color:#fff;transition:all var(--dur1)}
+.ing .ic.on{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent}
+.ing .body{flex:1;min-width:0}
+.ing .body b{font-size:14px;font-weight:700;display:block}
+.ing .body span{font-size:11.5px;color:var(--faint);font-weight:600}
+.ing.have .body b{color:var(--ok)}
+
+.step{padding:14px;margin-bottom:9px;position:relative}
+.step.done{opacity:.6}
+.stepnum{position:absolute;top:14px;left:14px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  font-weight:800;font-size:12px;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc2))}
+.step .stxt{margin-left:38px;font-size:14px;font-weight:600}
+.step .stools{margin-left:38px;margin-top:9px;display:flex;gap:8px;align-items:center}
+.timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:13px;color:var(--acc)}
+
+.empty{text-align:center;padding:42px 20px;color:var(--faint)}
+.empty .em{font-size:48px;margin-bottom:10px}
+.empty b{display:block;color:var(--text);font-size:16px;margin-bottom:4px}
+.empty p{font-size:13px}
+
+.nav{position:absolute;left:0;right:0;bottom:0;height:var(--navh);display:flex;justify-content:center;gap:2px;
+  padding:7px 12px var(--safeb);border-radius:26px 26px 0 0;background:var(--glass2);
+  backdrop-filter:blur(28px) saturate(1.5);-webkit-backdrop-filter:blur(28px) saturate(1.5);
+  border-top:1px solid var(--brd);box-shadow:0 -10px 40px rgba(70,20,40,.14);z-index:40}
+.nav .pill{position:absolute;z-index:0;top:7px;height:48px;border-radius:20px;
+  background:color-mix(in srgb,var(--acc) 14%,transparent);transition:left .34s var(--ease),width .34s var(--ease),opacity .25s;opacity:0}
+.nav button{position:relative;z-index:1;flex:1;max-width:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;border-radius:20px;font-size:10px;font-weight:700;color:var(--faint);transition:color var(--dur2) var(--ease)}
+.nav button.on{color:var(--acc)}
+.nav button.on svg{transform:translateY(-1px) scale(1.08)}
+.nav svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transition:transform var(--dur2) var(--ease)}
+
+.toast{position:absolute;left:50%;bottom:calc(var(--navh) + 14px);transform:translate(-50%,16px) scale(.92);opacity:0;
+  background:var(--glass2);backdrop-filter:blur(18px);border:1px solid var(--brd);border-radius:999px;padding:11px 18px;
+  font-size:13px;font-weight:700;box-shadow:var(--shadow);z-index:60;pointer-events:none;transition:all .3s var(--ease);white-space:nowrap}
+.toast.show{transform:translate(-50%,0) scale(1);opacity:1}
+
+.scrim{position:absolute;inset:0;background:rgba(15,5,10,.45);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity var(--dur2);z-index:50}
+.scrim.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:51;transform:translateY(110%);transition:transform var(--dur2) var(--ease);
+  background:var(--glass2);backdrop-filter:blur(28px) saturate(1.4);border-top:1px solid var(--brd);
+  border-radius:26px 26px 0 0;padding:18px 18px calc(20px + var(--sab));box-shadow:0 -16px 50px rgba(0,0,0,.3);max-width:640px;margin:0 auto;max-height:86dvh;overflow-y:auto}
+.sheet.show{transform:translateY(0)}
+.sheet h3{font-size:18px;letter-spacing:-.02em;margin-bottom:13px}
+.sheet .grid{display:flex;flex-direction:column;gap:11px}
+
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.rise{animation:rise .42s var(--ease) both}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+</style>
 </head>
 <body>
-  <main class="app">
-    <header class="top">
-      <div class="mark">CS</div>
-      <div class="title"><h1>Cook Simple</h1><p id="circleLine">Standalone circle</p></div>
-      <button class="iconbtn" id="themeBtn" type="button" aria-label="Toggle theme">T</button>
-    </header>
-    <section class="content">
-      <article class="hero"><div class="kicker">Tasty, SideChef, Kitchen Stories</div><h2>Swipe-style recipe coaching for busy family meals.</h2><p>A visual recipe app with ingredient prep, step cards, timers, and cooked history.</p><div class="stats"><div class="stat"><b id="score">0</b><span>score</span></div><div class="stat"><b id="streak">0</b><span>streak</span></div><div class="stat"><b id="session">0</b><span>sessions</span></div></div></article>
-      <nav class="tabs"><button class="tab active" data-tab="play" type="button">Play</button><button class="tab" data-tab="progress" type="button">Progress</button><button class="tab" data-tab="about" type="button">About</button></nav>
-      <section class="screen active" id="play"></section>
-      <section class="screen" id="progress"></section>
-      <section class="screen" id="about"></section>
-    </section>
-    <footer class="bottom"><button class="primary" id="primary" type="button">Continue</button><button class="secondary" id="next" type="button">Next</button></footer>
-  </main>
+<div class="app">
+  <header class="top">
+    <div class="mark">🍳</div>
+    <div class="ttl"><h1>Cook Simple</h1><div class="sub" id="hsub">Standalone</div></div>
+    <button class="iconbtn" id="themeBtn" aria-label="Theme">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6 6 4.5 4.5M19.5 19.5 18 18M18 6l1.5-1.5M4.5 19.5 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/></svg>
+    </button>
+  </header>
+
+  <main class="view" id="view"></main>
+
+  <nav class="nav" id="nav">
+    <span class="pill" id="pill"></span>
+    <button data-tab="discover" class="on">
+      <svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>
+      <span>Discover</span>
+    </button>
+    <button data-tab="tonight">
+      <svg viewBox="0 0 24 24"><path d="M20 13a8 8 0 1 1-9-9 6 6 0 0 0 9 9Z"/></svg>
+      <span>Tonight</span>
+    </button>
+    <button data-tab="favorites">
+      <svg viewBox="0 0 24 24"><path d="M12 4.5 14.3 9l5 .7-3.6 3.5.9 5-4.5-2.4L7.4 18l.9-5L4.6 9.6l5-.7Z"/></svg>
+      <span>Favorites</span>
+    </button>
+    <button data-tab="more">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5"/><path d="M12 8.4v.01M12 11.5v4.1"/></svg>
+      <span>More</span>
+    </button>
+  </nav>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet"></div>
   <div class="toast" id="toast"></div>
-  <script>
-    (function(){
-      "use strict";
-      const App={"appId":"cook-simple","name":"Cook Simple","file":"App_CookSimple.html","icon":"CS","gradient":["#ff8b3d","#f35d9f"],"category":"life","mode":"recipe","analog":"Tasty, SideChef, Kitchen Stories","tagline":"Swipe-style recipe coaching for busy family meals.","about":"A visual recipe app with ingredient prep, step cards, timers, and cooked history.","recipes":[{"title":"Egg Fried Rice","time":12,"type":"Quick","ingredients":["Cooked rice","2 eggs","Soy sauce","Spring onion"],"steps":["Scramble eggs first","Add rice and stir","Season lightly","Finish with spring onion"]},{"title":"Chicken Pasta","time":25,"type":"Family","ingredients":["Pasta","Chicken strips","Tomato sauce","Parmesan"],"steps":["Boil pasta","Cook chicken","Add sauce","Toss pasta together"]},{"title":"Salmon Rice Bowl","time":20,"type":"Healthy","ingredients":["Salmon","Rice","Cucumber","Yogurt sauce"],"steps":["Cook salmon","Prepare rice","Slice cucumber","Top with sauce"]}]};
-      const Config={appId:App.appId,storagePrefix:"kinetik_polished_cook_simple",collection:App.mode+"_records"};
-      const $=(s)=>document.querySelector(s);const $$=(s)=>Array.from(document.querySelectorAll(s));
-      const fallback={theme:"light",circleId:"standalone_demo",circleType:"family",personId:"standalone_person",memberId:"standalone_person",tab:"play",index:0,selected:null,checked:false,score:0,streak:0,sessions:0,done:{},customItems:[],installed:{},step:0,wheel:0};
-      const state=Object.assign(fallback,readJson(Config.storagePrefix+"_state",{}));state.embedded=isEmbedded();setTheme(state.theme,false);listen();wire();render();
-      function isEmbedded(){try{return window.self!==window.top}catch(e){return true}}
-      const Bridge={send(type,payload){if(!state.embedded||!window.parent||window.parent===window)return;window.parent.postMessage({type,appId:Config.appId,payload},"*")}};
-      function listen(){window.addEventListener("message",(event)=>{const msg=event.data||{};if(msg.type!=="INIT_APP")return;const p=msg.payload||{};state.circleId=p.circleId||state.circleId;state.circleType=p.circleType||state.circleType;state.personId=p.personId||p.memberId||state.personId;state.memberId=p.memberId||p.personId||state.memberId;if(p.theme)setTheme(p.theme,true);save();render()})}
-      function wire(){$("#themeBtn").onclick=()=>setTheme(state.theme==="dark"?"light":"dark",true);$$(".tab").forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;save();render()});$("#next").onclick=next;$("#primary").onclick=primary}
-      function render(){$("#circleLine").textContent=(state.embedded?"":"Standalone ")+titleCase(state.circleType)+" circle";$("#score").textContent=state.score;$("#streak").textContent=state.streak;$("#session").textContent=state.sessions;$$(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===state.tab));["play","progress","about"].forEach(id=>$("#"+id).classList.toggle("active",state.tab===id));renderPlay();renderProgress();renderAbout();renderButtons()}
-      function renderPlay(){if(App.mode==="store")return renderStore();if(App.mode==="grocery")return renderGrocery();if(App.mode==="recipe")return renderRecipe();return renderChallenge()}
-      function renderStore(){const featured=(App.items||[]).slice(0,6);$("#play").innerHTML='<div class="hscroll">'+featured.map(item=>'<button class="tile appcard" style="--x:'+item.gradient[0]+';--y:'+item.gradient[1]+'" data-app="'+escAttr(item.appId)+'"><span class="appicon">'+esc(item.icon)+'</span><b>'+esc(item.name)+'</b><span>'+esc(item.tagline)+'</span><span class="chip">'+(state.installed[item.appId]?"OPEN":"GET")+'</span></button>').join("")+'</div><div class="panel" style="margin-top:12px"><div class="panel-head"><div><h3>Browse all apps</h3><p class="muted">Local Kinetik apps discovered from rebuilt manifests.</p></div></div><div class="grid two">'+(App.items||[]).map(item=>'<button class="tile" data-app="'+escAttr(item.appId)+'"><span class="row"><span class="appicon" style="background:linear-gradient(135deg,'+item.gradient[0]+','+item.gradient[1]+')">'+esc(item.icon)+'</span><span><b>'+esc(item.name)+'</b><span>'+esc(item.category)+'</span></span><span class="chip">'+(state.installed[item.appId]?"OPEN":"GET")+'</span></span></button>').join("")+'</div></div>';$$("[data-app]").forEach(btn=>btn.onclick=()=>{const id=btn.dataset.app;state.installed[id]=true;complete(1,"Installed "+id);Bridge.send("OPEN_APP",{appId:id})})}
-      function renderGrocery(){const sections=App.sections||[];$("#play").innerHTML=sections.map((section,idx)=>{const items=idx===0?section.items.concat(state.customItems||[]):section.items;return '<div class="panel"><div class="panel-head"><div><h3>'+esc(section.icon)+' '+esc(section.name)+'</h3><p class="muted">Tap to move items into cart.</p></div><span class="chip">'+items.filter(item=>state.done[section.name+'_'+item]).length+'/'+items.length+'</span></div><div class="grid">'+items.map(item=>row(section.name,item)).join("")+'</div></div>'}).join("")+'<div class="panel"><div class="inputrow"><input class="input" id="addInput" placeholder="Add item"><button class="secondary" id="addBtn">Add</button></div></div>';$$("[data-item]").forEach(b=>b.onclick=()=>{state.done[b.dataset.key]=!state.done[b.dataset.key];complete(1,"Cart updated");render()});$("#addBtn").onclick=()=>{const input=$("#addInput");const text=input.value.trim();if(!text)return;state.customItems.push(text);input.value="";complete(1,"Item added");render()}}
-      function renderRecipe(){const recipe=(App.recipes||[])[state.index%(App.recipes||[]).length];const active=recipe.steps[state.step]||recipe.steps[0];$("#play").innerHTML='<div class="panel"><div class="visual">'+visual("recipe",recipe)+'</div><span class="chip">'+esc(recipe.type)+' / '+recipe.time+' min</span><h2 class="prompt">'+esc(recipe.title)+'</h2><p class="muted">'+esc(recipe.ingredients.join(", "))+'</p></div><div class="panel"><div class="panel-head"><div><h3>Step '+(state.step+1)+'</h3><p class="muted">'+esc(active)+'</p></div><span class="chip">'+(state.step+1)+'/'+recipe.steps.length+'</span></div><div class="meter"><i style="width:'+Math.round((state.step+1)/recipe.steps.length*100)+'%"></i></div></div>'}
-      function renderChallenge(){const item=current();$("#play").innerHTML='<div class="panel"><div class="visual">'+visual(item.visual||App.mode,item)+'</div><span class="chip">'+esc(item.kind)+'</span><h2 class="prompt">'+esc(item.prompt)+'</h2><div class="choices">'+item.choices.map((choice,i)=>'<button class="choice '+choiceClass(i)+'" data-choice="'+i+'">'+esc(choice)+'</button>').join("")+'</div><div class="feedback '+(state.checked?'show':'')+'"><b>'+(state.selected===item.answer?'Correct':'Try this idea')+'</b><p>'+esc(item.explain)+'</p></div></div>';$$("[data-choice]").forEach(btn=>btn.onclick=()=>{if(state.checked)return;state.selected=Number(btn.dataset.choice);save();render()})}
-      function renderProgress(){$("#progress").innerHTML='<div class="panel"><div class="panel-head"><div><h3>Progress</h3><p class="muted">Saved locally for this app and circle.</p></div><span class="chip">'+state.score+' pts</span></div><div class="meter"><i style="width:'+Math.min(100,state.score%101)+'%"></i></div></div><div class="grid two"><div class="tile"><b>'+state.score+'</b><span>Total score</span></div><div class="tile"><b>'+state.streak+'</b><span>Current streak</span></div><div class="tile"><b>'+state.sessions+'</b><span>Sessions</span></div><div class="tile"><b>'+esc(App.analog)+'</b><span>Analog target</span></div></div>'}
-      function renderAbout(){$("#about").innerHTML='<div class="panel"><span class="chip">'+esc(App.mode)+'</span><h2 class="prompt">'+esc(App.name)+'</h2><p class="muted">'+esc(App.about)+'</p></div><div class="panel"><h3>Interaction target</h3><p class="muted">'+esc(App.analog)+'</p></div>'}
-      function renderButtons(){if(App.mode==="store"){$("#primary").textContent="Install featured";$("#next").textContent="Reset"}else if(App.mode==="grocery"){$("#primary").textContent="Finish shop";$("#next").textContent="Clear"}else if(App.mode==="recipe"){$("#primary").textContent="Next step";$("#next").textContent="Recipe"}else{$("#primary").textContent=state.checked?"Continue":"Check";$("#primary").disabled=state.selected==null;$("#next").textContent=App.mode==="spin"?"Spin":"Next"}}
-      function primary(){if(App.mode==="store"){const first=(App.items||[])[0];if(first){state.installed[first.appId]=true;complete(1,"Featured installed");render()}return}if(App.mode==="grocery"){complete(8,"Shopping saved");return}if(App.mode==="recipe"){const recipe=(App.recipes||[])[state.index%(App.recipes||[]).length];if(state.step<recipe.steps.length-1){state.step++;save();render()}else{complete(12,"Cooked saved");next()}return}if(!state.checked){check();return}next()}
-      function check(){const item=current();state.checked=true;if(state.selected===item.answer){complete(10,"Correct")}else{state.streak=0;toast(item.explain);save()}Bridge.send("DATA_CREATE",{collection:Config.collection,payload:record({item:item.title,correct:state.selected===item.answer})});render()}
-      function next(){if(App.mode==="store"){state.installed={};save();render();return}if(App.mode==="grocery"){state.done={};save();render();return}if(App.mode==="recipe"){state.index=(state.index+1)%(App.recipes||[]).length;state.step=0;save();render();return}if(App.mode==="spin"){state.wheel=(state.wheel+137)%360}state.index=(state.index+1)%(App.items||[]).length;state.selected=null;state.checked=false;save();render()}
-      function complete(points,msg){state.score+=points;state.streak+=1;state.sessions+=1;save();toast(msg||"Saved")}
-      function row(section,item){const key=section+"_"+item;return '<button class="tile '+(state.done[key]?'done':'')+'" data-item data-key="'+escAttr(key)+'"><span class="row"><span class="check">OK</span><span class="row-label">'+esc(item)+'</span><span class="muted">'+esc(section)+'</span></span></button>'}
-      function current(){return (App.items||[])[state.index%(App.items||[]).length]}
-      function choiceClass(i){if(state.selected===i&&!state.checked)return"selected";if(state.checked&&i===current().answer)return"correct";if(state.checked&&i===state.selected&&i!==current().answer)return"wrong";return""}
-      function record(extra){return Object.assign({circleId:state.circleId,circleType:state.circleType,appId:Config.appId,ownerPersonId:state.personId,createdAt:new Date().toISOString()},extra||{})}
-      function visual(type,item){if(type==="clock")return clock(item.hour,item.minute);if(type==="spin")return spin();if(type==="bars"||type==="line"||type==="dots"||type==="people")return chart(type);if(type==="chess")return board();if(type==="ladder")return ladder();if(type==="wave")return wave();if(type==="habit")return habit();if(type==="wisdom")return wisdom();return generic(type)}
-      function generic(type){return '<svg viewBox="0 0 260 150"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--a)"/><stop offset="1" stop-color="var(--b)"/></linearGradient></defs><rect x="30" y="26" width="200" height="98" rx="32" fill="url(#g)" opacity=".16"/><circle cx="82" cy="76" r="34" fill="url(#g)" opacity=".88"/><rect x="126" y="48" width="78" height="14" rx="7" fill="url(#g)" opacity=".9"/><rect x="126" y="72" width="56" height="14" rx="7" fill="url(#g)" opacity=".56"/><rect x="126" y="96" width="88" height="14" rx="7" fill="url(#g)" opacity=".34"/></svg>'}
-      function chart(type){return '<svg viewBox="0 0 260 150"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--a)"/><stop offset="1" stop-color="var(--b)"/></linearGradient></defs><rect x="38" y="30" width="184" height="96" rx="24" fill="url(#g)" opacity=".12"/><rect x="60" y="82" width="24" height="28" rx="8" fill="url(#g)"/><rect x="102" y="58" width="24" height="52" rx="8" fill="url(#g)" opacity=".82"/><rect x="144" y="72" width="24" height="38" rx="8" fill="url(#g)" opacity=".62"/><path d="M62 88c28-36 54 10 82-20s42-2 58-28" fill="none" stroke="url(#g)" stroke-width="8" stroke-linecap="round" opacity="'+(type==="line"?".9":".2")+'"/></svg>'}
-      function board(){let s='<svg viewBox="0 0 160 160">';for(let y=0;y<4;y++){for(let x=0;x<4;x++){s+='<rect x="'+(22+x*28)+'" y="'+(22+y*28)+'" width="28" height="28" fill="'+((x+y)%2?'var(--a)':'var(--solid)')+'" opacity="'+((x+y)%2?'.72':'1')+'"/>'}}return s+'<text x="80" y="94" text-anchor="middle" font-size="34" fill="var(--ink)">N</text></svg>'}
-      function ladder(){return '<svg viewBox="0 0 260 150"><path d="M58 120 188 28" stroke="var(--a)" stroke-width="12" stroke-linecap="round"/><path d="M86 126 216 34" stroke="var(--b)" stroke-width="12" stroke-linecap="round"/><path d="M82 104h54M112 82h54M142 60h54" stroke="var(--ink)" stroke-width="8" stroke-linecap="round" opacity=".38"/><circle cx="68" cy="122" r="18" fill="var(--a)"/></svg>'}
-      function spin(){return '<svg viewBox="0 0 180 180"><g style="transform-origin:90px 90px;transform:rotate('+state.wheel+'deg)"><circle cx="90" cy="90" r="68" fill="var(--a)"/><path d="M90 90 90 22A68 68 0 0 1 158 90Z" fill="var(--b)"/><path d="M90 90 158 90A68 68 0 0 1 90 158Z" fill="var(--warn)"/><path d="M90 90 90 158A68 68 0 0 1 22 90Z" fill="var(--good)"/></g><circle cx="90" cy="90" r="22" fill="var(--solid)"/><path d="M90 8 104 34H76Z" fill="var(--ink)"/></svg>'}
-      function wave(){return '<svg viewBox="0 0 260 150"><path d="M40 94c24-42 42 42 68 0s42 42 68 0 28 12 44 0" fill="none" stroke="var(--a)" stroke-width="11" stroke-linecap="round"/><rect x="58" y="38" width="144" height="24" rx="12" fill="var(--b)" opacity=".22"/><circle cx="82" cy="104" r="18" fill="var(--b)"/></svg>'}
-      function habit(){return '<svg viewBox="0 0 260 150"><circle cx="92" cy="78" r="44" fill="var(--good)" opacity=".8"/><path d="M78 78l12 12 28-32" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><rect x="146" y="48" width="58" height="16" rx="8" fill="var(--a)"/><rect x="146" y="76" width="78" height="16" rx="8" fill="var(--b)" opacity=".7"/></svg>'}
-      function wisdom(){return '<svg viewBox="0 0 260 150"><rect x="66" y="26" width="128" height="98" rx="24" fill="var(--solid)" stroke="var(--line)"/><rect x="84" y="48" width="92" height="12" rx="6" fill="var(--a)"/><rect x="84" y="72" width="68" height="12" rx="6" fill="var(--b)" opacity=".72"/><rect x="84" y="96" width="84" height="12" rx="6" fill="var(--warn)" opacity=".56"/></svg>'}
-      function clock(h,m){const hour=((h%12)*30)+(m*.5)-90;const min=(m*6)-90;let ticks="";[12,3,6,9].forEach(n=>{const a=(n===12?-90:n*30-90)*Math.PI/180;const x=79+Math.cos(a)*61;const y=79+Math.sin(a)*61;ticks+='<span class="tick" style="transform:translate(-50%,-50%);left:'+x+'px;top:'+y+'px">'+n+'</span>'});return '<div class="clock">'+ticks+'<span class="hand hour" style="transform:rotate('+hour+'deg)"></span><span class="hand minute" style="transform:rotate('+min+'deg)"></span><span class="pin"></span></div>'}
-      function setTheme(theme,persist){state.theme=theme==="dark"?"dark":"light";document.documentElement.dataset.theme=state.theme;document.querySelector("meta[name='theme-color']").setAttribute("content",state.theme==="dark"?"#08101b":"#f7faff");if(persist)save()}
-      function save(){localStorage.setItem(Config.storagePrefix+"_state",JSON.stringify(state))}
-      function readJson(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
-      function toast(m){const n=$("#toast");n.textContent=m;n.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>n.classList.remove("show"),1500)}
-      function titleCase(v){v=String(v||"");return v.charAt(0).toUpperCase()+v.slice(1)}
-      function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-      function escAttr(v){return esc(v).replace(/\x60/g,"&#096;")}
-    })();
-  </script>
+</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const APP_ID="cook-simple";
+const CHANNEL="kinetik-kitchen";
+
+const CUISINES={
+  all:{icon:"🍽️",label:"All"},
+  healthy:{icon:"🥗",label:"Healthy"},
+  indonesian:{icon:"🇮🇩",label:"Indonesian"},
+  european:{icon:"🇪🇺",label:"European"},
+  asian:{icon:"🥢",label:"Asian"},
+  korean:{icon:"🌶️",label:"Korean"},
+  middleeastern:{icon:"🫓",label:"Middle Eastern"},
+  italian:{icon:"🍝",label:"Italian"},
+  american:{icon:"🍔",label:"American"}
+};
+
+const SEED=[
+  {id:"r-nasigoreng",title:"Nasi Goreng",icon:"🍚",cuisine:"indonesian",time:20,difficulty:2,rating:4.7,
+    ingredients:[{name:"Cooked rice",qty:"3 cups",cat:"Pantry"},{name:"Eggs",qty:"2",cat:"Dairy"},{name:"Kecap manis",qty:"3 tbsp",cat:"Pantry"},{name:"Shallots",qty:"3",cat:"Produce"},{name:"Chicken",qty:"150 g",cat:"Protein"}],
+    steps:[{t:"Fry shallots and chicken until golden",sec:300},{t:"Push aside, scramble the eggs",sec:120},{t:"Add rice and kecap manis, toss high heat",sec:240},{t:"Plate with cucumber and fried shallots",sec:60}]},
+  {id:"r-carbonara",title:"Spaghetti Carbonara",icon:"🍝",cuisine:"italian",time:25,difficulty:3,rating:4.8,
+    ingredients:[{name:"Spaghetti",qty:"400 g",cat:"Pantry"},{name:"Eggs",qty:"4",cat:"Dairy"},{name:"Guanciale",qty:"150 g",cat:"Protein"},{name:"Pecorino",qty:"100 g",cat:"Dairy"}],
+    steps:[{t:"Boil salted water, cook spaghetti",sec:540},{t:"Crisp the guanciale in a pan",sec:300},{t:"Beat eggs with grated pecorino",sec:120},{t:"Toss pasta off-heat with egg and fat",sec:120}]},
+  {id:"r-bibimbap",title:"Bibimbap",icon:"🍲",cuisine:"korean",time:30,difficulty:3,rating:4.6,
+    ingredients:[{name:"Rice",qty:"2 cups",cat:"Pantry"},{name:"Spinach",qty:"1 bunch",cat:"Produce"},{name:"Carrot",qty:"1",cat:"Produce"},{name:"Beef mince",qty:"200 g",cat:"Protein"},{name:"Gochujang",qty:"2 tbsp",cat:"Pantry"},{name:"Egg",qty:"2",cat:"Dairy"}],
+    steps:[{t:"Cook and season each vegetable separately",sec:600},{t:"Stir-fry the beef with soy and sugar",sec:240},{t:"Fry eggs sunny-side up",sec:180},{t:"Assemble over rice with gochujang",sec:120}]},
+  {id:"r-greenbowl",title:"Green Power Bowl",icon:"🥗",cuisine:"healthy",time:15,difficulty:1,rating:4.4,
+    ingredients:[{name:"Quinoa",qty:"1 cup",cat:"Pantry"},{name:"Avocado",qty:"1",cat:"Produce"},{name:"Chickpeas",qty:"1 can",cat:"Pantry"},{name:"Kale",qty:"2 cups",cat:"Produce"},{name:"Lemon",qty:"1",cat:"Produce"}],
+    steps:[{t:"Cook the quinoa and let it cool",sec:720},{t:"Massage kale with lemon and oil",sec:120},{t:"Roast chickpeas until crisp",sec:600},{t:"Build the bowl and dress",sec:120}]},
+  {id:"r-shawarma",title:"Chicken Shawarma",icon:"🫓",cuisine:"middleeastern",time:35,difficulty:2,rating:4.7,
+    ingredients:[{name:"Chicken thighs",qty:"600 g",cat:"Protein"},{name:"Yogurt",qty:"1/2 cup",cat:"Dairy"},{name:"Garlic",qty:"4 cloves",cat:"Produce"},{name:"Pita",qty:"4",cat:"Pantry"},{name:"Cumin & paprika",qty:"2 tbsp",cat:"Pantry"}],
+    steps:[{t:"Marinate chicken in yogurt and spices",sec:900},{t:"Sear until charred and cooked",sec:600},{t:"Rest then slice thin",sec:180},{t:"Wrap in warm pita with garlic sauce",sec:120}]},
+  {id:"r-friedrice",title:"Egg Fried Rice",icon:"🍳",cuisine:"asian",time:12,difficulty:1,rating:4.3,
+    ingredients:[{name:"Cooked rice",qty:"3 cups",cat:"Pantry"},{name:"Eggs",qty:"2",cat:"Dairy"},{name:"Soy sauce",qty:"2 tbsp",cat:"Pantry"},{name:"Spring onion",qty:"2",cat:"Produce"},{name:"Peas",qty:"1 cup",cat:"Frozen"}],
+    steps:[{t:"Scramble the eggs first, set aside",sec:120},{t:"Stir-fry rice on high heat",sec:240},{t:"Add soy, peas and the egg back",sec:120},{t:"Finish with spring onion",sec:60}]},
+  {id:"r-burger",title:"Smash Burger",icon:"🍔",cuisine:"american",time:20,difficulty:2,rating:4.6,
+    ingredients:[{name:"Beef mince",qty:"500 g",cat:"Protein"},{name:"Burger buns",qty:"4",cat:"Pantry"},{name:"Cheddar",qty:"4 slices",cat:"Dairy"},{name:"Onion",qty:"1",cat:"Produce"},{name:"Pickles",qty:"to taste",cat:"Pantry"}],
+    steps:[{t:"Form loose beef balls",sec:120},{t:"Smash hard on a screaming-hot pan",sec:180},{t:"Add cheese to melt, toast buns",sec:120},{t:"Stack with sauce and pickles",sec:90}]},
+  {id:"r-ratatouille",title:"Ratatouille",icon:"🍆",cuisine:"european",time:40,difficulty:2,rating:4.5,
+    ingredients:[{name:"Eggplant",qty:"1",cat:"Produce"},{name:"Zucchini",qty:"2",cat:"Produce"},{name:"Tomatoes",qty:"4",cat:"Produce"},{name:"Bell pepper",qty:"2",cat:"Produce"},{name:"Olive oil",qty:"3 tbsp",cat:"Pantry"}],
+    steps:[{t:"Slice all vegetables evenly",sec:420},{t:"Make a quick tomato base",sec:300},{t:"Arrange and drizzle with oil",sec:240},{t:"Bake covered until tender",sec:1500}]}
+];
+
+const Bridge={
+  embedded:window.self!==window.top, ctx:null, pend:{}, rq:0,
+  init(cb){
+    addEventListener("message",e=>{
+      const m=e.data||{};
+      if(m.type==="INIT_APP"){this.ctx=m.payload||{};if(this.ctx.theme)setTheme(this.ctx.theme);cb&&cb();}
+      else if((m.type==="DATA_RESULT"||m.type==="SESSION_CONTEXT")&&this.pend[m.reqId]){this.pend[m.reqId](m.items||m.payload);delete this.pend[m.reqId];}
+    });
+    if(this.embedded){parent.postMessage({type:"QUERY_SESSION",reqId:++this.rq},"*");}
+  },
+  call(msg){return new Promise(res=>{const id=++this.rq;this.pend[id]=res;msg.reqId=id;parent.postMessage(msg,"*");
+    setTimeout(()=>{if(this.pend[id]){delete this.pend[id];res(null);}},2500);});},
+  async list(appId,collection){
+    if(this.embedded){const r=await this.call({type:"DATA_LIST",appId,collection});if(r)return r.map(x=>({_id:x.id,...x.payload}));}
+    return LS.get(appId+"_"+collection);
+  },
+  async create(appId,collection,payload){
+    if(this.embedded){const r=await this.call({type:"DATA_CREATE",appId,collection,payload,ownerPersonId:false});if(r&&r[0])return r[0].id;}
+    const a=LS.get(appId+"_"+collection);const _id="ls_"+uid();a.push({_id,...payload});LS.set(appId+"_"+collection,a);return _id;
+  },
+  async update(appId,collection,id,payload){
+    if(this.embedded&&!String(id).startsWith("ls_")){await this.call({type:"DATA_UPDATE",id,payload});return;}
+    const a=LS.get(appId+"_"+collection);const i=a.findIndex(x=>x._id===id);if(i>=0){a[i]={_id:id,...payload};LS.set(appId+"_"+collection,a);}
+  },
+  toast(m){if(this.embedded)parent.postMessage({type:"SHOW_TOAST",message:m},"*");toast(m);},
+  calendar(p){if(this.embedded)parent.postMessage({type:"ADD_TO_CALENDAR",payload:p},"*");}
+};
+const LS={
+  cid(){return (Bridge.ctx&&Bridge.ctx.circleId)||"solo";},
+  key(k){return "kinetik_"+APP_ID+"_"+k+"_"+this.cid();},
+  get(k){try{return JSON.parse(localStorage.getItem(this.key(k)))||[]}catch(e){return[]}},
+  set(k,v){localStorage.setItem(this.key(k),JSON.stringify(v));}
+};
+
+const state={tab:"discover",cuisine:"all",q:"",recipes:[],tonight:null,sub:"ing",checked:{},stepsDone:{},favs:[],theme:"light",booted:false};
+
+function setTheme(t){state.theme=t==="dark"?"dark":"light";document.documentElement.dataset.theme=state.theme;
+  try{localStorage.setItem("kinetik_"+APP_ID+"_theme",state.theme)}catch(e){}}
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),1700);}
+function meName(){return (Bridge.ctx&&Bridge.ctx.personName)||"You";}
+function meId(){return (Bridge.ctx&&Bridge.ctx.personId)||"me";}
+
+async function loadAll(){
+  if(state.booted)return;state.booted=true;
+  let saved=await Bridge.list(APP_ID,"recipes");
+  // seed once
+  if(!saved.length){
+    for(const r of SEED){const id=await Bridge.create(APP_ID,"recipes",r);r._id=id;}
+    saved=await Bridge.list(APP_ID,"recipes");
+  }
+  state.recipes=saved.length?saved:SEED.map(r=>({_id:r.id,...r}));
+  try{state.favs=JSON.parse(localStorage.getItem(LS.key("favs")))||[]}catch(e){state.favs=[]}
+  try{const tn=localStorage.getItem(LS.key("tonight"));if(tn)state.tonight=JSON.parse(tn);}catch(e){}
+  if(!state.tonight)state.tonight=state.recipes[0];
+}
+function saveTonight(){try{localStorage.setItem(LS.key("tonight"),JSON.stringify(state.tonight))}catch(e){}}
+function saveFavs(){try{localStorage.setItem(LS.key("favs"),JSON.stringify(state.favs))}catch(e){}}
+
+function render(){
+  if(!state.recipes.length)return;
+  $("#hsub").textContent=(Bridge.ctx&&Bridge.ctx.circleName?Bridge.ctx.circleName+" · ":"")+"Shared kitchen"+(Bridge.embedded?"":" · standalone");
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===state.tab));
+  movePill();
+  const v=$("#view");
+  if(state.tab==="discover")v.innerHTML=viewDiscover();
+  else if(state.tab==="tonight")v.innerHTML=viewTonight();
+  else if(state.tab==="favorites")v.innerHTML=viewFavorites();
+  else v.innerHTML=viewMore();
+  wire();
+}
+function movePill(){const btn=document.querySelector(".nav button.on");if(!btn)return;
+  const pill=$("#pill");pill.style.opacity="1";pill.style.left=btn.offsetLeft+"px";pill.style.width=btn.offsetWidth+"px";}
+
+function diffLabel(d){return ["","Easy","Medium","Hard","Pro","Chef"][d]||"Easy";}
+function stars(r){const full=Math.round(r);return "★".repeat(full)+"☆".repeat(5-full);}
+
+function viewDiscover(){
+  let h=`<div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m20 20-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <input class="fld" id="q" placeholder="Search recipes…" value="${esc(state.q)}"></div>`;
+  h+=`<div class="chiprow">`;
+  for(const k of Object.keys(CUISINES))h+=`<button class="chip ${state.cuisine===k?"on":""}" data-cuisine="${k}">${CUISINES[k].icon} ${CUISINES[k].label}</button>`;
+  h+=`</div>`;
+  let list=state.recipes.filter(r=>state.cuisine==="all"||r.cuisine===state.cuisine);
+  if(state.q)list=list.filter(r=>r.title.toLowerCase().includes(state.q.toLowerCase()));
+  if(!list.length){h+=`<div class="empty"><div class="em">🍽️</div><b>No recipes found</b><p>Try another cuisine or add your own in More.</p></div>`;return h;}
+  h+=`<div class="rgrid">`;
+  list.forEach(r=>{h+=`<button class="rcard glass rise" data-open="${r._id}">
+    <div class="rico">${r.icon||"🍴"}</div>
+    <div class="rt">${esc(r.title)}</div>
+    <div class="rm"><span>⏱ ${r.time}m</span><span>${diffLabel(r.difficulty)}</span><span class="stars">${(r.rating||0).toFixed(1)}★</span></div>
+  </button>`;});
+  h+=`</div>`;
+  return h;
+}
+
+function viewTonight(){
+  const r=state.tonight;
+  if(!r)return `<div class="empty"><div class="em">🌙</div><b>No pick yet</b><p>Choose a recipe from Discover to set tonight's meal.</p></div>`;
+  let h=`<div class="bighero rise"><div class="em">${r.icon||"🍴"}</div><h2>${esc(r.title)}</h2>
+    <div class="meta"><b>⏱ ${r.time} min</b><b>${diffLabel(r.difficulty)}</b><b>${(r.rating||0).toFixed(1)} ★</b><b>${CUISINES[r.cuisine]?CUISINES[r.cuisine].label:""}</b></div>
+    <div class="acts">
+      <button class="heroact solid" id="toGrocery">🛒 Add to Grocery</button>
+      <button class="heroact" id="toPoll">🗳️ Vote dinner</button>
+      <button class="heroact" id="toCal">📅 Schedule</button>
+    </div></div>`;
+  h+=`<div class="subtabs"><button class="${state.sub==="ing"?"on":""}" data-sub="ing">Ingredients</button><button class="${state.sub==="steps"?"on":""}" data-sub="steps">Steps</button></div>`;
+  if(state.sub==="ing"){
+    h+=`<div class="lbl" style="padding:0 2px 8px">Tap to mark what you already have</div>`;
+    r.ingredients.forEach((ing,i)=>{const have=state.checked[r._id+"_"+i];
+      h+=`<div class="ing glass ${have?"have":""}"><button class="ic ${have?"on":""}" data-ing="${i}">${have?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4L19 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>':""}</button>
+        <div class="body"><b>${esc(ing.name)}</b><span>${esc(ing.qty||"")}${ing.cat?" · "+ing.cat:""}</span></div></div>`;});
+    h+=`<button class="btn block" id="missingToGrocery" style="margin-top:6px">🛒 Send missing to Grocery</button>`;
+  }else{
+    r.steps.forEach((st,i)=>{const done=state.stepsDone[r._id+"_"+i];
+      h+=`<div class="step glass ${done?"done":""}"><div class="stepnum">${i+1}</div><div class="stxt">${esc(st.t)}</div>
+        <div class="stools">${st.sec?`<span class="timer" id="t-${i}">${fmt(st.sec)}</span><button class="btn ghost sm" data-timer="${i}" data-sec="${st.sec}">Start</button>`:""}
+        <button class="btn ghost sm" data-stepdone="${i}" style="margin-left:auto">${done?"Undo":"Done"}</button></div></div>`;});
+  }
+  return h;
+}
+
+function viewFavorites(){
+  const favR=state.recipes.filter(r=>state.favs.includes(r._id));
+  let h=`<div class="lbl" style="padding:8px 2px">Saved recipes</div>`;
+  if(!favR.length){h+=`<div class="empty"><div class="em">⭐</div><b>No favorites yet</b><p>Open a recipe and tap the star to save it here.</p></div>`;}
+  else{h+=`<div class="rgrid">`;favR.forEach(r=>{h+=`<button class="rcard glass" data-open="${r._id}"><div class="rico">${r.icon||"🍴"}</div><div class="rt">${esc(r.title)}</div><div class="rm"><span>⏱ ${r.time}m</span><span class="stars">${(r.rating||0).toFixed(1)}★</span></div></button>`;});h+=`</div>`;}
+  h+=`<div class="card glass" style="margin-top:14px"><div class="lbl">Most loved</div><div style="margin-top:10px;display:flex;flex-direction:column;gap:9px">`;
+  [...state.recipes].sort((a,b)=>(b.rating||0)-(a.rating||0)).slice(0,3).forEach((r,i)=>{
+    h+=`<div style="display:flex;align-items:center;gap:10px;font-size:13.5px"><b style="color:var(--acc);width:18px">${i+1}</b><span style="font-size:18px">${r.icon}</span><span style="flex:1">${esc(r.title)}</span><span class="stars">${(r.rating||0).toFixed(1)}★</span></div>`;});
+  h+=`</div></div>`;
+  return h;
+}
+
+function viewMore(){
+  let h=`<div class="card glass rise" style="margin:8px 0 12px"><div class="lbl">Recipes</div>
+    <button class="btn block" style="margin-top:11px" id="newRecipe">+ Add a recipe</button></div>`;
+  h+=`<div class="card glass" style="margin-bottom:12px"><div class="lbl">Appearance</div>
+    <button class="btn ghost block" style="margin-top:11px" id="themeBtn2">Switch to ${state.theme==="dark"?"light":"dark"} mode</button></div>`;
+  h+=`<div class="empty" style="padding:20px"><p>Cook Simple · browse by cuisine, cook with step timers, and push ingredients to Grocery Buddy or start a dinner vote in Event Poll. Works on its own too.</p></div>`;
+  return h;
+}
+
+function fmt(s){const m=Math.floor(s/60),ss=s%60;return m+":"+String(ss).padStart(2,"0");}
+
+/* ---- channel pushes ---- */
+async function pushIngredients(r,onlyMissing){
+  let n=0;
+  for(let i=0;i<r.ingredients.length;i++){
+    if(onlyMissing&&state.checked[r._id+"_"+i])continue;
+    const ing=r.ingredients[i];
+    await Bridge.create(CHANNEL,"grocery_inbox",{text:ing.name,qty:ing.qty||"",category:ing.cat||"Pantry",
+      source:"recipe",linkLabel:r.title,addedBy:meId(),createdAt:new Date().toISOString()});n++;
+  }
+  Bridge.toast(n?`Sent ${n} item${n!==1?"s":""} to Grocery 🛒`:"Nothing to send — you have it all!");
+}
+async function pushDinnerPoll(r){
+  await Bridge.create(CHANNEL,"dinner_polls",{recipeId:r._id,title:r.title,icon:r.icon,cuisine:r.cuisine,
+    askedBy:meId(),askedName:meName(),createdAt:new Date().toISOString()});
+  Bridge.toast("Added to dinner vote 🗳️ — open Event Poll");
+}
+function scheduleMeal(r){
+  const d=new Date();d.setDate(d.getDate()+1);const iso=d.toISOString().slice(0,10);
+  Bridge.calendar({title:"🍳 "+r.title,date:iso,startTime:"19:00",endTime:"20:00"});
+  if(!Bridge.embedded)toast("Calendar works inside Kinetik");
+}
+
+function wire(){
+  if(state.tab==="discover"){
+    $("#q").oninput=e=>{state.q=e.target.value;clearTimeout(wire.t);wire.t=setTimeout(()=>{const c=document.activeElement;render();const q=$("#q");if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}},220);};
+    document.querySelectorAll("[data-cuisine]").forEach(b=>b.onclick=()=>{state.cuisine=b.dataset.cuisine;render();});
+    document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openRecipe(b.dataset.open));
+  }
+  if(state.tab==="tonight"&&state.tonight){
+    const r=state.tonight;
+    if($("#toGrocery"))$("#toGrocery").onclick=()=>pushIngredients(r,false);
+    if($("#missingToGrocery"))$("#missingToGrocery").onclick=()=>pushIngredients(r,true);
+    if($("#toPoll"))$("#toPoll").onclick=()=>pushDinnerPoll(r);
+    if($("#toCal"))$("#toCal").onclick=()=>scheduleMeal(r);
+    document.querySelectorAll("[data-sub]").forEach(b=>b.onclick=()=>{state.sub=b.dataset.sub;render();});
+    document.querySelectorAll("[data-ing]").forEach(b=>b.onclick=()=>{const k=r._id+"_"+b.dataset.ing;state.checked[k]=!state.checked[k];render();});
+    document.querySelectorAll("[data-stepdone]").forEach(b=>b.onclick=()=>{const k=r._id+"_"+b.dataset.stepdone;state.stepsDone[k]=!state.stepsDone[k];render();});
+    document.querySelectorAll("[data-timer]").forEach(b=>b.onclick=()=>startTimer(+b.dataset.timer,+b.dataset.sec,b));
+  }
+  if(state.tab==="favorites"){document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openRecipe(b.dataset.open));}
+  if(state.tab==="more"){
+    $("#newRecipe").onclick=openNewRecipe;
+    $("#themeBtn2").onclick=()=>{setTheme(state.theme==="dark"?"light":"dark");render();};
+  }
+}
+
+let timerInt=null;
+function startTimer(i,sec,btn){
+  if(timerInt){clearInterval(timerInt);timerInt=null;}
+  let left=sec;const el=$("#t-"+i);btn.textContent="Reset";
+  timerInt=setInterval(()=>{left--;if(el)el.textContent=fmt(left);if(left<=0){clearInterval(timerInt);timerInt=null;if(el)el.textContent="done ✓";Bridge.toast("Timer done ⏰");}},1000);
+  btn.onclick=()=>{clearInterval(timerInt);timerInt=null;if(el)el.textContent=fmt(sec);btn.textContent="Start";btn.onclick=()=>startTimer(i,sec,btn);};
+}
+
+function openRecipe(id){
+  const r=state.recipes.find(x=>x._id===id);if(!r)return;
+  const isFav=state.favs.includes(id);
+  let h=`<h3>${r.icon||"🍴"} ${esc(r.title)}</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="chip on">⏱ ${r.time}m</span><span class="chip">${diffLabel(r.difficulty)}</span><span class="chip">${(r.rating||0).toFixed(1)} ★</span><span class="chip">${CUISINES[r.cuisine]?CUISINES[r.cuisine].icon+" "+CUISINES[r.cuisine].label:""}</span></div>
+    <div class="grid">
+      <button class="btn block" id="mkTonight">🌙 Cook this tonight</button>
+      <button class="btn ghost block" id="mkFav">${isFav?"★ Saved — remove":"☆ Save to favorites"}</button>
+      <button class="btn ghost block" id="mkGrocery">🛒 Add ingredients to Grocery</button>
+    </div>`;
+  openSheet(h);
+  $("#mkTonight").onclick=()=>{state.tonight=r;saveTonight();state.tab="tonight";state.sub="ing";closeSheet();render();};
+  $("#mkFav").onclick=()=>{if(isFav)state.favs=state.favs.filter(x=>x!==id);else state.favs.push(id);saveFavs();closeSheet();toast(isFav?"Removed":"Saved to favorites ⭐");};
+  $("#mkGrocery").onclick=()=>{pushIngredients(r,false);closeSheet();};
+}
+
+function openNewRecipe(){
+  let h=`<h3>New recipe</h3><div class="grid">
+    <input class="fld" id="nTitle" placeholder="Recipe name">
+    <select class="fld" id="nCuisine">${Object.keys(CUISINES).filter(k=>k!=="all").map(k=>`<option value="${k}">${CUISINES[k].icon} ${CUISINES[k].label}</option>`).join("")}</select>
+    <input class="fld" id="nTime" placeholder="Time in minutes" inputmode="numeric">
+    <textarea class="fld" id="nIng" rows="3" placeholder="Ingredients, one per line (e.g. Eggs, 2)"></textarea>
+    <textarea class="fld" id="nSteps" rows="3" placeholder="Steps, one per line"></textarea>
+    <button class="btn block" id="nSave">Save recipe</button></div>`;
+  openSheet(h);
+  $("#nSave").onclick=async()=>{
+    const title=$("#nTitle").value.trim();if(!title){toast("Add a name");return;}
+    const ingredients=$("#nIng").value.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{const[name,qty]=l.split(",");return{name:name.trim(),qty:(qty||"").trim(),cat:"Pantry"};});
+    const steps=$("#nSteps").value.split("\n").map(l=>l.trim()).filter(Boolean).map(t=>({t,sec:0}));
+    const rec={id:"r-"+uid(),title,icon:CUISINES[$("#nCuisine").value].icon,cuisine:$("#nCuisine").value,time:+$("#nTime").value||20,difficulty:2,rating:0,
+      ingredients:ingredients.length?ingredients:[{name:"Add ingredients",qty:"",cat:"Pantry"}],steps:steps.length?steps:[{t:"Add steps",sec:0}]};
+    const _id=await Bridge.create(APP_ID,"recipes",rec);state.recipes.push({_id,...rec});
+    closeSheet();state.tab="discover";toast("Recipe saved 🍳");render();
+  };
+}
+
+function openSheet(html){$("#sheet").innerHTML=html;$("#sheet").classList.add("show");$("#scrim").classList.add("show");}
+function closeSheet(){$("#sheet").classList.remove("show");$("#scrim").classList.remove("show");}
+$("#scrim").onclick=closeSheet;
+
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;render();});
+$("#themeBtn").onclick=()=>{setTheme(state.theme==="dark"?"light":"dark");render();};
+addEventListener("resize",movePill);
+
+(function boot(){
+  try{const t=localStorage.getItem("kinetik_"+APP_ID+"_theme");if(t)setTheme(t);}catch(e){}
+  Bridge.init(async()=>{await loadAll();render();});
+  if(!Bridge.embedded){loadAll().then(render);}
+  else{setTimeout(()=>{if(!state.booted){loadAll().then(render);}},900);}
+})();
+</script>
 </body>
 </html>

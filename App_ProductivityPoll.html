@@ -1,184 +1,529 @@
 <!doctype html>
-<!--
-KINETIK APP STANDARD v1.0 — App_EventPoll.html
-
-Modular single-file app inside the Kinetik ecosystem.
-Works A) embedded in Kinetik.html via iframe + AppBridge, B) standalone with localStorage.
-Data: AppRecords collection "polls" payload {question,options[],votes{personId/name:option},open,createdBy}.
-Share invite text (§72.4). Circle-scoped: circleId/personId only.
-
-APP BRIDGE: receives INIT_APP {circleId,circleType,personId,theme,appId,people[]}.
-Sends DATA_LIST/CREATE/UPDATE, ADD_TO_CALENDAR (winning option), SHOW_TOAST.
-
-React/TS scale-up: becomes a feature module; keep AppBridge/DataAPI contracts.
--->
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Event Poll</title>
+<title>Event Poll - Kinetik</title>
 <script type="application/kinetik-app+json">
-{"appId":"event-poll","name":"Event Poll","shortName":"Poll","icon":"🗳️","gradient":["#8b5cf6","#d946ef"],"category":"productivity","tagline":"Find the best time, fast.","about":"Propose dates, let everyone in the circle vote with one tap, and watch the bars race. Close the poll and the winning time lands on the shared calendar automatically.","audience":"all","circleTypes":["family","friends"],"worksWith":["calendar"],"status":"live","minMembers":2}
+{
+  "appId": "event-poll",
+  "name": "Event Poll",
+  "shortName": "Poll",
+  "icon": "🗳️",
+  "gradient": ["#8b5cf6", "#d946ef"],
+  "category": "productivity",
+  "tagline": "Decide together. Rank everything.",
+  "about": "A generic voting framework for the circle — dinner, movies, gifts, activities, meeting times. One tap to vote, live bars, and a winner that can flow into Grocery, Cook or the Calendar. Also the circle's master leaderboard: any Kinetik app can post scores here and they appear ranked.",
+  "audience": "all",
+  "circleTypes": ["family", "friends"],
+  "worksWith": ["offline", "standalone", "calendar"],
+  "status": "live",
+  "minMembers": 1
+}
 </script>
+<meta name="theme-color" content="#8b5cf6">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <style>
-:root{--r:16px;--font:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--acc:#8b5cf6;--acc2:#d946ef}
-html[data-theme="dark"]{--bg:#0a0716;--bg2:#160f2e;--text:#f2eeff;--dim:rgba(235,228,255,.6);--glass:rgba(28,19,58,.66);--brd:rgba(255,255,255,.1);--chip:rgba(255,255,255,.07);color-scheme:dark}
-html[data-theme="light"]{--bg:#f1edfb;--bg2:#e7e0fa;--text:#171029;--dim:rgba(30,20,52,.6);--glass:rgba(255,255,255,.72);--brd:rgba(255,255,255,.8);--chip:rgba(40,20,90,.06);color-scheme:light}
-*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
-body{font-family:var(--font);color:var(--text);min-height:100vh;font-size:15px;line-height:1.5;
-background:radial-gradient(110% 80% at 85% -5%,color-mix(in srgb,var(--acc) 18%,transparent),transparent 55%),linear-gradient(165deg,var(--bg2),var(--bg));-webkit-font-smoothing:antialiased}
-#app{max-width:560px;margin:0 auto;padding:18px 18px 60px}
-h1{font-size:23px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
-h1 small{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--acc2);text-transform:uppercase}
-.card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--brd);border-radius:var(--r);padding:16px;margin:13px 0;box-shadow:0 18px 50px rgba(0,0,0,.25)}
-.lbl{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:9px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:14px;font-family:var(--font);color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 8px 24px color-mix(in srgb,var(--acc) 35%,transparent);transition:transform .15s}
-.btn:active{transform:scale(.96)}.btn.ghost{background:var(--chip);color:var(--text);box-shadow:none;border:1px solid var(--brd)}
-.btn.sm{padding:8px 15px;font-size:12.5px}.btn[disabled]{opacity:.4;pointer-events:none}
-input.fld{width:100%;background:var(--chip);border:1px solid var(--brd);border-radius:12px;padding:12px 14px;color:var(--text);font-family:var(--font);font-size:15px;outline:none;margin-bottom:9px}
-input.fld:focus{border-color:var(--acc)}
-.opt{width:100%;text-align:left;border:1.5px solid var(--brd);background:var(--chip);border-radius:13px;padding:12px 14px;margin-bottom:9px;cursor:pointer;font-family:var(--font);color:var(--text);position:relative;overflow:hidden;transition:.15s}
-.opt .fill{position:absolute;inset:0;background:color-mix(in srgb,var(--acc) 16%,transparent);transform-origin:left;z-index:0}
-.opt .in{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14.5px;font-weight:600}
-.opt .ct{font-size:12px;color:var(--dim);font-weight:700}
+:root{
+  --radius-sm:14px; --radius-md:20px; --radius-lg:28px;
+  --font:Inter,ui-sans-serif,system-ui,-apple-system,"SF Pro Display","Segoe UI",sans-serif;
+  --dur1:.2s; --dur2:.38s; --ease:cubic-bezier(.32,.72,.28,1);
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  --safeb:max(var(--sab),8px); --navh:calc(64px + var(--safeb));
+  --acc:#8b5cf6; --acc2:#d946ef;
+}
+html[data-theme="dark"]{ --bg0:#08060f;--bg1:#120a24;--bg2:#1d1038;--text:#f2eeff;
+  --dim:rgba(235,228,255,.62);--faint:rgba(235,228,255,.4);
+  --glass:rgba(28,19,58,.55);--glass2:rgba(34,22,66,.72);
+  --brd:rgba(255,255,255,.1);--brd2:rgba(255,255,255,.16);
+  --shadow:0 24px 80px rgba(0,0,0,.45);--chip:rgba(255,255,255,.07);
+  --ok:#34d399;--warn:#fbbf24;--bad:#fb7185; color-scheme:dark; }
+html[data-theme="light"]{ --bg0:#f4f0fd;--bg1:#efe8fb;--bg2:#f6e6fb;--text:#1a1030;
+  --dim:rgba(26,16,48,.7);--faint:rgba(26,16,48,.46);
+  --glass:rgba(255,255,255,.64);--glass2:rgba(255,255,255,.86);
+  --brd:rgba(255,255,255,.78);--brd2:rgba(150,120,200,.28);
+  --shadow:0 24px 70px rgba(90,60,150,.18);--chip:rgba(80,40,140,.06);
+  --ok:#059669;--warn:#d97706;--bad:#e11d48; color-scheme:light; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;height:100dvh;overscroll-behavior:none}
+body{font-family:var(--font);color:var(--text);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(120% 80% at 12% -8%,color-mix(in srgb,var(--acc) 18%,transparent),transparent 46%),
+    radial-gradient(120% 80% at 90% -4%,color-mix(in srgb,var(--acc2) 16%,transparent),transparent 42%),
+    linear-gradient(180deg,var(--bg1),var(--bg0));}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+::-webkit-scrollbar{display:none}*{scrollbar-width:none}
+
+.app{height:100dvh;display:flex;flex-direction:column;max-width:640px;margin:0 auto;position:relative}
+.top{display:flex;align-items:center;gap:11px;padding:calc(12px + var(--sat)) 16px 8px}
+.mark{width:40px;height:40px;border-radius:14px;flex:0 0 auto;display:grid;place-items:center;font-size:21px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 10px 24px color-mix(in srgb,var(--acc) 34%,transparent)}
+.top .ttl{min-width:0;flex:1}
+.top h1{font-size:19px;letter-spacing:-.02em;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .sub{font-size:11.5px;color:var(--faint);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;flex:0 0 auto;
+  background:var(--chip);border:1px solid var(--brd2);color:var(--text);transition:transform var(--dur1) var(--ease)}
+.iconbtn:active{transform:scale(.92)}
+
+.view{flex:1;overflow-y:auto;padding:6px 16px calc(var(--navh) + 16px)}
+.glass{background:var(--glass);backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);
+  border:1px solid var(--brd);box-shadow:var(--shadow);border-radius:var(--radius-md)}
+.card{padding:15px}
+.lbl{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:11px 18px;
+  font-weight:700;font-size:14px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;
+  box-shadow:0 8px 26px color-mix(in srgb,var(--acc) 35%,transparent);transition:transform var(--dur1) var(--ease)}
+.btn:active{transform:scale(.96)}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.btn.ghost{background:var(--chip);border:1px solid var(--brd2);color:var(--text);box-shadow:none}
+.btn.sm{padding:8px 13px;font-size:12.5px}
+.btn.block{width:100%}
+
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:700;
+  background:var(--chip);border:1px solid transparent;color:var(--dim);transition:all var(--dur1);white-space:nowrap}
+.chip:active{transform:scale(.95)}
+.chip.on{background:color-mix(in srgb,var(--acc) 18%,transparent);color:var(--text);border-color:color-mix(in srgb,var(--acc) 45%,transparent)}
+.chiprow{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px}.chiprow .chip{flex:0 0 auto}
+
+.av{width:24px;height:24px;border-radius:50%;display:inline-grid;place-items:center;font-size:10px;font-weight:800;color:#fff;
+  flex:0 0 auto;border:2px solid rgba(255,255,255,.25)}
+
+input.fld,select.fld,textarea.fld{width:100%;background:var(--chip);border:1px solid var(--brd2);border-radius:13px;padding:12px 13px;
+  font-size:14px;outline:none;transition:border-color var(--dur1)}
+input.fld:focus,select.fld:focus,textarea.fld:focus{border-color:color-mix(in srgb,var(--acc) 55%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 12%,transparent)}
+
+.pollcard{padding:15px;margin-bottom:12px}
+.phead{display:flex;align-items:flex-start;gap:9px;margin-bottom:12px}
+.phead .pq{flex:1;min-width:0}
+.phead .pq b{font-size:16px;letter-spacing:-.01em;display:block}
+.phead .pq span{font-size:11.5px;color:var(--faint);font-weight:700}
+.status{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:99px;flex:0 0 auto}
+.status.open{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.status.closed{background:var(--chip);color:var(--faint)}
+.opt{position:relative;overflow:hidden;border:1.5px solid var(--brd2);border-radius:14px;margin-bottom:9px;cursor:pointer;transition:border-color var(--dur1)}
+.opt .fill{position:absolute;inset:0;z-index:0;transform-origin:left;background:color-mix(in srgb,var(--acc) 16%,transparent);transition:transform .5s var(--ease)}
+.opt .in{position:relative;z-index:1;display:flex;align-items:center;gap:9px;padding:12px 13px}
+.opt .oem{font-size:18px}
+.opt .otext{flex:1;font-weight:700;font-size:14px}
+.opt .oct{font-weight:800;font-size:13px;color:var(--dim)}
 .opt.mine{border-color:var(--acc)}
-.opt.win{border-color:#fbbf24}
-.opt small{display:block;font-weight:500;font-size:11.5px;color:var(--dim)}
-.who{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-.tag{font-size:10.5px;font-weight:700;background:var(--chip);border-radius:99px;padding:3px 9px;color:var(--dim)}
-.status{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:99px}
-.status.open{background:color-mix(in srgb,#34d399 16%,transparent);color:#34d399}
-.status.closed{background:var(--chip);color:var(--dim)}
-.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:9px;margin-bottom:10px}
-.phead b{font-size:16.5px;letter-spacing:-.01em}
-.note{font-size:12px;color:var(--dim)}
-.wrap{display:flex;flex-wrap:wrap;gap:8px}
+.opt.win{border-color:var(--warn)}
+.opt.win .fill{background:color-mix(in srgb,var(--warn) 20%,transparent)}
+.voters{display:flex;gap:-6px;padding:0 13px 10px;margin-top:-2px;position:relative;z-index:1}
+.voters .av{margin-right:-7px;box-shadow:0 0 0 2px var(--glass)}
+.pacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+
+/* leaderboard */
+.lbcard{padding:15px;margin-bottom:12px}
+.lbtitle{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.lbtitle .lbico{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:18px;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 80%,#fff),var(--acc2))}
+.lbtitle b{font-size:15px;flex:1}
+.lbtitle span{font-size:11px;color:var(--faint);font-weight:700}
+.lbrow{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px solid var(--brd2)}
+.lbrow:first-of-type{border-top:none}
+.rank{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-weight:800;font-size:13px;flex:0 0 auto;
+  background:var(--chip);color:var(--dim)}
+.rank.g1{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff}
+.rank.g2{background:linear-gradient(135deg,#cbd5e1,#94a3b8);color:#fff}
+.rank.g3{background:linear-gradient(135deg,#d97706,#b45309);color:#fff}
+.lbrow .nm{flex:1;font-weight:700;font-size:14px}
+.lbrow .sc{font-weight:800;font-size:14px;color:var(--acc)}
+
+.empty{text-align:center;padding:42px 20px;color:var(--faint)}
+.empty .em{font-size:48px;margin-bottom:10px}
+.empty b{display:block;color:var(--text);font-size:16px;margin-bottom:4px}
+.empty p{font-size:13px}
+
+.fab{position:absolute;right:18px;bottom:calc(var(--navh) + 14px);z-index:42;width:54px;height:54px;border-radius:50%;
+  display:grid;place-items:center;color:#fff;font-size:28px;background:linear-gradient(135deg,var(--acc),var(--acc2));
+  box-shadow:0 12px 30px color-mix(in srgb,var(--acc2) 50%,transparent);transition:transform var(--dur1) var(--ease)}
+.fab:active{transform:scale(.9)}
+
+.nav{position:absolute;left:0;right:0;bottom:0;height:var(--navh);display:flex;justify-content:center;gap:2px;
+  padding:7px 12px var(--safeb);border-radius:26px 26px 0 0;background:var(--glass2);
+  backdrop-filter:blur(28px) saturate(1.5);-webkit-backdrop-filter:blur(28px) saturate(1.5);
+  border-top:1px solid var(--brd);box-shadow:0 -10px 40px rgba(40,20,70,.14);z-index:40}
+.nav .pill{position:absolute;z-index:0;top:7px;height:48px;border-radius:20px;
+  background:color-mix(in srgb,var(--acc) 14%,transparent);transition:left .34s var(--ease),width .34s var(--ease),opacity .25s;opacity:0}
+.nav button{position:relative;z-index:1;flex:1;max-width:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;border-radius:20px;font-size:10px;font-weight:700;color:var(--faint);transition:color var(--dur2) var(--ease)}
+.nav button.on{color:var(--acc)}
+.nav button.on svg{transform:translateY(-1px) scale(1.08)}
+.nav svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transition:transform var(--dur2) var(--ease)}
+
+.toast{position:absolute;left:50%;bottom:calc(var(--navh) + 14px);transform:translate(-50%,16px) scale(.92);opacity:0;
+  background:var(--glass2);backdrop-filter:blur(18px);border:1px solid var(--brd);border-radius:999px;padding:11px 18px;
+  font-size:13px;font-weight:700;box-shadow:var(--shadow);z-index:60;pointer-events:none;transition:all .3s var(--ease);white-space:nowrap}
+.toast.show{transform:translate(-50%,0) scale(1);opacity:1}
+
+.scrim{position:absolute;inset:0;background:rgba(10,5,20,.45);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity var(--dur2);z-index:50}
+.scrim.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:51;transform:translateY(110%);transition:transform var(--dur2) var(--ease);
+  background:var(--glass2);backdrop-filter:blur(28px) saturate(1.4);border-top:1px solid var(--brd);
+  border-radius:26px 26px 0 0;padding:18px 18px calc(20px + var(--sab));box-shadow:0 -16px 50px rgba(0,0,0,.3);max-width:640px;margin:0 auto;max-height:86dvh;overflow-y:auto}
+.sheet.show{transform:translateY(0)}
+.sheet h3{font-size:18px;letter-spacing:-.02em;margin-bottom:13px}
+.sheet .grid{display:flex;flex-direction:column;gap:11px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.seg button{padding:11px 6px;border-radius:13px;background:var(--chip);border:1px solid var(--brd2);font-weight:700;font-size:11.5px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;transition:all var(--dur1)}
+.seg button .se{font-size:19px}
+.seg button.on{background:color-mix(in srgb,var(--acc) 16%,transparent);border-color:color-mix(in srgb,var(--acc) 50%,transparent);color:var(--text)}
+.optedit{display:flex;gap:7px;align-items:center}
+.optedit input{flex:1}
+.optedit button{width:38px;height:42px;border-radius:11px;background:var(--chip);border:1px solid var(--brd2);color:var(--bad);font-size:18px;flex:0 0 auto}
+
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.rise{animation:rise .42s var(--ease) both}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
 </style>
 </head>
 <body>
-<div id="app"></div>
+<div class="app">
+  <header class="top">
+    <div class="mark">🗳️</div>
+    <div class="ttl"><h1>Event Poll</h1><div class="sub" id="hsub">Standalone</div></div>
+    <button class="iconbtn" id="themeBtn" aria-label="Theme">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6 6 4.5 4.5M19.5 19.5 18 18M18 6l1.5-1.5M4.5 19.5 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/></svg>
+    </button>
+  </header>
+
+  <main class="view" id="view"></main>
+  <button class="fab" id="fab" style="display:none">+</button>
+
+  <nav class="nav" id="nav">
+    <span class="pill" id="pill"></span>
+    <button data-tab="active" class="on">
+      <svg viewBox="0 0 24 24"><path d="M5 21V10M12 21V4M19 21v-7"/></svg>
+      <span>Active</span>
+    </button>
+    <button data-tab="results">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>
+      <span>Results</span>
+    </button>
+    <button data-tab="boards">
+      <svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h2.5a1.5 1.5 0 0 1 0 5H17M7 5H4.5a1.5 1.5 0 0 0 0 5H7"/></svg>
+      <span>Boards</span>
+    </button>
+    <button data-tab="more">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5"/><path d="M12 8.4v.01M12 11.5v4.1"/></svg>
+      <span>More</span>
+    </button>
+  </nav>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet"></div>
+  <div class="toast" id="toast"></div>
+</div>
+
 <script>
 "use strict";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const APP_ID="event-poll";
-let CTX=null,embedded=false,polls=[],creating=false;
+const CHANNEL="kinetik-kitchen";
+const LBOARD="kinetik-leaderboard";   // shared namespace any app posts scores to (collection: "scores")
 
-/* ---- Bridge / storage ---- */
-const pend={};let rq=0;
-function bridge(msg){return new Promise(res=>{const id=++rq;pend[id]=res;msg.reqId=id;msg.appId=APP_ID;parent.postMessage(msg,"*");setTimeout(()=>{if(pend[id]){delete pend[id];res(null);}},2500);});}
-addEventListener("message",e=>{
-  const m=e.data||{};
-  if(m.type==="INIT_APP"){CTX=m.payload;embedded=true;document.documentElement.dataset.theme=CTX.theme||"dark";load().then(render);}
-  if(m.type==="DATA_RESULT"&&pend[m.reqId]){pend[m.reqId](m.items);delete pend[m.reqId];}
-});
-const LS={get k(){return "poll_local_"+(CTX?CTX.circleId:"solo");},
-  load(){try{return JSON.parse(localStorage.getItem(this.k))||[]}catch(e){return[]}},
-  save(a){localStorage.setItem(this.k,JSON.stringify(a));}};
-async function load(){
-  if(embedded){const items=await bridge({type:"DATA_LIST",collection:"polls"});if(items){polls=items.map(r=>({recId:r.id,...r.payload}));return;}}
-  polls=LS.load();
-}
-async function persist(p){
-  if(embedded){
-    if(p.recId)await bridge({type:"DATA_UPDATE",collection:"polls",id:p.recId,payload:stripped(p)});
-    else{const r=await bridge({type:"DATA_CREATE",collection:"polls",payload:stripped(p)});if(r&&r[0])p.recId=r[0].id;}
-    return;
-  }
-  LS.save(polls);
-}
-const stripped=p=>({question:p.question,options:p.options,votes:p.votes,open:p.open,createdBy:p.createdBy});
-function toast(m){if(embedded)parent.postMessage({type:"SHOW_TOAST",message:m},"*");else{const t=document.createElement("div");t.textContent=m;t.style.cssText="position:fixed;left:50%;transform:translateX(-50%);bottom:30px;background:var(--glass);border:1px solid var(--brd);backdrop-filter:blur(14px);padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;z-index:99";document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}}
-const myId=()=>CTX?CTX.personId:"me";
-const nameOf=id=>{if(CTX&&CTX.people){const p=CTX.people.find(p=>p.id===id);if(p)return p.name;}return id==="me"?"Me":id;};
+const PTYPES={
+  dinner:{icon:"🍴",label:"Dinner",expire:2,onClose:"add_recipe",hint:"What's for dinner?"},
+  activity:{icon:"🎯",label:"Activity",expire:24,onClose:"add_calendar",hint:"What should we do?"},
+  gift:{icon:"🎁",label:"Gift",expire:168,onClose:"none",hint:"Which gift?"},
+  movie:{icon:"🎬",label:"Movie",expire:1,onClose:"none",hint:"What to watch?"},
+  meeting:{icon:"🕐",label:"Meeting",expire:24,onClose:"add_calendar",hint:"Best time to meet?"},
+  custom:{icon:"🗳️",label:"Custom",expire:24,onClose:"none",hint:"Your question"}
+};
 
-/* ---- UI ---- */
+const Bridge={
+  embedded:window.self!==window.top, ctx:null, pend:{}, rq:0,
+  init(cb){
+    addEventListener("message",e=>{
+      const m=e.data||{};
+      if(m.type==="INIT_APP"){this.ctx=m.payload||{};if(this.ctx.theme)setTheme(this.ctx.theme);cb&&cb();}
+      else if((m.type==="DATA_RESULT"||m.type==="SESSION_CONTEXT")&&this.pend[m.reqId]){this.pend[m.reqId](m.items||m.payload);delete this.pend[m.reqId];}
+    });
+    if(this.embedded){parent.postMessage({type:"QUERY_SESSION",reqId:++this.rq},"*");}
+  },
+  call(msg){return new Promise(res=>{const id=++this.rq;this.pend[id]=res;msg.reqId=id;parent.postMessage(msg,"*");
+    setTimeout(()=>{if(this.pend[id]){delete this.pend[id];res(null);}},2500);});},
+  async list(appId,collection){
+    if(this.embedded){const r=await this.call({type:"DATA_LIST",appId,collection});if(r)return r.map(x=>({_id:x.id,...x.payload}));}
+    return LS.get(appId+"_"+collection);
+  },
+  async create(appId,collection,payload){
+    if(this.embedded){const r=await this.call({type:"DATA_CREATE",appId,collection,payload,ownerPersonId:false});if(r&&r[0])return r[0].id;}
+    const a=LS.get(appId+"_"+collection);const _id="ls_"+uid();a.push({_id,...payload});LS.set(appId+"_"+collection,a);return _id;
+  },
+  async update(appId,collection,id,payload){
+    if(this.embedded&&!String(id).startsWith("ls_")){await this.call({type:"DATA_UPDATE",id,payload});return;}
+    const a=LS.get(appId+"_"+collection);const i=a.findIndex(x=>x._id===id);if(i>=0){a[i]={_id:id,...payload};LS.set(appId+"_"+collection,a);}
+  },
+  async remove(appId,collection,id){
+    if(this.embedded&&!String(id).startsWith("ls_")){await this.call({type:"DATA_REMOVE",id});return;}
+    let a=LS.get(appId+"_"+collection);a=a.filter(x=>x._id!==id);LS.set(appId+"_"+collection,a);
+  },
+  toast(m){if(this.embedded)parent.postMessage({type:"SHOW_TOAST",message:m},"*");toast(m);},
+  calendar(p){if(this.embedded)parent.postMessage({type:"ADD_TO_CALENDAR",payload:p},"*");}
+};
+const LS={
+  cid(){return (Bridge.ctx&&Bridge.ctx.circleId)||"solo";},
+  key(k){return "kinetik_"+APP_ID+"_"+k+"_"+this.cid();},
+  get(k){try{return JSON.parse(localStorage.getItem(this.key(k)))||[]}catch(e){return[]}},
+  set(k,v){localStorage.setItem(this.key(k),JSON.stringify(v));}
+};
+
+const state={tab:"active",polls:[],scores:[],theme:"light",booted:false};
+
+function setTheme(t){state.theme=t==="dark"?"dark":"light";document.documentElement.dataset.theme=state.theme;
+  try{localStorage.setItem("kinetik_"+APP_ID+"_theme",state.theme)}catch(e){}}
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),1700);}
+function people(){return (Bridge.ctx&&Bridge.ctx.people)||[];}
+function meId(){return (Bridge.ctx&&Bridge.ctx.personId)||"me";}
+function meName(){return (Bridge.ctx&&Bridge.ctx.personName)||"You";}
+function pName(id){const p=people().find(p=>p.id===id);return p?p.name:(id===meId()?meName():"Someone");}
+function pColor(id){const p=people().find(p=>p.id===id);return p?p.color:"#8b5cf6";}
+function initials(n){return String(n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();}
+
+async function loadAll(){
+  if(state.booted)return;state.booted=true;
+  state.polls=await Bridge.list(APP_ID,"polls");
+  state.scores=await Bridge.list(LBOARD,"scores");
+  // auto-close expired
+  let changed=false;
+  for(const p of state.polls){if(p.open&&p.expiresAt&&Date.now()>p.expiresAt){p.open=false;await Bridge.update(APP_ID,"polls",p._id,strip(p));changed=true;}}
+}
+function strip(p){const{_id,...rest}=p;return rest;}
+
 function render(){
-  const A=$("#app");
-  A.innerHTML=`<h1>🗳️ Event Poll <small>Kinetik</small></h1>
-  ${!embedded?'<p class="note" style="margin:3px 0 6px">Standalone mode · data stays on this device</p>':""}
-  <div id="body"></div>`;
-  const B=$("#body");
-  if(creating){renderCreate(B);return;}
-  B.innerHTML=`<button class="btn" id="newP" style="margin:6px 0 4px">+ New poll</button>
-  ${polls.length?polls.map((p,i)=>pollCard(p,i)).join(""):'<div class="card" style="text-align:center;color:var(--dim)">No polls yet.<br>Create one to find the best time 🗳️</div>'}`;
-  $("#newP").onclick=()=>{creating=true;render();};
-  polls.forEach((p,i)=>wireCard(p,i));
+  $("#hsub").textContent=(Bridge.ctx&&Bridge.ctx.circleName?Bridge.ctx.circleName+" · ":"")+"Vote & rank"+(Bridge.embedded?"":" · standalone");
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===state.tab));
+  movePill();
+  $("#fab").style.display=(state.tab==="active")?"grid":"none";
+  const v=$("#view");
+  if(state.tab==="active")v.innerHTML=viewActive();
+  else if(state.tab==="results")v.innerHTML=viewResults();
+  else if(state.tab==="boards")v.innerHTML=viewBoards();
+  else v.innerHTML=viewMore();
+  wire();
 }
-function counts(p){
-  const c={};p.options.forEach(o=>c[o]=[]);
-  Object.entries(p.votes||{}).forEach(([who,opt])=>{if(c[opt])c[opt].push(who);});
-  return c;
-}
-function pollCard(p,i){
-  const c=counts(p),tot=Object.keys(p.votes||{}).length;
-  const max=Math.max(1,...Object.values(c).map(a=>a.length));
-  const winner=p.options.reduce((w,o)=>c[o].length>((c[w]||[]).length)?o:w,p.options[0]);
-  return `<div class="card" id="poll${i}">
-    <div class="phead"><b>${esc(p.question)}</b><span class="status ${p.open?"open":"closed"}">${p.open?"Open":"Closed"}</span></div>
-    ${p.options.map(o=>{
-      const vs=c[o],mine=(p.votes||{})[myId()]===o,isWin=!p.open&&o===winner&&vs.length>0;
-      return `<button class="opt ${mine?"mine":""} ${isWin?"win":""}" data-i="${i}" data-o="${esc(o)}" ${p.open?"":"disabled"}>
-        <span class="fill" style="transform:scaleX(${vs.length/max})"></span>
-        <span class="in"><span>${isWin?"🏆 ":""}${esc(o)}${mine?" · your vote":""}</span><span class="ct">${vs.length}</span></span>
-        ${vs.length?`<span class="who">${vs.map(v=>`<span class="tag">${esc(nameOf(v))}</span>`).join("")}</span>`:""}
-      </button>`;}).join("")}
-    <div class="wrap" style="margin-top:7px">
-      <button class="btn sm ghost" data-share="${i}">Share invite</button>
-      ${p.open?`<button class="btn sm ghost" data-close="${i}">Close poll</button>`
-        :embedded?`<button class="btn sm" data-cal="${i}">Add "${esc(winner)}" to Calendar</button>`:""}
-    </div>
-    <p class="note" style="margin-top:8px">${tot} vote${tot!==1?"s":""}${p.open?" · tap an option to vote":" · winner: "+esc(winner)}</p>
-  </div>`;
-}
-function wireCard(p,i){
-  const el=$("#poll"+i);if(!el)return;
-  el.querySelectorAll(".opt").forEach(b=>b.onclick=async()=>{
-    if(!p.open)return;
-    p.votes=p.votes||{};p.votes[myId()]=b.dataset.o;
-    await persist(p);render();toast("Vote saved ✓");
+function movePill(){const btn=document.querySelector(".nav button.on");if(!btn)return;
+  const pill=$("#pill");pill.style.opacity="1";pill.style.left=btn.offsetLeft+"px";pill.style.width=btn.offsetWidth+"px";}
+
+function counts(p){const c={};p.options.forEach(o=>c[o.id]=[]);Object.entries(p.votes||{}).forEach(([who,oid])=>{if(c[oid])c[oid].push(who);});return c;}
+function winner(p){const c=counts(p);let w=null,n=-1;p.options.forEach(o=>{if(c[o.id].length>n){n=c[o.id].length;w=o;}});return w;}
+function timeLeft(p){if(!p.expiresAt)return"";const ms=p.expiresAt-Date.now();if(ms<=0)return"closing…";
+  const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);return h>0?`${h}h ${m}m left`:`${m}m left`;}
+
+function pollCard(p){
+  const c=counts(p),total=Object.keys(p.votes||{}).length;
+  const max=Math.max(1,...p.options.map(o=>c[o.id].length));
+  const w=p.open?null:winner(p);const T=PTYPES[p.type]||PTYPES.custom;
+  let h=`<div class="pollcard glass rise"><div class="phead"><div class="pq"><b>${T.icon} ${esc(p.question)}</b>
+    <span>${p.open?timeLeft(p):"closed"} · ${total} vote${total!==1?"s":""}</span></div>
+    <span class="status ${p.open?"open":"closed"}">${p.open?"Open":"Closed"}</span></div>`;
+  p.options.forEach(o=>{
+    const v=c[o.id],mine=(p.votes||{})[meId()]===o.id,isWin=w&&o.id===w.id&&v.length>0;
+    h+=`<div class="opt ${mine?"mine":""} ${isWin?"win":""}" data-vote="${p._id}|${o.id}">
+      <div class="fill" style="transform:scaleX(${v.length/max})"></div>
+      <div class="in">${o.emoji?`<span class="oem">${o.emoji}</span>`:""}<span class="otext">${isWin?"🏆 ":""}${esc(o.text)}${mine?" · your vote":""}</span><span class="oct">${v.length}</span></div>
+      ${v.length?`<div class="voters">${v.slice(0,6).map(id=>`<span class="av" style="background:${pColor(id)}">${initials(pName(id))}</span>`).join("")}</div>`:""}</div>`;
   });
-  const cl=el.querySelector("[data-close]");if(cl)cl.onclick=async()=>{p.open=false;await persist(p);render();toast("Poll closed");};
-  const sh=el.querySelector("[data-share]");if(sh)sh.onclick=async()=>{
-    const c=counts(p);
-    const txt=`🗳️ ${p.question}\n${p.options.map(o=>`· ${o} (${c[o].length})`).join("\n")}\n\nVote in Kinetik — Plans. People. Play.`;
-    if(navigator.share){try{await navigator.share({text:txt});return;}catch(e){}}
-    try{await navigator.clipboard.writeText(txt);toast("Invite copied ✓");}catch(e){toast("Copy failed");}
-  };
-  const ca=el.querySelector("[data-cal]");if(ca)ca.onclick=()=>{
-    const c=counts(p);const winner=p.options.reduce((w,o)=>c[o].length>((c[w]||[]).length)?o:w,p.options[0]);
-    const d=new Date();d.setDate(d.getDate()+((5-d.getDay()+7)%7||7)); /* next Friday default */
-    parent.postMessage({type:"ADD_TO_CALENDAR",payload:{title:p.question+" — "+winner,date:d.toISOString().slice(0,10),startTime:"19:00",endTime:"21:00"}},"*");
-  };
-}
-function renderCreate(B){
-  let opts=["",""];
-  const draw=()=>{
-    B.innerHTML=`<div class="card"><div class="lbl">New poll</div>
-    <input class="fld" id="q" placeholder="Question — e.g. Padel this Friday?">
-    <div class="lbl" style="margin-top:6px">Options</div>
-    <div id="opts">${opts.map((o,i)=>`<input class="fld" data-i="${i}" placeholder="Option ${i+1} — e.g. Fri 8pm" value="${esc(o)}">`).join("")}</div>
-    <button class="btn sm ghost" id="addO">+ Option</button>
-    <div class="wrap" style="margin-top:13px"><button class="btn" id="mk">Create poll</button><button class="btn ghost" id="cx">Cancel</button></div></div>`;
-    B.querySelectorAll("#opts .fld").forEach(f=>f.oninput=()=>{opts[+f.dataset.i]=f.value;});
-    $("#addO").onclick=()=>{opts=B.q?opts:opts;opts.push("");const q=$("#q").value;draw();$("#q").value=q;};
-    $("#cx").onclick=()=>{creating=false;render();};
-    $("#mk").onclick=async()=>{
-      const q=$("#q").value.trim(),os=opts.map(o=>o.trim()).filter(Boolean);
-      if(!q||os.length<2)return toast("Need a question + 2 options");
-      const p={question:q,options:os,votes:{},open:true,createdBy:myId()};
-      polls.unshift(p);await persist(p);creating=false;render();toast("Poll created ✓");
-    };
-  };
-  draw();
+  h+=`<div class="pacts">`;
+  h+=`<button class="btn ghost sm" data-share="${p._id}">Share</button>`;
+  if(p.open)h+=`<button class="btn sm" data-close="${p._id}">Close poll</button>`;
+  h+=`<button class="btn ghost sm" data-delpoll="${p._id}">Delete</button>`;
+  h+=`</div></div>`;
+  return h;
 }
 
-/* ---- boot ---- */
-setTimeout(()=>{if(!embedded){
-  if(matchMedia("(prefers-color-scheme: light)").matches)document.documentElement.dataset.theme="light";
-  load().then(render);
-}},650);
+function viewActive(){
+  const open=state.polls.filter(p=>p.open);
+  let h=``;
+  // dinner inbox from Cook
+  if(state.dinnerInbox&&state.dinnerInbox.length){
+    h+=`<div class="card glass rise" style="margin:8px 0 12px"><div class="lbl">From Cook Simple</div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">`;
+    state.dinnerInbox.forEach(d=>{h+=`<div style="display:flex;align-items:center;gap:9px"><span style="font-size:18px">${d.icon||"🍴"}</span><span style="flex:1;font-weight:700;font-size:13.5px">${esc(d.title)}</span></div>`;});
+    h+=`<button class="btn block sm" id="makeDinnerPoll" style="margin-top:4px">🗳️ Create dinner poll from these</button></div></div>`;
+  }
+  if(!open.length){
+    h+=`<div class="empty"><div class="em">🗳️</div><b>No open polls</b><p>Tap + to start one — dinner, movie night, gift ideas, anything.</p></div>`;
+    return h;
+  }
+  open.forEach(p=>h+=pollCard(p));
+  return h;
+}
+function viewResults(){
+  const closed=state.polls.filter(p=>!p.open);
+  if(!closed.length)return `<div class="empty"><div class="em">📊</div><b>No results yet</b><p>Closed polls and their winners show up here.</p></div>`;
+  let h=`<div class="lbl" style="padding:8px 2px">Closed polls</div>`;
+  closed.slice().reverse().forEach(p=>{
+    const w=winner(p),total=Object.keys(p.votes||{}).length,T=PTYPES[p.type]||PTYPES.custom;
+    h+=`<div class="pollcard glass"><div class="phead"><div class="pq"><b>${T.icon} ${esc(p.question)}</b>
+      <span>${total} vote${total!==1?"s":""} · winner: ${w?esc(w.text):"—"}</span></div><span class="status closed">Closed</span></div>`;
+    if(p.type==="dinner"&&w&&w.recipeId){
+      h+=`<div class="pacts"><button class="btn sm" data-tocart="${p._id}">🛒 Send to Grocery</button></div>`;
+    }
+    h+=`</div>`;
+  });
+  return h;
+}
+
+function aggBoards(){
+  // group scores by appId; for each, best score per person
+  const byApp={};
+  state.scores.forEach(s=>{
+    const a=s.appId||"unknown";byApp[a]=byApp[a]||{appId:a,appName:s.appName||a,icon:s.icon||"🏆",metric:s.metric||"pts",players:{}};
+    const cur=byApp[a].players[s.personId];const sc=+s.score||0;
+    if(!cur||sc>cur.score)byApp[a].players[s.personId]={personId:s.personId,name:s.personName||pName(s.personId),score:sc};
+  });
+  return Object.values(byApp);
+}
+function viewBoards(){
+  const boards=aggBoards();
+  let h=`<div class="lbl" style="padding:8px 2px">Master leaderboard · all apps</div>`;
+  if(!boards.length){
+    h+=`<div class="empty"><div class="em">🏆</div><b>No scores yet</b><p>Any Kinetik app can post here. When games and quizzes report scores, the circle rankings appear automatically.</p></div>`;
+    h+=`<div class="card glass" style="margin-top:6px"><div class="lbl">For app builders</div>
+      <p style="font-size:12.5px;color:var(--dim);margin-top:9px;line-height:1.6">Post a score from any app via the bridge:</p>
+      <pre style="font-size:11px;background:var(--chip);border-radius:11px;padding:11px;margin-top:9px;overflow-x:auto;white-space:pre-wrap">parent.postMessage({type:"DATA_CREATE",
+  appId:"kinetik-leaderboard",
+  collection:"scores", ownerPersonId:false,
+  payload:{appId:"times-table-quest",
+    appName:"Times Table", icon:"✖️",
+    personId, personName, score:1280,
+    metric:"XP"}}, "*")</pre></div>`;
+    return h;
+  }
+  boards.forEach(b=>{
+    const players=Object.values(b.players).sort((a,c)=>c.score-a.score).slice(0,8);
+    h+=`<div class="lbcard glass rise"><div class="lbtitle"><div class="lbico">${b.icon}</div><b>${esc(b.appName)}</b><span>${players.length} player${players.length!==1?"s":""}</span></div>`;
+    players.forEach((pl,i)=>{h+=`<div class="lbrow"><div class="rank ${i<3?"g"+(i+1):""}">${i+1}</div>
+      <div class="av" style="background:${pColor(pl.personId)}">${initials(pl.name)}</div>
+      <div class="nm">${esc(pl.name)}</div><div class="sc">${pl.score.toLocaleString()} ${esc(b.metric)}</div></div>`;});
+    h+=`</div>`;
+  });
+  return h;
+}
+
+function viewMore(){
+  let h=`<div class="card glass rise" style="margin:8px 0 12px"><div class="lbl">Quick start</div>
+    <div class="chiprow" style="margin-top:10px">`;
+  for(const k of Object.keys(PTYPES))h+=`<button class="chip" data-template="${k}">${PTYPES[k].icon} ${PTYPES[k].label}</button>`;
+  h+=`</div></div>`;
+  h+=`<div class="card glass" style="margin-bottom:12px"><div class="lbl">Appearance</div>
+    <button class="btn ghost block" style="margin-top:11px" id="themeBtn2">Switch to ${state.theme==="dark"?"light":"dark"} mode</button></div>`;
+  h+=`<div class="empty" style="padding:20px"><p>Event Poll · a generic voting framework for any decision, and the circle's master leaderboard. Dinner winners can flow to Grocery & Calendar; any app can post scores to the Boards tab.</p></div>`;
+  return h;
+}
+
+async function loadDinnerInbox(){state.dinnerInbox=await Bridge.list(CHANNEL,"dinner_polls");}
+
+function wire(){
+  if(state.tab==="active"){
+    document.querySelectorAll("[data-vote]").forEach(b=>b.onclick=async()=>{
+      const[pid,oid]=b.dataset.vote.split("|");const p=state.polls.find(x=>x._id===pid);if(!p||!p.open)return;
+      p.votes=p.votes||{};p.votes[meId()]=oid;await Bridge.update(APP_ID,"polls",p._id,strip(p));toast("Vote saved ✓");render();});
+    document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closePoll(b.dataset.close));
+    document.querySelectorAll("[data-share]").forEach(b=>b.onclick=()=>sharePoll(b.dataset.share));
+    document.querySelectorAll("[data-delpoll]").forEach(b=>b.onclick=async()=>{await Bridge.remove(APP_ID,"polls",b.dataset.delpoll);state.polls=state.polls.filter(p=>p._id!==b.dataset.delpoll);toast("Deleted");render();});
+    if($("#makeDinnerPoll"))$("#makeDinnerPoll").onclick=createDinnerPoll;
+  }
+  if(state.tab==="results"){
+    document.querySelectorAll("[data-tocart]").forEach(b=>b.onclick=()=>sendWinnerToGrocery(b.dataset.tocart));
+  }
+  if(state.tab==="more"){
+    document.querySelectorAll("[data-template]").forEach(b=>b.onclick=()=>openCreate(b.dataset.template));
+    $("#themeBtn2").onclick=()=>{setTheme(state.theme==="dark"?"light":"dark");render();};
+  }
+}
+
+async function closePoll(id){
+  const p=state.polls.find(x=>x._id===id);if(!p)return;p.open=false;p.closedAt=Date.now();
+  await Bridge.update(APP_ID,"polls",p._id,strip(p));
+  const w=winner(p);
+  if(w&&p.onClose==="add_calendar"){const d=new Date();d.setDate(d.getDate()+(((5-d.getDay())+7)%7||7));
+    Bridge.calendar({title:p.question+" — "+w.text,date:d.toISOString().slice(0,10),startTime:"19:00",endTime:"21:00"});}
+  if(w&&p.onClose==="add_recipe"&&w.recipeId){await sendWinnerToGrocery(id,true);}
+  toast(w?`Winner: ${w.text} 🏆`:"Poll closed");render();
+}
+async function sendWinnerToGrocery(id,silent){
+  const p=state.polls.find(x=>x._id===id);if(!p)return;const w=winner(p);if(!w)return;
+  // look for the recipe in Cook Simple (its own appId) or the shared channel
+  let recipes=await Bridge.list("cook-simple","recipes");
+  if(!recipes||!recipes.length)recipes=await Bridge.list(CHANNEL,"recipes");
+  const rec=(recipes||[]).find(r=>r._id===w.recipeId||r.id===w.recipeId||r.title===w.text);
+  if(rec&&rec.ingredients){for(const ing of rec.ingredients)await Bridge.create(CHANNEL,"grocery_inbox",{text:ing.name,qty:ing.qty||"",category:ing.cat||"Pantry",source:"poll",linkLabel:w.text,addedBy:meId()});}
+  else{await Bridge.create(CHANNEL,"grocery_inbox",{text:w.text,qty:"",category:"Other",source:"poll",linkLabel:p.question,addedBy:meId()});}
+  if(!silent)toast("Sent to Grocery 🛒");
+}
+function sharePoll(id){
+  const p=state.polls.find(x=>x._id===id);if(!p)return;const c=counts(p);
+  const txt=`🗳️ ${p.question}\n${p.options.map(o=>`· ${o.text} (${c[o.id].length})`).join("\n")}\n\nVote in Kinetik — Plans. People. Play.`;
+  if(navigator.share)navigator.share({text:txt}).catch(()=>{});
+  else navigator.clipboard.writeText(txt).then(()=>toast("Copied")).catch(()=>toast("Copy failed"));
+}
+
+async function createDinnerPoll(){
+  const opts=state.dinnerInbox.map(d=>({id:uid(),text:d.title,emoji:d.icon||"🍴",recipeId:d.recipeId}));
+  if(!opts.length)return;
+  const poll={question:"What's for dinner?",type:"dinner",options:opts,votes:{},open:true,onClose:"add_recipe",
+    createdBy:meId(),createdAt:Date.now(),expiresAt:Date.now()+2*3600000};
+  const _id=await Bridge.create(APP_ID,"polls",poll);state.polls.push({_id,...poll});
+  // clear inbox
+  for(const d of state.dinnerInbox)await Bridge.remove(CHANNEL,"dinner_polls",d._id);
+  state.dinnerInbox=[];toast("Dinner poll created 🗳️");render();
+}
+
+function openCreate(type){
+  type=type||"custom";const T=PTYPES[type];
+  let opts=type==="custom"?["",""]:[];
+  let h=`<h3>New poll</h3><div class="grid">
+    <div class="seg">${Object.keys(PTYPES).map(k=>`<button data-ptype="${k}" class="${k===type?"on":""}"><span class="se">${PTYPES[k].icon}</span>${PTYPES[k].label}</button>`).join("")}</div>
+    <input class="fld" id="cQ" placeholder="${esc(T.hint)}" value="${type!=="custom"?esc(T.hint):""}">
+    <div class="lbl">Options</div>
+    <div id="optList"></div>
+    <button class="btn ghost sm" id="addOpt" style="align-self:flex-start">+ Add option</button>
+    <button class="btn block" id="cSave">Create poll</button></div>`;
+  openSheet(h);
+  let curType=type, options=type==="custom"?["",""]:["",""];
+  function drawOpts(){
+    $("#optList").innerHTML=options.map((o,i)=>`<div class="optedit" style="margin-bottom:8px"><input class="fld" data-opt="${i}" placeholder="Option ${i+1}" value="${esc(o)}">${options.length>2?`<button data-rmopt="${i}">×</button>`:""}</div>`).join("");
+    $("#optList").querySelectorAll("[data-opt]").forEach(inp=>inp.oninput=e=>{options[+e.target.dataset.opt]=e.target.value;});
+    $("#optList").querySelectorAll("[data-rmopt]").forEach(b=>b.onclick=()=>{options.splice(+b.dataset.rmopt,1);drawOpts();});
+  }
+  drawOpts();
+  document.querySelectorAll("[data-ptype]").forEach(b=>b.onclick=()=>{curType=b.dataset.ptype;
+    document.querySelectorAll("[data-ptype]").forEach(x=>x.classList.toggle("on",x===b));
+    $("#cQ").value=PTYPES[curType].hint;});
+  $("#addOpt").onclick=()=>{options.push("");drawOpts();};
+  $("#cSave").onclick=async()=>{
+    const q=$("#cQ").value.trim();const valid=options.map(o=>o.trim()).filter(Boolean);
+    if(!q){toast("Add a question");return;}if(valid.length<2){toast("Add at least 2 options");return;}
+    const poll={question:q,type:curType,options:valid.map(t=>({id:uid(),text:t,emoji:""})),votes:{},open:true,
+      onClose:PTYPES[curType].onClose,createdBy:meId(),createdAt:Date.now(),expiresAt:Date.now()+PTYPES[curType].expire*3600000};
+    const _id=await Bridge.create(APP_ID,"polls",poll);state.polls.push({_id,...poll});
+    closeSheet();state.tab="active";toast("Poll created 🗳️");render();
+  };
+}
+
+function openSheet(html){$("#sheet").innerHTML=html;$("#sheet").classList.add("show");$("#scrim").classList.add("show");}
+function closeSheet(){$("#sheet").classList.remove("show");$("#scrim").classList.remove("show");}
+$("#scrim").onclick=closeSheet;
+
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;render();});
+$("#themeBtn").onclick=()=>{setTheme(state.theme==="dark"?"light":"dark");render();};
+$("#fab").onclick=()=>openCreate("custom");
+addEventListener("resize",movePill);
+
+(function boot(){
+  try{const t=localStorage.getItem("kinetik_"+APP_ID+"_theme");if(t)setTheme(t);}catch(e){}
+  Bridge.init(async()=>{await loadAll();await loadDinnerInbox();render();});
+  if(!Bridge.embedded){loadAll().then(()=>loadDinnerInbox()).then(render);}
+  else{setTimeout(()=>{if(!state.booted){loadAll().then(()=>loadDinnerInbox()).then(render);}},900);}
+})();
 </script>
 </body>
 </html>
