@@ -1,156 +1,767 @@
 <!--
-KINETIK APP STANDARD v0.4
+KINETIK APP STANDARD v1.0 — Charisma Coach
+Flagship of the COACHING DECK engine (Batch 2). Built from scratch — no shared code
+with the Quiz engine. Analog feel: Headspace (calm daily sessions) × Speeko (coaching)
+× Blinkist (insight decks). Interaction quality only; no copied assets.
 
-PRODUCT:
-Kinetik is a private life app for Family and Friends circles.
+The science it teaches is real and cited in-app (the "Me → Science" tab):
+  • Olivia Fox Cabane, The Charisma Myth — pillars: Presence · Power · Warmth.
+  • Antonakis et al., 12 Charismatic Leadership Tactics (peer-reviewed, ~60% lift).
+  • Vanessa Van Edwards, Cues — charisma = Warmth × Competence.
 
-APP:
-Charisma Coach is a polished standalone Kinetik mini app.
-Analog inspiration: Orai, Speeko, MasterClass.
-
-IMPORTANT:
-- This app closely follows proven interaction patterns from the analog target.
-- It does not copy protected logos, mascots, names, exact artwork, or exact trade dress.
-- It keeps distinct Kinetik branding, icons, colors, and data contracts.
-
-ARCHITECTURE:
-- Single self-contained HTML file.
-- Inline CSS and vanilla JavaScript only.
-- No external frameworks, CDNs, build step, or backend dependency.
-- Works directly from a local HTML file.
-- Works embedded inside the Kinetik shell iframe.
-- Uses AppBridge messages for future parent-shell persistence.
-- Uses localStorage for direct-file progress and history.
-
-KINETIK INTEGRATION:
-- Detects embedded mode with window.self !== window.top.
-- Listens for INIT_APP messages.
-- Accepts circleId, circleType, memberId, personId, theme, and context.
-- Sends DATA_CREATE, DATA_UPDATE, OPEN_APP, and SHOW_TOAST bridge messages when relevant.
-
-DATA:
-- Storage prefix: kinetik_polished_productivity_charisma.
-- App-specific future records should be stored in AppRecords with circleId, appId, collection, and payloadJson.
-- This app must not access another circle's data.
-
-React/TypeScript app scale-up note:
-- This single-file app should later become a React feature module or standalone route.
-- It must keep using AppBridge/DataAPI contracts.
-- It must not access another circle's data.
-- It must store app-specific data in AppRecords using circleId, appId, collection, payloadJson.
+Engine = Shell(5 tabs) + Deck(daily session) + Scenarios/Drills + Signature(Warmth×
+Competence) + Progress(streak/level/mastery/badges). CONTENT is isolated at the top so
+sibling Deck apps (Founder Wisdom, Behaviour, Articulation, Presenter, Cook) swap it.
+Storage: kinetik_charisma_coach_*. No microphone. Offline, single file, no CDNs.
 -->
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f7faff">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Charisma Coach">
-  <title>Charisma Coach - Kinetik Polished</title>
-  <script type="application/kinetik-app+json">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Charisma Coach — Kinetik</title>
+<script type="application/kinetik-app+json">
 {
-  "appId": "productivity-charisma",
+  "appId": "charisma-coach",
   "name": "Charisma Coach",
-  "shortName": "CH",
+  "shortName": "Charisma",
   "icon": "✨",
-  "gradient": [
-    "#ff5d8f",
-    "#7c3aed"
-  ],
-  "category": "scenario coach",
-  "tagline": "Practice warm, confident social responses.",
-  "about": "A scenario coach with response scoring, presence cues, and reflection prompts.",
-  "audience": "family and friends circles",
-  "circleTypes": [
-    "family",
-    "friends",
-    "learning",
-    "work"
-  ],
-  "worksWith": [
-    "offline",
-    "standalone",
-    "embedded",
-    "local progress"
-  ],
+  "gradient": ["#f7b733", "#fc5c7d"],
+  "category": "productivity",
+  "tagline": "Train real-world magnetism.",
+  "about": "A daily charisma trainer built on real research — Cabane's Presence/Power/Warmth, Antonakis's 12 charismatic tactics, and the Warmth×Competence model. Swipe a short coaching session, practice with real scenarios, and watch your Charisma Signature grow. Fully offline.",
+  "audience": "adults",
+  "circleTypes": ["family", "friends"],
+  "worksWith": ["offline", "standalone"],
   "status": "live",
   "minMembers": 1
 }
-  </script>
-  <style>
-    :root{color-scheme:light;--bg:#f5f8ff;--bg2:#edf3ff;--ink:#111827;--muted:#6b7280;--faint:#9ca3af;--panel:rgba(255,255,255,.88);--solid:#fff;--line:rgba(17,24,39,.1);--a:#ff5d8f;--b:#7c3aed;--good:#18b978;--warn:#f59e0b;--bad:#ef4444;--shadow:0 22px 58px rgba(35,52,92,.15);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    [data-theme=dark]{color-scheme:dark;--bg:#08101b;--bg2:#101827;--ink:#f8fbff;--muted:#b9c3d2;--faint:#7e8aa2;--panel:rgba(18,26,42,.82);--solid:#111827;--line:rgba(255,255,255,.12);--shadow:0 22px 58px rgba(0,0,0,.35)}
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;width:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink)}body{background:radial-gradient(circle at 12% -8%,color-mix(in srgb,var(--a) 22%,transparent),transparent 34%),radial-gradient(circle at 94% 0%,color-mix(in srgb,var(--b) 18%,transparent),transparent 32%),linear-gradient(180deg,var(--bg),var(--bg2))}button,input{font:inherit}button{border:0;color:inherit;cursor:pointer}h1,h2,h3,p{margin:0}.app{height:100dvh;max-width:780px;margin:0 auto;display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden}.top{padding:calc(12px + env(safe-area-inset-top,0px)) 16px 10px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px}.mark{width:46px;height:46px;border-radius:16px;color:white;display:grid;place-items:center;font-size:12px;font-weight:950;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 16px 32px color-mix(in srgb,var(--a) 24%,transparent)}.title{min-width:0}.title h1{font-size:22px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title p{margin-top:5px;color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.iconbtn{width:42px;height:42px;border-radius:15px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 10px 24px rgba(0,0,0,.06)}.content{min-height:0;overflow-y:auto;overflow-x:hidden;padding:6px 16px 18px;scrollbar-width:none}.content::-webkit-scrollbar,.hscroll::-webkit-scrollbar{display:none}.hero{position:relative;overflow:hidden;border-radius:30px;padding:18px;color:white;background:radial-gradient(circle at 14% 0%,rgba(255,255,255,.34),transparent 31%),linear-gradient(135deg,var(--a),var(--b));box-shadow:var(--shadow)}.hero:after{content:"";position:absolute;right:-42px;bottom:-78px;width:172px;height:172px;border-radius:50%;border:30px solid rgba(255,255,255,.14)}.hero>*{position:relative;z-index:1}.kicker{font-size:11px;letter-spacing:1.8px;font-weight:950;text-transform:uppercase;opacity:.74}.hero h2{margin-top:8px;font-size:29px;line-height:1;letter-spacing:0}.hero p{margin-top:9px;color:rgba(255,255,255,.82);font-size:13px;line-height:1.35;font-weight:750}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:16px}.stat{min-height:62px;padding:10px;border-radius:18px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(14px)}.stat b{font-size:20px}.stat span{display:block;margin-top:6px;color:rgba(255,255,255,.78);font-size:11px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .tabs{position:sticky;top:0;z-index:2;margin:14px 0;padding:4px;border-radius:18px;background:rgba(255,255,255,.64);border:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;backdrop-filter:blur(20px)}[data-theme=dark] .tabs{background:rgba(18,26,42,.74)}.tab{height:40px;border-radius:14px;background:transparent;color:var(--muted);font-size:13px;font-weight:950}.tab.active{color:var(--ink);background:var(--solid);box-shadow:0 8px 18px rgba(0,0,0,.08)}.screen{display:none}.screen.active{display:block;animation:rise .24s ease both}@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.panel{border-radius:28px;background:var(--panel);border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.08);padding:15px;margin-bottom:12px;backdrop-filter:blur(20px)}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.panel h3{font-size:16px}.muted{color:var(--muted);font-size:12px;font-weight:760;line-height:1.35}.chip{display:inline-flex;align-items:center;height:29px;padding:0 10px;border-radius:999px;background:color-mix(in srgb,var(--a) 10%,transparent);border:1px solid color-mix(in srgb,var(--a) 17%,transparent);color:var(--a);font-size:11px;font-weight:950}.grid{display:grid;gap:10px}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.tile,.choice{width:100%;border-radius:22px;background:var(--solid);border:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.06);padding:13px;text-align:left;transition:transform .18s ease,border-color .18s ease}.tile:active,.choice:active,.primary:active,.secondary:active,.iconbtn:active{transform:scale(.98)}.tile b{display:block;font-size:14px;line-height:1.15}.tile span{display:block;margin-top:6px;color:var(--muted);font-size:12px;font-weight:750;line-height:1.3}.visual{min-height:168px;border-radius:26px;background:radial-gradient(circle at 22% 20%,color-mix(in srgb,var(--a) 18%,transparent),transparent 32%),linear-gradient(135deg,color-mix(in srgb,var(--a) 8%,var(--solid)),color-mix(in srgb,var(--b) 8%,var(--solid)));border:1px solid var(--line);display:grid;place-items:center;margin-bottom:13px;overflow:hidden}.visual svg{width:min(250px,82vw);height:150px}.prompt{font-size:24px;line-height:1.08;margin-top:10px}.choices{display:grid;gap:10px;margin-top:14px}.choice{font-size:15px;font-weight:900;min-height:58px;border-width:2px}.choice.selected{border-color:var(--a);background:color-mix(in srgb,var(--a) 9%,var(--solid))}.choice.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--solid))}.choice.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--solid))}.feedback{display:none;margin-top:12px;border-radius:20px;padding:13px;background:color-mix(in srgb,var(--a) 8%,var(--solid));border:1px solid var(--line)}.feedback.show{display:block}.feedback b{font-size:14px}.feedback p{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.35;font-weight:750}.meter{height:9px;border-radius:999px;background:rgba(120,140,160,.16);overflow:hidden;margin-top:10px}.meter i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--a),var(--b));transition:width .28s ease}.hscroll{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none}.appcard{flex:0 0 70%;min-height:150px;color:white;background:linear-gradient(135deg,var(--x),var(--y));border:0}.appicon{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-weight:950}.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}.check{width:34px;height:34px;border-radius:13px;display:grid;place-items:center;background:rgba(120,140,160,.14);border:1px solid var(--line);font-weight:950;color:transparent}.done .check{color:white;background:linear-gradient(135deg,var(--good),var(--a));border-color:transparent}.done .row-label{text-decoration:line-through;color:var(--muted)}.row-label{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.inputrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}.input{height:48px;border-radius:17px;border:1px solid var(--line);padding:0 13px;background:var(--solid);color:var(--ink)}.bottom{padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--bg) 94%,transparent) 35%,var(--bg));backdrop-filter:blur(18px)}.primary,.secondary{min-height:52px;border-radius:18px;font-size:15px;font-weight:950;display:inline-flex;align-items:center;justify-content:center;gap:8px}.primary{color:white;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 16px 32px color-mix(in srgb,var(--a) 24%,transparent)}.primary:disabled{opacity:.5;box-shadow:none}.secondary{min-width:56px;background:var(--panel);border:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.06)}.toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom,0px));transform:translate(-50%,18px);opacity:0;max-width:min(340px,calc(100vw - 32px));padding:12px 14px;border-radius:999px;background:rgba(17,24,39,.92);color:white;font-size:13px;font-weight:850;box-shadow:0 18px 42px rgba(0,0,0,.22);transition:opacity .22s ease,transform .22s ease;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
-    .clock{width:158px;height:158px;border-radius:50%;background:var(--solid);border:8px solid color-mix(in srgb,var(--a) 22%,white);position:relative;box-shadow:0 18px 38px rgba(0,0,0,.13)}.hand{position:absolute;left:50%;top:50%;height:5px;border-radius:999px;background:var(--ink);transform-origin:left center}.hour{width:43px}.minute{width:60px;background:var(--a)}.pin{position:absolute;left:50%;top:50%;width:13px;height:13px;border-radius:50%;background:var(--b);transform:translate(-50%,-50%)}.tick{position:absolute;left:50%;top:50%;font-size:12px;font-weight:950;color:var(--muted)}
-    @media (min-width:720px){.content{padding-inline:24px}.two{grid-template-columns:repeat(3,minmax(0,1fr))}.appcard{flex-basis:38%}}@media (max-width:370px){.top{padding-inline:12px}.hero h2{font-size:25px}.prompt{font-size:22px}.two{grid-template-columns:1fr}.appcard{flex-basis:82%}}@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
-  </style>
+</script>
+<meta name="theme-color" content="#fbf7f3">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+:root{
+  --gold:#f7b733;--coral:#fc5c7d;--plum:#8b5cf6;
+  --acc:#fc5c7d;--acc2:#f7b733;
+  --bg:#fbf7f3;--bg2:#f3eee8;--ink:#1c1726;--muted:#6c6478;--faint:#a59cae;
+  --panel:rgba(255,255,255,.92);--solid:#fff;--line:rgba(28,23,38,.08);--line2:rgba(28,23,38,.14);
+  --good:#16b87a;--goodbg:#e6f8f0;--bad:#ef4458;--badbg:#fdecee;
+  --warmc:#fc5c7d;--compc:#5b8cff;
+  --shadow:0 24px 60px rgba(60,40,80,.16);
+  --font:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --serif:"Georgia","Times New Roman",serif;
+  color-scheme:light;
+}
+[data-theme=dark]{
+  --bg:#0d0a16;--bg2:#140f22;--ink:#f4f0fb;--muted:#a9a2ba;--faint:#6f6782;
+  --panel:rgba(26,20,40,.86);--solid:#171225;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.15);
+  --goodbg:rgba(22,184,122,.16);--badbg:rgba(239,68,88,.16);--shadow:0 24px 60px rgba(0,0,0,.45);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg)}
+body{font-family:var(--font);color:var(--ink);overflow:hidden;-webkit-font-smoothing:antialiased;
+  background:
+   radial-gradient(120% 60% at 12% -8%,color-mix(in srgb,var(--gold) 24%,transparent),transparent 44%),
+   radial-gradient(120% 60% at 92% -4%,color-mix(in srgb,var(--coral) 22%,transparent),transparent 42%),
+   radial-gradient(140% 80% at 50% 108%,color-mix(in srgb,var(--plum) 16%,transparent),transparent 46%),
+   linear-gradient(180deg,var(--bg),var(--bg2))}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+h1,h2,h3,h4,p{margin:0}
+.app{height:100dvh;max-width:640px;margin:0 auto;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.safetop{height:max(env(safe-area-inset-top,0px),10px);flex:0 0 auto}
+.screens{flex:1;min-height:0;position:relative}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+.screen.on{display:flex;animation:fade .3s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:0 18px 22px}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ---------- top header ---------- */
+.top{display:flex;align-items:center;gap:12px;padding:8px 18px 12px}
+.top .hi{flex:1;min-width:0}
+.top .hi .k{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.top .hi h1{font-size:24px;letter-spacing:-.02em;line-height:1.05;margin-top:2px;font-weight:850}
+.lvchip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;
+  background:linear-gradient(135deg,var(--gold),var(--coral));color:#fff;font-size:12.5px;font-weight:850;box-shadow:0 8px 20px color-mix(in srgb,var(--coral) 30%,transparent);flex:0 0 auto}
+.flame{display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:13px;font-weight:850;flex:0 0 auto}
+
+/* ---------- generic panel ---------- */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:17px}
+.sectlbl{font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:18px 4px 11px;display:flex;align-items:center;justify-content:space-between}
+.sectlbl span.more{color:var(--acc);cursor:pointer}
+
+/* ---------- hero / signature ---------- */
+.hero{position:relative;overflow:hidden;border-radius:28px;padding:18px;color:#fff;box-shadow:var(--shadow);
+  background:radial-gradient(120% 120% at 18% 12%,rgba(255,255,255,.28),transparent 42%),linear-gradient(135deg,var(--gold),var(--coral) 60%,var(--plum))}
+.hero .k{font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;opacity:.85}
+.hero h2{font-size:25px;letter-spacing:-.02em;margin-top:4px;line-height:1.06}
+.hero p{font-size:13px;opacity:.92;margin-top:7px;line-height:1.4;max-width:88%}
+.hero .cta{margin-top:15px;display:inline-flex;align-items:center;gap:9px;background:#fff;color:#1c1726;border-radius:15px;padding:12px 18px;font-size:15px;font-weight:900;box-shadow:0 12px 26px rgba(0,0,0,.2)}
+.hero .cta:active{transform:scale(.97)}
+.hero .orb{position:absolute;right:-30px;top:-26px;width:140px;height:140px;border-radius:50%;
+  background:radial-gradient(circle at 38% 35%,rgba(255,255,255,.9),rgba(255,255,255,.15) 55%,transparent 70%);filter:blur(2px);animation:pulse 3.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.12);opacity:1}}
+
+/* signature map */
+.sig{position:relative;width:100%;max-width:330px;margin:6px auto 0;aspect-ratio:1}
+.sig svg{width:100%;height:100%;overflow:visible}
+.sigwrap{display:flex;flex-direction:column;align-items:center}
+.sig .dot{transition:transform 1s cubic-bezier(.34,1.4,.4,1)}
+.quad{font-size:9.5px;font-weight:800;fill:var(--faint);letter-spacing:.04em}
+.axislbl{font-size:11px;font-weight:850;fill:var(--muted)}
+.sigmeta{display:flex;gap:10px;width:100%;margin-top:14px}
+.sigmeta .m{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:11px 13px}
+.sigmeta .m .lab{font-size:11px;font-weight:850;color:var(--muted);display:flex;align-items:center;gap:6px}
+.sigmeta .m .v{font-size:21px;font-weight:900;letter-spacing:-.02em;margin-top:4px}
+.dotw{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+/* stat row */
+.statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:13px 11px;text-align:center}
+.stat b{font-size:21px;font-weight:900;letter-spacing:-.02em;display:block}
+.stat span{font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-top:3px}
+
+/* pillar / list cards */
+.pillar{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:15px;margin-bottom:11px;cursor:pointer;transition:transform .14s}
+.pillar:active{transform:scale(.985)}
+.pillar .ic{width:50px;height:50px;border-radius:16px;display:grid;place-items:center;font-size:24px;flex:0 0 auto;color:#fff}
+.pillar .tx{flex:1;min-width:0}.pillar .tx b{font-size:16px;letter-spacing:-.01em}.pillar .tx p{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.35}
+.ring{flex:0 0 auto}
+.tlist{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tcard{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:13px;cursor:pointer;transition:transform .14s}
+.tcard:active{transform:scale(.97)}
+.tcard .tag{font-size:9.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--acc)}
+.tcard b{font-size:13.5px;display:block;margin-top:5px;line-height:1.2}
+.tcard .mini{margin-top:9px;height:5px;border-radius:999px;background:var(--line2);overflow:hidden}
+.tcard .mini i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--coral))}
+
+.rowcard{display:flex;align-items:center;gap:13px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:10px;cursor:pointer;transition:transform .14s}
+.rowcard:active{transform:scale(.985)}
+.rowcard .ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:21px;flex:0 0 auto;background:color-mix(in srgb,var(--acc) 12%,var(--solid))}
+.rowcard .tx{flex:1;min-width:0}.rowcard .tx b{font-size:14.5px}.rowcard .tx p{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.3}
+.chev{color:var(--faint);font-size:20px;flex:0 0 auto}
+.done-pill{font-size:10px;font-weight:900;color:var(--good);background:var(--goodbg);padding:4px 9px;border-radius:999px;flex:0 0 auto}
+
+/* ---------- bottom nav ---------- */
+.nav{flex:0 0 auto;display:flex;background:var(--panel);border-top:1px solid var(--line);backdrop-filter:blur(18px);
+  padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px))}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--faint);font-size:10px;font-weight:800;padding:4px 0}
+.nav button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.nav button.on{color:var(--acc)}
+.nav button.on svg{transform:translateY(-2px) scale(1.06)}
+.nav button.on .ind{opacity:1}
+.nav .ind{width:5px;height:5px;border-radius:50%;background:var(--acc);opacity:0;margin-top:1px}
+
+/* ---------- deck (daily session) ---------- */
+#deck{position:absolute;inset:0;z-index:40;display:none;flex-direction:column;background:
+  radial-gradient(120% 60% at 12% -8%,color-mix(in srgb,var(--gold) 22%,transparent),transparent 44%),
+  radial-gradient(120% 60% at 92% -4%,color-mix(in srgb,var(--coral) 20%,transparent),transparent 42%),
+  linear-gradient(180deg,var(--bg),var(--bg2))}
+#deck.on{display:flex}
+.dhead{display:flex;align-items:center;gap:13px;padding:calc(10px + env(safe-area-inset-top,0px)) 18px 8px}
+.dhead .x{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:var(--faint);font-size:22px;flex:0 0 auto}
+.dbar{flex:1;height:12px;border-radius:999px;background:var(--line2);overflow:hidden}
+.dbar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--gold),var(--coral));transition:width .35s cubic-bezier(.4,1.2,.5,1)}
+.dbody{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:10px 20px 8px;display:flex;flex-direction:column}
+.dbody::-webkit-scrollbar{display:none}
+.card{flex:1;display:flex;flex-direction:column;animation:cardin .34s cubic-bezier(.3,1.2,.5,1) both}
+@keyframes cardin{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+.card .kind{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:12px}
+.card .big{font-size:27px;font-weight:850;letter-spacing:-.02em;line-height:1.16}
+.card .body{font-size:15.5px;line-height:1.5;color:var(--muted);margin-top:12px;font-weight:500}
+.card .body b{color:var(--ink);font-weight:800}
+.quote{font-family:var(--serif);font-size:23px;line-height:1.3;font-style:italic}
+.quote+.qby{margin-top:12px;font-size:13px;font-weight:800;color:var(--muted)}
+.illus{align-self:center;margin:6px 0 16px}
+.illus .auraorb{width:118px;height:118px;border-radius:50%;background:radial-gradient(circle at 38% 35%,#fff,color-mix(in srgb,var(--gold) 70%,#fff) 30%,var(--coral) 72%,var(--plum));box-shadow:0 18px 44px color-mix(in srgb,var(--coral) 40%,transparent);animation:pulse 3.4s ease-in-out infinite}
+.opts{display:flex;flex-direction:column;gap:11px;margin-top:18px}
+.opt{text-align:left;background:var(--solid);border:2px solid var(--line2);border-radius:18px;padding:15px;font-size:15px;font-weight:650;line-height:1.35;transition:transform .12s,border-color .12s,background .12s}
+.opt:active{transform:scale(.985)}
+.opt.sel{border-color:var(--acc)}
+.opt.best{border-color:var(--good);background:var(--goodbg)}
+.opt.bad{border-color:var(--bad);background:var(--badbg)}
+.opt .mark{float:right;margin-left:10px;font-weight:900}
+.fbcard{margin-top:16px;border-radius:18px;padding:15px;background:var(--panel);border:1px solid var(--line);display:none;animation:cardin .3s ease both}
+.fbcard.on{display:block}
+.fbcard .ft{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.fbcard.good .ft{color:var(--good)}.fbcard.bad .ft{color:var(--warn,#f59e0b)}
+.fbcard p{font-size:14px;line-height:1.45;color:var(--muted)}
+.fbcard .tac{display:inline-block;margin-top:9px;font-size:11px;font-weight:850;color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,transparent);padding:5px 10px;border-radius:999px}
+.reflect textarea{width:100%;min-height:120px;border-radius:16px;border:2px solid var(--line2);background:var(--solid);color:var(--ink);padding:14px;font:inherit;font-size:15px;resize:none;margin-top:16px}
+.reflect textarea:focus{outline:none;border-color:var(--acc)}
+.dfoot{flex:0 0 auto;padding:12px 18px calc(14px + env(safe-area-inset-bottom,0px))}
+.btn{width:100%;min-height:54px;border-radius:16px;font-size:16px;font-weight:900;letter-spacing:.02em;color:#fff;
+  background:linear-gradient(135deg,var(--gold),var(--coral));box-shadow:0 14px 30px color-mix(in srgb,var(--coral) 30%,transparent);transition:transform .12s,opacity .12s}
+.btn:active{transform:scale(.98)}.btn:disabled{opacity:.4;box-shadow:none}
+.btn.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+
+/* reward */
+.reward{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:4px}
+.reward .auraorb{width:130px;height:130px;margin-bottom:10px}
+.reward h2{font-size:27px;font-weight:850;letter-spacing:-.02em}
+.reward .sub{font-size:14px;color:var(--muted);font-weight:650;max-width:80%}
+.rwtiles{display:grid;grid-template-columns:1fr 1fr;gap:11px;width:100%;max-width:330px;margin:18px 0}
+.rwtile{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:13px;text-align:left}
+.rwtile .k{font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.rwtile .v{font-size:22px;font-weight:900;margin-top:5px;letter-spacing:-.02em}
+
+/* progress */
+.bars .bar{margin-bottom:14px}
+.bars .bar .lab{display:flex;justify-content:space-between;font-size:13px;font-weight:800;margin-bottom:7px}
+.bars .bar .track{height:12px;border-radius:999px;background:var(--line2);overflow:hidden}
+.bars .bar .track i{display:block;height:100%;border-radius:inherit;transition:width .7s cubic-bezier(.3,1.2,.5,1)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal .d{aspect-ratio:1;border-radius:8px;background:var(--line2);display:grid;place-items:center;font-size:10px;font-weight:800;color:var(--faint)}
+.cal .d.on{background:linear-gradient(135deg,var(--gold),var(--coral));color:#fff}
+.badges{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.badge{aspect-ratio:1;border-radius:18px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;padding:6px;opacity:.4}
+.badge.got{opacity:1;border-color:transparent;background:linear-gradient(135deg,color-mix(in srgb,var(--gold) 22%,var(--solid)),color-mix(in srgb,var(--coral) 18%,var(--solid)))}
+.badge .e{font-size:26px}.badge .n{font-size:9px;font-weight:850;line-height:1.1;color:var(--muted)}
+.ringbox{display:flex;flex-direction:column;align-items:center;gap:6px}
+.ringbox .rn{font-size:11px;font-weight:800;color:var(--muted);text-align:center;line-height:1.1}
+
+/* reader sheet */
+#sheet{position:absolute;inset:0;z-index:50;display:none;flex-direction:column;background:rgba(10,8,16,.4);backdrop-filter:blur(3px)}
+#sheet.on{display:flex}
+#sheet .body{margin-top:auto;background:var(--bg);border-radius:26px 26px 0 0;max-height:88%;display:flex;flex-direction:column;animation:up .34s cubic-bezier(.3,1.1,.5,1) both;box-shadow:0 -20px 50px rgba(0,0,0,.3)}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+#sheet .grab{width:40px;height:5px;border-radius:999px;background:var(--line2);margin:10px auto 4px;flex:0 0 auto}
+#sheet .inner{overflow-y:auto;scrollbar-width:none;padding:8px 22px calc(24px + env(safe-area-inset-bottom,0px))}
+#sheet .inner::-webkit-scrollbar{display:none}
+
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translate(-50%,14px);opacity:0;
+  background:rgba(20,15,30,.95);color:#fff;font-size:13.5px;font-weight:800;padding:11px 16px;border-radius:999px;max-width:84%;
+  box-shadow:0 16px 40px rgba(0,0,0,.35);pointer-events:none;transition:.24s;z-index:70}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media (max-width:360px){.card .big{font-size:24px}.top .hi h1{font-size:21px}}
+</style>
 </head>
 <body>
-  <main class="app">
-    <header class="top">
-      <div class="mark">CH</div>
-      <div class="title"><h1>Charisma Coach</h1><p id="circleLine">Standalone circle</p></div>
-      <button class="iconbtn" id="themeBtn" type="button" aria-label="Toggle theme">T</button>
-    </header>
-    <section class="content">
-      <article class="hero"><div class="kicker">Orai, Speeko, MasterClass</div><h2>Practice warm, confident social responses.</h2><p>A scenario coach with response scoring, presence cues, and reflection prompts.</p><div class="stats"><div class="stat"><b id="score">0</b><span>score</span></div><div class="stat"><b id="streak">0</b><span>streak</span></div><div class="stat"><b id="session">0</b><span>sessions</span></div></div></article>
-      <nav class="tabs"><button class="tab active" data-tab="play" type="button">Play</button><button class="tab" data-tab="progress" type="button">Progress</button><button class="tab" data-tab="about" type="button">About</button></nav>
-      <section class="screen active" id="play"></section>
-      <section class="screen" id="progress"></section>
-      <section class="screen" id="about"></section>
+<div class="app">
+  <div class="safetop"></div>
+  <div class="screens">
+
+    <!-- ============ TODAY ============ -->
+    <section class="screen on" id="s-today">
+      <header class="top"><div class="hi"><div class="k" id="greetK">Today</div><h1 id="greet">Good day</h1></div>
+        <span class="flame">🔥 <b id="tStreak">0</b></span>
+        <span class="lvchip">✨ <b id="tLevel">Lv 1</b></span></header>
+      <div class="scroll">
+        <div class="hero">
+          <div class="orb"></div>
+          <div class="k">Daily session · 3 min</div>
+          <h2 id="heroTitle">Your charisma, one rep at a time</h2>
+          <p id="heroSub">A short coaching session: a principle, a real scenario, and one drill.</p>
+          <button class="cta" id="startBtn">▶ Start today's session</button>
+        </div>
+        <div class="statrow">
+          <div class="stat"><b id="tSessions">0</b><span>Sessions</span></div>
+          <div class="stat"><b id="tQuad">—</b><span>Signature</span></div>
+          <div class="stat"><b id="tInsights">0</b><span>Insights</span></div>
+        </div>
+        <div class="sectlbl">This week's focus</div>
+        <div class="panel" id="focusCard" style="display:flex;gap:14px;align-items:center;cursor:pointer">
+          <div class="ic" id="focusIc" style="width:48px;height:48px;border-radius:15px;display:grid;place-items:center;font-size:23px;background:color-mix(in srgb,var(--acc) 12%,var(--solid));flex:0 0 auto">🎯</div>
+          <div style="flex:1;min-width:0"><b id="focusName" style="font-size:15.5px">Focus</b><p id="focusBlurb" style="font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.35"></p></div>
+          <span class="chev">›</span>
+        </div>
+        <div class="sectlbl">Your signature <span class="more" id="seeProgress">Open ›</span></div>
+        <div class="panel sigwrap" id="todaySig"></div>
+      </div>
     </section>
-    <footer class="bottom"><button class="primary" id="primary" type="button">Continue</button><button class="secondary" id="next" type="button">Next</button></footer>
-  </main>
-  <div class="toast" id="toast"></div>
-  <script>
-    (function(){
-      "use strict";
-      const App={"appId":"productivity-charisma","name":"Charisma Coach","file":"App_ProductivityCharisma.html","icon":"CH","gradient":["#ff5d8f","#7c3aed"],"category":"scenario coach","mode":"coach","analog":"Orai, Speeko, MasterClass","tagline":"Practice warm, confident social responses.","about":"A scenario coach with response scoring, presence cues, and reflection prompts.","items":[{"title":"First Impression","kind":"Presence","prompt":"You meet someone new. Best opener?","choices":["Ask a real question","Talk only about yourself","Check phone","Complain"],"answer":0,"explain":"Curiosity creates warmth fast.","visual":"wave"},{"title":"Good News","kind":"Warmth","prompt":"Someone shares good news. Best response?","choices":["Celebrate and ask more","Change topic","Compete","Dismiss it"],"answer":0,"explain":"Active constructive response builds connection.","visual":"wave"},{"title":"Group Energy","kind":"Inclusion","prompt":"A quiet person is left out. What helps?","choices":["Invite their view","Ignore them","Mock silence","Talk louder"],"answer":0,"explain":"Including people raises group trust.","visual":"wave"}]};
-      const Config={appId:App.appId,storagePrefix:"kinetik_polished_productivity_charisma",collection:App.mode+"_records"};
-      const $=(s)=>document.querySelector(s);const $$=(s)=>Array.from(document.querySelectorAll(s));
-      const fallback={theme:"light",circleId:"standalone_demo",circleType:"family",personId:"standalone_person",memberId:"standalone_person",tab:"play",index:0,selected:null,checked:false,score:0,streak:0,sessions:0,done:{},customItems:[],installed:{},step:0,wheel:0};
-      const state=Object.assign(fallback,readJson(Config.storagePrefix+"_state",{}));state.embedded=isEmbedded();setTheme(state.theme,false);listen();wire();render();
-      function isEmbedded(){try{return window.self!==window.top}catch(e){return true}}
-      const Bridge={send(type,payload){if(!state.embedded||!window.parent||window.parent===window)return;window.parent.postMessage({type,appId:Config.appId,payload},"*")}};
-      function listen(){window.addEventListener("message",(event)=>{const msg=event.data||{};if(msg.type!=="INIT_APP")return;const p=msg.payload||{};state.circleId=p.circleId||state.circleId;state.circleType=p.circleType||state.circleType;state.personId=p.personId||p.memberId||state.personId;state.memberId=p.memberId||p.personId||state.memberId;if(p.theme)setTheme(p.theme,true);save();render()})}
-      function wire(){$("#themeBtn").onclick=()=>setTheme(state.theme==="dark"?"light":"dark",true);$$(".tab").forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;save();render()});$("#next").onclick=next;$("#primary").onclick=primary}
-      function render(){$("#circleLine").textContent=(state.embedded?"":"Standalone ")+titleCase(state.circleType)+" circle";$("#score").textContent=state.score;$("#streak").textContent=state.streak;$("#session").textContent=state.sessions;$$(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===state.tab));["play","progress","about"].forEach(id=>$("#"+id).classList.toggle("active",state.tab===id));renderPlay();renderProgress();renderAbout();renderButtons()}
-      function renderPlay(){if(App.mode==="store")return renderStore();if(App.mode==="grocery")return renderGrocery();if(App.mode==="recipe")return renderRecipe();return renderChallenge()}
-      function renderStore(){const featured=(App.items||[]).slice(0,6);$("#play").innerHTML='<div class="hscroll">'+featured.map(item=>'<button class="tile appcard" style="--x:'+item.gradient[0]+';--y:'+item.gradient[1]+'" data-app="'+escAttr(item.appId)+'"><span class="appicon">'+esc(item.icon)+'</span><b>'+esc(item.name)+'</b><span>'+esc(item.tagline)+'</span><span class="chip">'+(state.installed[item.appId]?"OPEN":"GET")+'</span></button>').join("")+'</div><div class="panel" style="margin-top:12px"><div class="panel-head"><div><h3>Browse all apps</h3><p class="muted">Local Kinetik apps discovered from rebuilt manifests.</p></div></div><div class="grid two">'+(App.items||[]).map(item=>'<button class="tile" data-app="'+escAttr(item.appId)+'"><span class="row"><span class="appicon" style="background:linear-gradient(135deg,'+item.gradient[0]+','+item.gradient[1]+')">'+esc(item.icon)+'</span><span><b>'+esc(item.name)+'</b><span>'+esc(item.category)+'</span></span><span class="chip">'+(state.installed[item.appId]?"OPEN":"GET")+'</span></span></button>').join("")+'</div></div>';$$("[data-app]").forEach(btn=>btn.onclick=()=>{const id=btn.dataset.app;state.installed[id]=true;complete(1,"Installed "+id);Bridge.send("OPEN_APP",{appId:id})})}
-      function renderGrocery(){const sections=App.sections||[];$("#play").innerHTML=sections.map((section,idx)=>{const items=idx===0?section.items.concat(state.customItems||[]):section.items;return '<div class="panel"><div class="panel-head"><div><h3>'+esc(section.icon)+' '+esc(section.name)+'</h3><p class="muted">Tap to move items into cart.</p></div><span class="chip">'+items.filter(item=>state.done[section.name+'_'+item]).length+'/'+items.length+'</span></div><div class="grid">'+items.map(item=>row(section.name,item)).join("")+'</div></div>'}).join("")+'<div class="panel"><div class="inputrow"><input class="input" id="addInput" placeholder="Add item"><button class="secondary" id="addBtn">Add</button></div></div>';$$("[data-item]").forEach(b=>b.onclick=()=>{state.done[b.dataset.key]=!state.done[b.dataset.key];complete(1,"Cart updated");render()});$("#addBtn").onclick=()=>{const input=$("#addInput");const text=input.value.trim();if(!text)return;state.customItems.push(text);input.value="";complete(1,"Item added");render()}}
-      function renderRecipe(){const recipe=(App.recipes||[])[state.index%(App.recipes||[]).length];const active=recipe.steps[state.step]||recipe.steps[0];$("#play").innerHTML='<div class="panel"><div class="visual">'+visual("recipe",recipe)+'</div><span class="chip">'+esc(recipe.type)+' / '+recipe.time+' min</span><h2 class="prompt">'+esc(recipe.title)+'</h2><p class="muted">'+esc(recipe.ingredients.join(", "))+'</p></div><div class="panel"><div class="panel-head"><div><h3>Step '+(state.step+1)+'</h3><p class="muted">'+esc(active)+'</p></div><span class="chip">'+(state.step+1)+'/'+recipe.steps.length+'</span></div><div class="meter"><i style="width:'+Math.round((state.step+1)/recipe.steps.length*100)+'%"></i></div></div>'}
-      function renderChallenge(){const item=current();$("#play").innerHTML='<div class="panel"><div class="visual">'+visual(item.visual||App.mode,item)+'</div><span class="chip">'+esc(item.kind)+'</span><h2 class="prompt">'+esc(item.prompt)+'</h2><div class="choices">'+item.choices.map((choice,i)=>'<button class="choice '+choiceClass(i)+'" data-choice="'+i+'">'+esc(choice)+'</button>').join("")+'</div><div class="feedback '+(state.checked?'show':'')+'"><b>'+(state.selected===item.answer?'Correct':'Try this idea')+'</b><p>'+esc(item.explain)+'</p></div></div>';$$("[data-choice]").forEach(btn=>btn.onclick=()=>{if(state.checked)return;state.selected=Number(btn.dataset.choice);save();render()})}
-      function renderProgress(){$("#progress").innerHTML='<div class="panel"><div class="panel-head"><div><h3>Progress</h3><p class="muted">Saved locally for this app and circle.</p></div><span class="chip">'+state.score+' pts</span></div><div class="meter"><i style="width:'+Math.min(100,state.score%101)+'%"></i></div></div><div class="grid two"><div class="tile"><b>'+state.score+'</b><span>Total score</span></div><div class="tile"><b>'+state.streak+'</b><span>Current streak</span></div><div class="tile"><b>'+state.sessions+'</b><span>Sessions</span></div><div class="tile"><b>'+esc(App.analog)+'</b><span>Analog target</span></div></div>'}
-      function renderAbout(){$("#about").innerHTML='<div class="panel"><span class="chip">'+esc(App.mode)+'</span><h2 class="prompt">'+esc(App.name)+'</h2><p class="muted">'+esc(App.about)+'</p></div><div class="panel"><h3>Interaction target</h3><p class="muted">'+esc(App.analog)+'</p></div>'}
-      function renderButtons(){if(App.mode==="store"){$("#primary").textContent="Install featured";$("#next").textContent="Reset"}else if(App.mode==="grocery"){$("#primary").textContent="Finish shop";$("#next").textContent="Clear"}else if(App.mode==="recipe"){$("#primary").textContent="Next step";$("#next").textContent="Recipe"}else{$("#primary").textContent=state.checked?"Continue":"Check";$("#primary").disabled=state.selected==null;$("#next").textContent=App.mode==="spin"?"Spin":"Next"}}
-      function primary(){if(App.mode==="store"){const first=(App.items||[])[0];if(first){state.installed[first.appId]=true;complete(1,"Featured installed");render()}return}if(App.mode==="grocery"){complete(8,"Shopping saved");return}if(App.mode==="recipe"){const recipe=(App.recipes||[])[state.index%(App.recipes||[]).length];if(state.step<recipe.steps.length-1){state.step++;save();render()}else{complete(12,"Cooked saved");next()}return}if(!state.checked){check();return}next()}
-      function check(){const item=current();state.checked=true;if(state.selected===item.answer){complete(10,"Correct")}else{state.streak=0;toast(item.explain);save()}Bridge.send("DATA_CREATE",{collection:Config.collection,payload:record({item:item.title,correct:state.selected===item.answer})});render()}
-      function next(){if(App.mode==="store"){state.installed={};save();render();return}if(App.mode==="grocery"){state.done={};save();render();return}if(App.mode==="recipe"){state.index=(state.index+1)%(App.recipes||[]).length;state.step=0;save();render();return}if(App.mode==="spin"){state.wheel=(state.wheel+137)%360}state.index=(state.index+1)%(App.items||[]).length;state.selected=null;state.checked=false;save();render()}
-      function complete(points,msg){state.score+=points;state.streak+=1;state.sessions+=1;save();toast(msg||"Saved")}
-      function row(section,item){const key=section+"_"+item;return '<button class="tile '+(state.done[key]?'done':'')+'" data-item data-key="'+escAttr(key)+'"><span class="row"><span class="check">OK</span><span class="row-label">'+esc(item)+'</span><span class="muted">'+esc(section)+'</span></span></button>'}
-      function current(){return (App.items||[])[state.index%(App.items||[]).length]}
-      function choiceClass(i){if(state.selected===i&&!state.checked)return"selected";if(state.checked&&i===current().answer)return"correct";if(state.checked&&i===state.selected&&i!==current().answer)return"wrong";return""}
-      function record(extra){return Object.assign({circleId:state.circleId,circleType:state.circleType,appId:Config.appId,ownerPersonId:state.personId,createdAt:new Date().toISOString()},extra||{})}
-      function visual(type,item){if(type==="clock")return clock(item.hour,item.minute);if(type==="spin")return spin();if(type==="bars"||type==="line"||type==="dots"||type==="people")return chart(type);if(type==="chess")return board();if(type==="ladder")return ladder();if(type==="wave")return wave();if(type==="habit")return habit();if(type==="wisdom")return wisdom();return generic(type)}
-      function generic(type){return '<svg viewBox="0 0 260 150"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--a)"/><stop offset="1" stop-color="var(--b)"/></linearGradient></defs><rect x="30" y="26" width="200" height="98" rx="32" fill="url(#g)" opacity=".16"/><circle cx="82" cy="76" r="34" fill="url(#g)" opacity=".88"/><rect x="126" y="48" width="78" height="14" rx="7" fill="url(#g)" opacity=".9"/><rect x="126" y="72" width="56" height="14" rx="7" fill="url(#g)" opacity=".56"/><rect x="126" y="96" width="88" height="14" rx="7" fill="url(#g)" opacity=".34"/></svg>'}
-      function chart(type){return '<svg viewBox="0 0 260 150"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--a)"/><stop offset="1" stop-color="var(--b)"/></linearGradient></defs><rect x="38" y="30" width="184" height="96" rx="24" fill="url(#g)" opacity=".12"/><rect x="60" y="82" width="24" height="28" rx="8" fill="url(#g)"/><rect x="102" y="58" width="24" height="52" rx="8" fill="url(#g)" opacity=".82"/><rect x="144" y="72" width="24" height="38" rx="8" fill="url(#g)" opacity=".62"/><path d="M62 88c28-36 54 10 82-20s42-2 58-28" fill="none" stroke="url(#g)" stroke-width="8" stroke-linecap="round" opacity="'+(type==="line"?".9":".2")+'"/></svg>'}
-      function board(){let s='<svg viewBox="0 0 160 160">';for(let y=0;y<4;y++){for(let x=0;x<4;x++){s+='<rect x="'+(22+x*28)+'" y="'+(22+y*28)+'" width="28" height="28" fill="'+((x+y)%2?'var(--a)':'var(--solid)')+'" opacity="'+((x+y)%2?'.72':'1')+'"/>'}}return s+'<text x="80" y="94" text-anchor="middle" font-size="34" fill="var(--ink)">N</text></svg>'}
-      function ladder(){return '<svg viewBox="0 0 260 150"><path d="M58 120 188 28" stroke="var(--a)" stroke-width="12" stroke-linecap="round"/><path d="M86 126 216 34" stroke="var(--b)" stroke-width="12" stroke-linecap="round"/><path d="M82 104h54M112 82h54M142 60h54" stroke="var(--ink)" stroke-width="8" stroke-linecap="round" opacity=".38"/><circle cx="68" cy="122" r="18" fill="var(--a)"/></svg>'}
-      function spin(){return '<svg viewBox="0 0 180 180"><g style="transform-origin:90px 90px;transform:rotate('+state.wheel+'deg)"><circle cx="90" cy="90" r="68" fill="var(--a)"/><path d="M90 90 90 22A68 68 0 0 1 158 90Z" fill="var(--b)"/><path d="M90 90 158 90A68 68 0 0 1 90 158Z" fill="var(--warn)"/><path d="M90 90 90 158A68 68 0 0 1 22 90Z" fill="var(--good)"/></g><circle cx="90" cy="90" r="22" fill="var(--solid)"/><path d="M90 8 104 34H76Z" fill="var(--ink)"/></svg>'}
-      function wave(){return '<svg viewBox="0 0 260 150"><path d="M40 94c24-42 42 42 68 0s42 42 68 0 28 12 44 0" fill="none" stroke="var(--a)" stroke-width="11" stroke-linecap="round"/><rect x="58" y="38" width="144" height="24" rx="12" fill="var(--b)" opacity=".22"/><circle cx="82" cy="104" r="18" fill="var(--b)"/></svg>'}
-      function habit(){return '<svg viewBox="0 0 260 150"><circle cx="92" cy="78" r="44" fill="var(--good)" opacity=".8"/><path d="M78 78l12 12 28-32" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><rect x="146" y="48" width="58" height="16" rx="8" fill="var(--a)"/><rect x="146" y="76" width="78" height="16" rx="8" fill="var(--b)" opacity=".7"/></svg>'}
-      function wisdom(){return '<svg viewBox="0 0 260 150"><rect x="66" y="26" width="128" height="98" rx="24" fill="var(--solid)" stroke="var(--line)"/><rect x="84" y="48" width="92" height="12" rx="6" fill="var(--a)"/><rect x="84" y="72" width="68" height="12" rx="6" fill="var(--b)" opacity=".72"/><rect x="84" y="96" width="84" height="12" rx="6" fill="var(--warn)" opacity=".56"/></svg>'}
-      function clock(h,m){const hour=((h%12)*30)+(m*.5)-90;const min=(m*6)-90;let ticks="";[12,3,6,9].forEach(n=>{const a=(n===12?-90:n*30-90)*Math.PI/180;const x=79+Math.cos(a)*61;const y=79+Math.sin(a)*61;ticks+='<span class="tick" style="transform:translate(-50%,-50%);left:'+x+'px;top:'+y+'px">'+n+'</span>'});return '<div class="clock">'+ticks+'<span class="hand hour" style="transform:rotate('+hour+'deg)"></span><span class="hand minute" style="transform:rotate('+min+'deg)"></span><span class="pin"></span></div>'}
-      function setTheme(theme,persist){state.theme=theme==="dark"?"dark":"light";document.documentElement.dataset.theme=state.theme;document.querySelector("meta[name='theme-color']").setAttribute("content",state.theme==="dark"?"#08101b":"#f7faff");if(persist)save()}
-      function save(){localStorage.setItem(Config.storagePrefix+"_state",JSON.stringify(state))}
-      function readJson(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
-      function toast(m){const n=$("#toast");n.textContent=m;n.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>n.classList.remove("show"),1500)}
-      function titleCase(v){v=String(v||"");return v.charAt(0).toUpperCase()+v.slice(1)}
-      function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-      function escAttr(v){return esc(v).replace(/\x60/g,"&#096;")}
-    })();
-  </script>
+
+    <!-- ============ LEARN ============ -->
+    <section class="screen" id="s-learn">
+      <header class="top"><div class="hi"><div class="k">Learn</div><h1>The 3 pillars</h1></div></header>
+      <div class="scroll">
+        <p style="font-size:13.5px;color:var(--muted);line-height:1.45;margin:0 2px 14px">Charisma isn't a gift — it's three trainable skills. Tap a pillar to study it.</p>
+        <div id="pillars"></div>
+        <div class="sectlbl">The 12 charismatic tactics</div>
+        <p style="font-size:12.5px;color:var(--muted);line-height:1.4;margin:0 2px 12px">Antonakis's research-backed moves great speakers use. Tap to learn one.</p>
+        <div class="tlist" id="tactics"></div>
+        <div class="sectlbl">Foundations</div>
+        <div class="rowcard" id="scienceRow"><div class="ic">🔬</div><div class="tx"><b>The science of charisma</b><p>Where this all comes from — and the proof it's learnable.</p></div><span class="chev">›</span></div>
+      </div>
+    </section>
+
+    <!-- ============ PRACTICE ============ -->
+    <section class="screen" id="s-practice">
+      <header class="top"><div class="hi"><div class="k">Practice</div><h1>Scenario studio</h1></div></header>
+      <div class="scroll">
+        <p style="font-size:13.5px;color:var(--muted);line-height:1.45;margin:0 2px 14px">Real moments, real choices. Pick the most charismatic response and learn why.</p>
+        <div class="sectlbl">Scenarios</div>
+        <div id="scenarioList"></div>
+        <div class="sectlbl">Quick drills</div>
+        <div id="drillList"></div>
+      </div>
+    </section>
+
+    <!-- ============ PROGRESS ============ -->
+    <section class="screen" id="s-progress">
+      <header class="top"><div class="hi"><div class="k">Progress</div><h1 id="pTitle">Your signature</h1></div></header>
+      <div class="scroll">
+        <div class="panel sigwrap" id="progSig"></div>
+        <div class="bars panel" style="margin-top:14px">
+          <div class="bar"><div class="lab"><span><span class="dotw" style="background:var(--warmc)"></span> Warmth</span><span id="pwV">0</span></div><div class="track"><i id="pwBar" style="background:var(--warmc)"></i></div></div>
+          <div class="bar"><div class="lab"><span><span class="dotw" style="background:var(--compc)"></span> Competence</span><span id="pcV">0</span></div><div class="track"><i id="pcBar" style="background:var(--compc)"></i></div></div>
+        </div>
+        <div class="sectlbl">Daily practice</div>
+        <div class="panel"><div class="cal" id="cal"></div></div>
+        <div class="sectlbl">Pillar mastery</div>
+        <div class="panel" id="pillarRings" style="display:flex;justify-content:space-around"></div>
+        <div class="sectlbl">Badges</div>
+        <div class="badges" id="badges"></div>
+        <div class="sectlbl">Tactics mastered</div>
+        <div class="panel"><div class="tlist" id="tacRings"></div></div>
+      </div>
+    </section>
+
+    <!-- ============ ME ============ -->
+    <section class="screen" id="s-me">
+      <header class="top"><div class="hi"><div class="k">You</div><h1>Settings</h1></div></header>
+      <div class="scroll">
+        <div class="rowcard" id="meScience"><div class="ic">🔬</div><div class="tx"><b>The science</b><p>Cabane · Antonakis · Van Edwards — and the sources.</p></div><span class="chev">›</span></div>
+        <div class="rowcard" id="meTheme"><div class="ic">🌓</div><div class="tx"><b>Appearance</b><p id="themeNow">Light</p></div><span class="chev">›</span></div>
+        <div class="rowcard" id="meReset"><div class="ic">↺</div><div class="tx"><b>Reset progress</b><p>Clear your signature, streak and history.</p></div><span class="chev">›</span></div>
+        <p style="font-size:11.5px;color:var(--faint);text-align:center;line-height:1.5;margin-top:16px">Charisma Coach · a Kinetik app.<br>Practice beats theory — small reps, every day.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- bottom nav -->
+  <nav class="nav" id="nav">
+    <button data-tab="today" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Today</span><span class="ind"></span></button>
+    <button data-tab="learn"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M18 3v16"/></svg><span>Learn</span><span class="ind"></span></button>
+    <button data-tab="practice"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/></svg><span>Practice</span><span class="ind"></span></button>
+    <button data-tab="progress"><svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16l4-5 3 3 4-6"/></svg><span>Progress</span><span class="ind"></span></button>
+    <button data-tab="me"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span>You</span><span class="ind"></span></button>
+  </nav>
+
+  <!-- daily session deck -->
+  <section id="deck">
+    <header class="dhead"><button class="x" id="deckClose">✕</button><div class="dbar"><i id="deckProg"></i></div></header>
+    <div class="dbody" id="deckBody"></div>
+    <footer class="dfoot"><button class="btn" id="deckNext">Continue</button></footer>
+  </section>
+
+  <!-- reader sheet -->
+  <section id="sheet"><div class="body"><div class="grab"></div><div class="inner" id="sheetInner"></div></div></section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+const APP_ID="charisma-coach", PREFIX="kinetik_charisma_coach";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+const today=()=>new Date().toISOString().slice(0,10);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const pickN=(arr,n)=>shuffle(arr.slice()).slice(0,n);
+
+/* ===================== CONTENT (swap this block for sibling Deck apps) ===================== */
+const PILLARS=[
+ {id:"presence",name:"Presence",icon:"🧘",grad:["#7c9cff","#5b8cff"],axis:"both",
+  blurb:"Be fully here. People feel charismatic attention before they hear a charismatic word.",
+  lessons:[
+   {t:"The 3-breath reset",b:"Before you walk in, take three slow breaths and drop your attention into your body. Presence starts by leaving your own head."},
+   {t:"Listen to understand",b:"Don't plan your reply while they talk. Let a beat of silence land after they finish — it signals you actually heard them."},
+   {t:"Eyes up, phone away",b:"Put the phone fully away. Steady, soft eye contact with natural breaks is the clearest signal that someone has your attention."}]},
+ {id:"power",name:"Power",icon:"⚡",grad:["#5b8cff","#8b5cf6"],axis:"competence",
+  blurb:"Perceived ability to make things happen — posture, voice and language that signal calm authority.",
+  lessons:[
+   {t:"Stand like you belong",b:"Feet grounded, shoulders back and down, chin level. An open, settled posture reads as confidence before you say a word."},
+   {t:"Drop the hedges",b:"Cut <b>just, maybe, sort of, I think</b>. \"I'd like five minutes\" beats \"I was just wondering if maybe I could grab a sec?\""},
+   {t:"Land your sentences",b:"Let your pitch fall at the end of statements instead of rising. A downward inflection sounds certain; an upward one sounds unsure."}]},
+ {id:"warmth",name:"Warmth",icon:"❤️",grad:["#fc5c7d","#f7b733"],axis:"warmth",
+  blurb:"Perceived goodwill — the sense you'll use your power in others' interest. It's what makes power trustworthy.",
+  lessons:[
+   {t:"Make them feel seen",b:"Use their name, reference what they said earlier, ask the follow-up. People glow when they feel remembered."},
+   {t:"Validate before you respond",b:"\"That makes sense\" first, then your point. A validated person can actually hear you; a dismissed one defends."},
+   {t:"The old-friend reframe",b:"Walk in imagining they're already a friend you're glad to see. Your face and voice soften automatically."}]}
+];
+const TACTICS=[
+ {id:"metaphor",name:"Metaphor & analogy",type:"Verbal",pillar:"power",blurb:"Paint the idea as a picture so it sticks and feels vivid.",ex:"\"We're not patching a leak — we're rebuilding the dam.\""},
+ {id:"story",name:"Stories & anecdotes",type:"Verbal",pillar:"warmth",blurb:"A 20-second story lands deeper than a list of facts.",ex:"\"Last year a customer called at 2am, and what we did next changed everything…\""},
+ {id:"contrast",name:"Contrast",type:"Verbal",pillar:"power",blurb:"Pair what-is against what-could-be. Contrast creates clarity and drama.",ex:"\"This isn't about working harder — it's about working on the right thing.\""},
+ {id:"rhetq",name:"Rhetorical questions",type:"Verbal",pillar:"presence",blurb:"A question they answer in their head pulls them in.",ex:"\"What would you do if you knew you couldn't fail?\""},
+ {id:"triad",name:"Three-part lists",type:"Verbal",pillar:"power",blurb:"Three beats feel complete and memorable.",ex:"\"Simple, fast, and fair.\""},
+ {id:"moral",name:"Moral conviction",type:"Verbal",pillar:"power",blurb:"State what you stand for. Conviction is magnetic.",ex:"\"I believe no one on this team should ever feel invisible.\""},
+ {id:"reflect",name:"Reflect the group",type:"Verbal",pillar:"warmth",blurb:"Name what the room is feeling. People follow those who 'get' them.",ex:"\"I know everyone's exhausted — and proud of how far we've come.\""},
+ {id:"highgoal",name:"High goals",type:"Verbal",pillar:"power",blurb:"Set an ambitious, vivid target.",ex:"\"By spring, every family in this circle will have a plan they love.\""},
+ {id:"confidence",name:"Confidence it's possible",type:"Verbal",pillar:"power",blurb:"Pair the big goal with belief it can be reached.",ex:"\"It's a stretch — and we have exactly what it takes.\""},
+ {id:"voice",name:"Animated voice",type:"Nonverbal",pillar:"presence",blurb:"Vary pitch, pace and volume. A flat voice kills the best words.",ex:"Slow down on the key line. Drop your volume so people lean in."},
+ {id:"face",name:"Expressive face",type:"Nonverbal",pillar:"warmth",blurb:"Let your face show the feeling. A genuine smile reaches the eyes.",ex:"React visibly — surprise, delight, concern — instead of a poker face."},
+ {id:"gesture",name:"Purposeful gestures",type:"Nonverbal",pillar:"power",blurb:"Open, deliberate hand gestures emphasise and signal confidence.",ex:"Show 'three points' on your fingers; open palms read as honest."}
+];
+const SCENARIOS=[
+ {id:"venting",icon:"😮‍💨",title:"A friend is venting",skill:"warmth",ctx:"Your friend just had a brutal day and is unloading about their boss.",prompt:"What's the most charismatic response?",opts:[
+   {t:"\"You should just talk to HR about it.\"",w:1,c:2,fb:"Jumping to advice skips the human. They want to feel heard first, not managed.",tac:null},
+   {t:"\"Ugh, that sounds exhausting. What happened?\"",w:5,c:2,best:true,fb:"You validated the feeling and invited more. People open up to those who make them feel seen.",tac:"reflect"},
+   {t:"\"That's nothing, wait till you hear my day.\"",w:0,c:1,fb:"Hijacking the moment kills warmth. Charismatic people give the spotlight, they don't steal it.",tac:null}]},
+ {id:"network",icon:"🤝",title:"Networking intro",skill:"presence",ctx:"You meet someone new at an event. They ask, \"So what do you do?\"",prompt:"Pick the most magnetic answer.",opts:[
+   {t:"\"I'm, uh, just a project manager, nothing exciting.\"",w:2,c:0,fb:"Hedging and shrinking ('just', 'nothing exciting') leaks both warmth and competence.",tac:null},
+   {t:"\"I help teams turn chaos into a plan they actually follow.\"",w:3,c:5,best:true,fb:"A vivid, benefit-first line with a mini-contrast. Memorable and confident.",tac:"contrast"},
+   {t:"\"Project management at a mid-size logistics firm since 2019.\"",w:1,c:3,fb:"Accurate but forgettable — it's a résumé line, not a hook.",tac:null}]},
+ {id:"disagree",icon:"🙃",title:"You disagree in a meeting",skill:"power",ctx:"A teammate proposes a plan you think is risky. All eyes turn to you.",prompt:"Most charismatic way to push back?",opts:[
+   {t:"\"Yeah no, that won't work.\"",w:0,c:2,fb:"Blunt dismissal spends warmth for no extra clarity. People dig in when dismissed.",tac:null},
+   {t:"\"I love the ambition here. My one worry is timing — can we ship it in two phases?\"",w:5,c:5,best:true,fb:"Validate, then redirect with a concrete path. Warmth + competence together = persuasive.",tac:"reflect"},
+   {t:"\"I guess we could try it, maybe, if everyone's okay?\"",w:2,c:0,fb:"All hedges. You sound unsure of your own concern.",tac:null}]},
+ {id:"praise",icon:"🌟",title:"Giving praise",skill:"warmth",ctx:"A teammate nailed a tough task. You want to recognise them.",prompt:"Which praise lands hardest?",opts:[
+   {t:"\"Good job!\"",w:3,c:1,fb:"Kind but generic — it could be said to anyone about anything.",tac:null},
+   {t:"\"The way you calmed that angry client and turned it around? That's rare. Thank you.\"",w:5,c:4,best:true,fb:"Specific + names the trait + a story beat. Specific praise feels true and is remembered.",tac:"story"},
+   {t:"\"Finally, someone did it right.\"",w:0,c:2,fb:"Backhanded praise stings more than it warms.",tac:null}]},
+ {id:"interview",icon:"💼",title:"The interview question",skill:"power",ctx:"\"Tell me about a weakness.\"",prompt:"Most charismatic answer?",opts:[
+   {t:"\"I'm a perfectionist, I guess.\"",w:1,c:0,fb:"The cliché answer reads as evasive. It signals low self-awareness.",tac:null},
+   {t:"\"I used to avoid hard feedback. I now ask for it weekly — last quarter it changed how I run reviews.\"",w:4,c:5,best:true,fb:"Honest + growth + a concrete result. Vulnerability with competence is deeply charismatic.",tac:"story"},
+   {t:"\"I don't really have weaknesses that matter for this role.\"",w:0,c:2,fb:"Reads as arrogant and untrue — it lowers warmth fast.",tac:null}]},
+ {id:"smalltalk",icon:"💬",title:"Beat the small talk",skill:"presence",ctx:"You're stuck in a dull 'how was your weekend' exchange.",prompt:"Most engaging move?",opts:[
+   {t:"\"Good, you?\" then silence.",w:1,c:1,fb:"The conversation flatlines. Closed answers give the other person nothing.",tac:null},
+   {t:"\"Honestly the highlight was a tiny thing — what about you, best moment?\"",w:5,c:3,best:true,fb:"You share a real detail and hand them an easy, specific question. That's how rapport starts.",tac:"rhetq"},
+   {t:"\"Fine. Anyway, about the project…\"",w:0,c:2,fb:"Snapping to business skips the human warmth that earns attention.",tac:null}]},
+ {id:"room",icon:"🎤",title:"Opening a toast",skill:"power",ctx:"You're asked to say a few words at a family gathering. Everyone goes quiet.",prompt:"Strongest opening line?",opts:[
+   {t:"\"Um, I'm not really good at speeches, so…\"",w:1,c:0,fb:"Apologising up front tells everyone to expect little. Never open by shrinking.",tac:null},
+   {t:"\"Three things make this family rare: we show up, we laugh hard, and we never let anyone fall.\"",w:4,c:5,best:true,fb:"A confident three-part list with warmth baked in. Structure makes you sound prepared.",tac:"triad"},
+   {t:"\"I'll keep this short because I hate being up here.\"",w:1,c:1,fb:"Self-deprecation about the moment pulls energy out of the room.",tac:null}]},
+ {id:"feedback",icon:"🪞",title:"Hard feedback",skill:"warmth",ctx:"You need to tell a teammate their report missed the mark.",prompt:"Most charismatic delivery?",opts:[
+   {t:"\"This report is wrong, redo it.\"",w:0,c:2,fb:"True maybe, but it spends all your warmth and triggers defensiveness.",tac:null},
+   {t:"\"I can see the effort here. The data's solid — the story on top needs work. Want to rebuild it together?\"",w:5,c:4,best:true,fb:"Acknowledge effort, separate good from gap, offer partnership. They leave motivated, not crushed.",tac:"contrast"},
+   {t:"\"It's fine, I'll just fix it myself.\"",w:1,c:1,fb:"Avoiding the conversation robs them of growth and quietly lowers trust.",tac:null}]}
+];
+const DRILLS=[
+ {id:"hedge",icon:"✂️",title:"Drop the hedge",skill:"power",axis:"c",prompt:"Pick the version that sounds most confident.",opts:[
+   {t:"\"I was just wondering if maybe we could possibly start soon?\"",fb:""},
+   {t:"\"Let's begin.\"",best:true,fb:"Confident language is lean. Every hedge — just, maybe, possibly — quietly leaks authority."},
+   {t:"\"I think we should sort of get going, if that's okay?\"",fb:""}]},
+ {id:"warmthcue",icon:"💛",title:"Spot the warmth",skill:"warmth",axis:"w",prompt:"Which reply makes the other person feel most seen?",opts:[
+   {t:"\"Noted.\"",fb:""},
+   {t:"\"That's a great point, Sam — it actually changes how I'd approach this.\"",best:true,fb:"Using their name + crediting their idea is a pure warmth cue. People remember feeling valued."},
+   {t:"\"Sure, whatever works.\"",fb:""}]},
+ {id:"metaphor",icon:"🎨",title:"Make it vivid",skill:"power",axis:"c",prompt:"Which line uses a metaphor to make the point stick?",opts:[
+   {t:"\"Our process is inefficient and slow.\"",fb:""},
+   {t:"\"Our process is a garden hose with ten kinks — straighten them and it flows.\"",best:true,fb:"A picture beats an adjective. Metaphors make abstract problems instantly graspable."},
+   {t:"\"We have several process-related issues to address.\"",fb:""}]},
+ {id:"triad",icon:"3️⃣",title:"The rule of three",skill:"power",axis:"c",prompt:"Which version is most memorable?",opts:[
+   {t:"\"We're reliable and also pretty affordable and the support is decent too.\"",fb:""},
+   {t:"\"Reliable. Affordable. Always there.\"",best:true,fb:"Three crisp beats feel complete and stick in memory. Great speakers list in threes."},
+   {t:"\"We offer a number of competitive advantages.\"",fb:""}]},
+ {id:"validate",icon:"🤲",title:"Validate first",skill:"warmth",axis:"w",prompt:"Your partner says they're stressed about money. Best first response?",opts:[
+   {t:"\"Just make a budget, it's not that hard.\"",fb:""},
+   {t:"\"That weight is real — I'm glad you told me. Let's look at it together.\"",best:true,fb:"Validation before solution. People can only hear advice once they feel understood."},
+   {t:"\"We're fine, you worry too much.\"",fb:""}]}
+];
+const QUOTES=[
+ {t:"Charisma is not something you have. It's something you learn to do.",a:"Olivia Fox Cabane"},
+ {t:"People judge your warmth first, your competence second — and they decide in seconds.",a:"Vanessa Van Edwards"},
+ {t:"Great speakers aren't born. They use tactics anyone can learn.",a:"John Antonakis"},
+ {t:"Presence is the rarest gift you can give: your full attention.",a:"The Charisma Myth"},
+ {t:"Warmth without competence is liked but not followed. Competence without warmth is respected but not trusted.",a:"Cues"}];
+
+/* ===================== STATE ===================== */
+const DEFAULT={theme:"light",warmth:28,competence:28,xp:0,sessions:0,streak:0,lastDay:"",activeDays:[],
+  mastery:{},insights:[],badges:[],seenScn:[],reflections:[],weekFocus:null,weekStart:""};
+let S=load();
+function load(){try{const o=Object.assign({},DEFAULT,JSON.parse(localStorage.getItem(PREFIX+"_state")||"{}"));o.mastery=o.mastery||{};return o;}catch(e){return Object.assign({},DEFAULT);}}
+function save(){try{localStorage.setItem(PREFIX+"_state",JSON.stringify(S));}catch(e){}}
+
+let CTX={circleType:"family",personId:"me",personName:""};
+const embedded=(()=>{try{return window.self!==window.top}catch(e){return true}})();
+if(embedded)document.body.classList.add("embedded");
+function bridge(type,payload){try{if(embedded&&window.parent&&window.parent!==window)window.parent.postMessage({type,appId:APP_ID,payload},"*");}catch(e){}}
+addEventListener("message",e=>{const m=e.data||{};if(m.type==="INIT_APP"&&m.payload){const p=m.payload;CTX.circleType=p.circleType||CTX.circleType;CTX.personId=p.personId||CTX.personId;const me=(p.people||[]).find(x=>x.id===CTX.personId);CTX.personName=(me&&me.name)||"";if(p.theme)setTheme(p.theme);renderAll();}});
+
+/* ===================== GAMIFICATION ===================== */
+const LEVELS=["Observer","Aware","Warming up","Engaging","Compelling","Magnetic","Captivating"];
+const levelNum=()=>clamp(1+Math.floor(S.xp/120),1,LEVELS.length);
+const levelName=()=>LEVELS[levelNum()-1];
+function quadrant(w,c){const W=w>=58,C=c>=58;if(W&&C)return"Magnetic";if(W)return"Lovable";if(C)return"Impressive";return"Working on it";}
+const mget=id=>S.mastery[id]||0;
+function mbump(id,n){if(!id)return;S.mastery[id]=clamp(mget(id)+n,0,100);}
+function award(w,c,opts){opts=opts||{};
+  S.warmth=clamp(S.warmth+(w||0),0,100);S.competence=clamp(S.competence+(c||0),0,100);
+  S.xp+=opts.xp||0; if(opts.skill)mbump(opts.skill,opts.m||10); if(opts.tac)mbump(opts.tac,opts.m||10);
+}
+function markDayActive(){const d=today();if(S.activeDays.indexOf(d)<0)S.activeDays.push(d);}
+function bumpStreak(){const d=today();if(S.lastDay===d)return;const y=new Date(Date.now()-864e5).toISOString().slice(0,10);
+  S.streak=(S.lastDay===y||!S.lastDay)?(S.streak||0)+1:1;S.lastDay=d;}
+const BADGES=[
+ {id:"first",e:"🌱",n:"First session",has:()=>S.sessions>=1},
+ {id:"streak3",e:"🔥",n:"3-day streak",has:()=>S.streak>=3},
+ {id:"streak7",e:"⚡",n:"7-day streak",has:()=>S.streak>=7},
+ {id:"warm",e:"❤️",n:"Warm (60+)",has:()=>S.warmth>=60},
+ {id:"comp",e:"👑",n:"Sharp (60+)",has:()=>S.competence>=60},
+ {id:"magnet",e:"✨",n:"Magnetic",has:()=>S.warmth>=60&&S.competence>=60},
+ {id:"tactics",e:"🎓",n:"All 12 tactics",has:()=>TACTICS.every(t=>mget(t.id)>0)},
+ {id:"insight",e:"💡",n:"5 insights",has:()=>S.insights.length>=5}];
+function checkBadges(){let gained=null;BADGES.forEach(b=>{if(b.has()&&S.badges.indexOf(b.id)<0){S.badges.push(b.id);gained=b;}});return gained;}
+
+/* weekly focus */
+function ensureFocus(){const ws=weekStartStr();if(S.weekStart!==ws||!S.weekFocus){S.weekStart=ws;S.weekFocus=TACTICS[Math.abs(hashStr(ws))%TACTICS.length].id;save();}}
+function weekStartStr(){const d=new Date();const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d.toISOString().slice(0,10);}
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++)h=(h<<5)-h+s.charCodeAt(i)|0;return h;}
+
+/* ===================== THEME / NAV ===================== */
+function setTheme(t){S.theme=t==="dark"?"dark":"light";document.documentElement.dataset.theme=S.theme;
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=S.theme==="dark"?"#140f22":"#fbf7f3";save();
+  const tn=$("#themeNow");if(tn)tn.textContent=S.theme==="dark"?"Dark":"Light";}
+function show(tab){$$(".screen").forEach(s=>s.classList.toggle("on",s.id==="s-"+tab));
+  $$("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
+  if(tab==="learn")renderLearn();if(tab==="practice")renderPractice();if(tab==="progress")renderProgress();if(tab==="me")$("#themeNow").textContent=S.theme==="dark"?"Dark":"Light";
+}
+
+/* ===================== SIGNATURE SVG ===================== */
+function signatureSVG(w,c){
+  const W=300,P=34,inner=W-P*2;
+  const x=P+(c/100)*inner, y=P+(1-w/100)*inner;
+  return `<div class="sig"><svg viewBox="-6 -6 ${W+12} ${W+18}">
+    <defs><radialGradient id="aura" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff"/><stop offset="35%" stop-color="${themeIsDark()?'#ffd27a':'#f7b733'}"/><stop offset="100%" stop-color="#fc5c7d"/></radialGradient>
+    <linearGradient id="qg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="color-mix(in srgb,var(--ink) 5%,transparent)"/><stop offset="1" stop-color="color-mix(in srgb,var(--coral) 16%,transparent)"/></linearGradient></defs>
+    <rect x="${P}" y="${P}" width="${inner}" height="${inner}" rx="20" fill="url(#qg)" stroke="var(--line2)"/>
+    <line x1="${P+inner/2}" y1="${P}" x2="${P+inner/2}" y2="${P+inner}" stroke="var(--line2)" stroke-dasharray="3 5"/>
+    <line x1="${P}" y1="${P+inner/2}" x2="${P+inner}" y2="${P+inner/2}" stroke="var(--line2)" stroke-dasharray="3 5"/>
+    <text class="quad" x="${P+8}" y="${P+16}">Lovable</text>
+    <text class="quad" x="${P+inner-8}" y="${P+16}" text-anchor="end" style="fill:var(--coral)">Magnetic</text>
+    <text class="quad" x="${P+8}" y="${P+inner-7}">Working on it</text>
+    <text class="quad" x="${P+inner-8}" y="${P+inner-7}" text-anchor="end">Impressive</text>
+    <text class="axislbl" x="${P+inner/2}" y="${W+10}" text-anchor="middle">Competence →</text>
+    <text class="axislbl" x="${-2}" y="${P+inner/2}" text-anchor="middle" transform="rotate(-90 -2 ${P+inner/2})">Warmth →</text>
+    <g class="dot" transform="translate(${x.toFixed(1)},${y.toFixed(1)})">
+      <circle r="26" fill="url(#aura)" opacity=".28"/><circle r="15" fill="url(#aura)" opacity=".5"/><circle r="8" fill="url(#aura)"/>
+      <circle r="8" fill="none" stroke="#fff" stroke-width="2"/></g>
+  </svg></div>`;
+}
+function themeIsDark(){return document.documentElement.dataset.theme==="dark";}
+function sigMetaHTML(){return `<div class="sigmeta">
+   <div class="m"><div class="lab"><span class="dotw" style="background:var(--warmc)"></span>Warmth</div><div class="v">${Math.round(S.warmth)}</div></div>
+   <div class="m"><div class="lab"><span class="dotw" style="background:var(--compc)"></span>Competence</div><div class="v">${Math.round(S.competence)}</div></div>
+   <div class="m"><div class="lab">Signature</div><div class="v" style="font-size:15px;line-height:1.9">${quadrant(S.warmth,S.competence)}</div></div></div>`;}
+
+function ring(pct,label,size){size=size||58;const r=size/2-5,c2=2*Math.PI*r,off=c2*(1-pct/100);
+  return `<div class="ringbox"><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--line2)" stroke-width="5"/>
+   <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="url(#rg)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${c2.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 ${size/2} ${size/2})"/>
+   <text x="${size/2}" y="${size/2+4}" text-anchor="middle" font-size="13" font-weight="900" fill="var(--ink)">${Math.round(pct)}</text></svg>${label?`<div class="rn">${label}</div>`:""}</div>`;}
+const RGDEF=`<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7b733"/><stop offset="1" stop-color="#fc5c7d"/></linearGradient></defs></svg>`;
+
+/* ===================== RENDER: TODAY ===================== */
+function renderToday(){
+  ensureFocus();
+  const hour=new Date().getHours();const part=hour<12?"morning":hour<18?"afternoon":"evening";
+  $("#greet").textContent="Good "+part+(CTX.personName?", "+CTX.personName.split(" ")[0]:"");
+  $("#tStreak").textContent=S.streak;$("#tLevel").textContent="Lv "+levelNum();
+  $("#tSessions").textContent=S.sessions;$("#tQuad").textContent=quadrant(S.warmth,S.competence).split(" ")[0];$("#tInsights").textContent=S.insights.length;
+  const doneToday=S.activeDays.indexOf(today())>=0;
+  $("#heroTitle").textContent=doneToday?"Nice — today's done ✨":"Your charisma, one rep at a time";
+  $("#heroSub").textContent=doneToday?"Come back tomorrow to keep your streak, or run a bonus session.":"A short coaching session: a principle, a real scenario, and one drill.";
+  $("#startBtn").textContent=doneToday?"▶ Bonus session":"▶ Start today's session";
+  const f=TACTICS.find(t=>t.id===S.weekFocus)||TACTICS[0];
+  $("#focusName").textContent=f.name;$("#focusBlurb").textContent=f.blurb;
+  $("#todaySig").innerHTML=RGDEF+signatureSVG(S.warmth,S.competence)+sigMetaHTML();
+}
+
+/* ===================== RENDER: LEARN ===================== */
+function renderLearn(){
+  $("#pillars").innerHTML=PILLARS.map(p=>`<div class="pillar" data-pillar="${p.id}">
+    <div class="ic" style="background:linear-gradient(135deg,${p.grad[0]},${p.grad[1]})">${p.icon}</div>
+    <div class="tx"><b>${p.name}</b><p>${p.blurb}</p></div>
+    ${ring(mget("pillar_"+p.id),"",46)}</div>`).join("")+RGDEF;
+  $("#tactics").innerHTML=TACTICS.map(t=>`<div class="tcard" data-tac="${t.id}"><div class="tag">${t.type}</div><b>${t.name}</b>
+    <div class="mini"><i style="width:${mget(t.id)}%"></i></div></div>`).join("");
+  $$("#pillars .pillar").forEach(el=>el.onclick=()=>openPillar(el.dataset.pillar));
+  $$("#tactics .tcard").forEach(el=>el.onclick=()=>openTactic(el.dataset.tac));
+  $("#scienceRow").onclick=openScience;
+}
+function openPillar(id){const p=PILLARS.find(x=>x.id===id);
+  sheet(`<div class="ic" style="width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-size:26px;color:#fff;background:linear-gradient(135deg,${p.grad[0]},${p.grad[1]})">${p.icon}</div>
+   <h2 style="font-size:24px;letter-spacing:-.02em;margin-top:12px">${p.name}</h2>
+   <p style="font-size:14px;color:var(--muted);line-height:1.5;margin-top:8px">${p.blurb}</p>
+   ${p.lessons.map(l=>`<div class="panel" style="margin-top:12px;box-shadow:none"><b style="font-size:15px">${l.t}</b><p style="font-size:14px;color:var(--muted);line-height:1.5;margin-top:6px">${l.b}</p></div>`).join("")}
+   <button class="btn" style="margin-top:18px" onclick="__startFocus('${p.lessons.length?'':''}')" id="sheetPractice">Practice this in a session</button>`);
+  setTimeout(()=>{const b=$("#sheetPractice");if(b)b.onclick=()=>{closeSheet();startSession();};},0);
+}
+function openTactic(id){const t=TACTICS.find(x=>x.id===id);const pil=PILLARS.find(p=>p.id===t.pillar);
+  sheet(`<div class="tag" style="font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--acc)">${t.type} tactic · ${pil?pil.name:""}</div>
+   <h2 style="font-size:24px;letter-spacing:-.02em;margin-top:8px">${t.name}</h2>
+   <p style="font-size:15px;color:var(--muted);line-height:1.5;margin-top:10px">${t.blurb}</p>
+   <div class="panel" style="margin-top:14px;box-shadow:none"><div class="tag" style="color:var(--faint);font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase">In action</div>
+     <p style="font-family:var(--serif);font-style:italic;font-size:17px;line-height:1.4;margin-top:8px">${esc(t.ex)}</p></div>
+   <div class="ringbox" style="margin:18px auto 0">${ring(mget(t.id),"Your mastery",70)}</div>${RGDEF}
+   <button class="btn" style="margin-top:18px" id="sheetPractice2">Practice in a session</button>`);
+  setTimeout(()=>{const b=$("#sheetPractice2");if(b)b.onclick=()=>{closeSheet();startSession();};},0);
+}
+function openScience(){
+  sheet(`<h2 style="font-size:24px;letter-spacing:-.02em">The science</h2>
+   <p style="font-size:14px;color:var(--muted);line-height:1.5;margin-top:8px">Charisma is measurable and trainable. Three bodies of work shape this app:</p>
+   ${[["The Charisma Myth — Olivia Fox Cabane","Charisma breaks into three learnable behaviours: <b>Presence, Power, Warmth</b>. You practise states and signals, not personality."],
+      ["12 Charismatic Leadership Tactics — Antonakis et al.","In controlled studies, training speakers in 12 specific tactics raised their charisma ratings by roughly <b>60%</b>. Nine are verbal, three nonverbal."],
+      ["Cues — Vanessa Van Edwards","First impressions hinge on two axes: <b>Warmth × Competence</b>. The most magnetic people score high on both — that's your Signature here."]]
+     .map(x=>`<div class="panel" style="margin-top:12px;box-shadow:none"><b style="font-size:15px">${x[0]}</b><p style="font-size:14px;color:var(--muted);line-height:1.5;margin-top:6px">${x[1]}</p></div>`).join("")}
+   <p style="font-size:12px;color:var(--faint);line-height:1.5;margin-top:16px">Sources: Cabane, <i>The Charisma Myth</i> (2012); Antonakis, Fenley & Liechti, “Learning Charisma”, HBR (2012) & “Can Charisma Be Taught?”; Van Edwards, <i>Cues</i> (2022).</p>`);
+}
+
+/* ===================== RENDER: PRACTICE ===================== */
+function renderPractice(){
+  $("#scenarioList").innerHTML=SCENARIOS.map(s=>{const done=S.seenScn.indexOf(s.id)>=0;
+    return `<div class="rowcard" data-scn="${s.id}"><div class="ic">${s.icon}</div><div class="tx"><b>${s.title}</b><p>${s.ctx}</p></div>${done?'<span class="done-pill">✓ done</span>':'<span class="chev">›</span>'}</div>`;}).join("");
+  $("#drillList").innerHTML=DRILLS.map(d=>`<div class="rowcard" data-drill="${d.id}"><div class="ic">${d.icon}</div><div class="tx"><b>${d.title}</b><p>${d.prompt}</p></div><span class="chev">›</span></div>`).join("");
+  $$("#scenarioList .rowcard").forEach(el=>el.onclick=()=>playSingle({type:"scenario",scenario:SCENARIOS.find(s=>s.id===el.dataset.scn)}));
+  $$("#drillList .rowcard").forEach(el=>el.onclick=()=>playSingle({type:"drill",drill:DRILLS.find(d=>d.id===el.dataset.drill)}));
+}
+
+/* ===================== RENDER: PROGRESS ===================== */
+function renderProgress(){
+  $("#progSig").innerHTML=RGDEF+signatureSVG(S.warmth,S.competence)+`<div style="text-align:center;margin-top:12px"><div style="font-size:13px;font-weight:850;color:var(--muted)">Charisma Level ${levelNum()}</div><div style="font-size:22px;font-weight:900;letter-spacing:-.02em;margin-top:2px">${levelName()}</div></div>`;
+  $("#pwV").textContent=Math.round(S.warmth);$("#pcV").textContent=Math.round(S.competence);
+  $("#pwBar").style.width=S.warmth+"%";$("#pcBar").style.width=S.competence+"%";
+  // calendar: last 28 days
+  const days=[];for(let i=27;i>=0;i--){const d=new Date(Date.now()-i*864e5).toISOString().slice(0,10);days.push(d);}
+  $("#cal").innerHTML=days.map(d=>`<div class="d ${S.activeDays.indexOf(d)>=0?'on':''}">${d.slice(8,10)}</div>`).join("");
+  $("#pillarRings").innerHTML=PILLARS.map(p=>ring(mget("pillar_"+p.id),p.name,64)).join("")+RGDEF;
+  $("#badges").innerHTML=BADGES.map(b=>`<div class="badge ${S.badges.indexOf(b.id)>=0?'got':''}"><div class="e">${b.e}</div><div class="n">${b.n}</div></div>`).join("");
+  $("#tacRings").innerHTML=TACTICS.map(t=>`<div class="tcard" style="cursor:default"><div class="tag">${t.type}</div><b>${t.name}</b><div class="mini"><i style="width:${mget(t.id)}%"></i></div></div>`).join("");
+}
+
+/* ===================== READER SHEET ===================== */
+function sheet(html){$("#sheetInner").innerHTML=html;$("#sheet").classList.add("on");}
+function closeSheet(){$("#sheet").classList.remove("on");}
+$("#sheet").onclick=e=>{if(e.target.id==="sheet")closeSheet();};
+
+/* ===================== DAILY SESSION (DECK) ===================== */
+const D={steps:[],i:0,answered:false,session:0,gains:{w:0,c:0,xp:0}};
+function buildSession(){
+  const steps=[];
+  const q=QUOTES[Math.abs(hashStr(today()+S.sessions))%QUOTES.length];
+  // 1 principle from a pillar lesson + 1 tactic spotlight
+  const pil=PILLARS[Math.floor(Math.random()*PILLARS.length)];const les=pil.lessons[Math.floor(Math.random()*pil.lessons.length)];
+  steps.push({type:"principle",pillar:pil,lesson:les});
+  steps.push({type:"quote",quote:q});
+  // 2 scenarios — prefer unseen
+  const unseen=SCENARIOS.filter(s=>S.seenScn.indexOf(s.id)<0);
+  const scn=(unseen.length>=2?pickN(unseen,2):pickN(SCENARIOS,2));
+  steps.push({type:"scenario",scenario:scn[0]});
+  // 1 drill
+  steps.push({type:"drill",drill:DRILLS[Math.floor(Math.random()*DRILLS.length)]});
+  steps.push({type:"scenario",scenario:scn[1]});
+  // reflection
+  steps.push({type:"reflect",prompt:reflectPrompt()});
+  return steps;
+}
+function reflectPrompt(){const ps=["Where could you use one of these moves today?","Who in your circle would you like to connect with better — and how?","Recall a time someone made you feel truly seen. What did they do?","What's one hedge word you'll drop this week?"];return ps[Math.abs(hashStr(today()+"r"+S.sessions))%ps.length];}
+
+function startSession(){D.steps=buildSession();D.i=0;D.gains={w:0,c:0,xp:0};$("#deck").classList.add("on");renderStep();}
+function endDeck(){$("#deck").classList.remove("on");}
+$("#deckClose").onclick=endDeck;
+
+function renderStep(){
+  D.answered=false;
+  $("#deckProg").style.width=(D.i/D.steps.length*100)+"%";
+  const st=D.steps[D.i];const body=$("#deckBody");body.scrollTop=0;
+  const next=$("#deckNext");next.className="btn";next.textContent=D.i+1>=D.steps.length?"Finish":"Continue";next.disabled=false;next.onclick=advance;
+  if(st.type==="principle"){
+    body.innerHTML=`<div class="card"><div class="kind">${st.pillar.name} · principle</div>
+      <div class="illus"><div class="auraorb" style="background:radial-gradient(circle at 38% 35%,#fff,${st.pillar.grad[0]} 34%,${st.pillar.grad[1]})"></div></div>
+      <div class="big">${st.lesson.t}</div><div class="body">${st.lesson.b}</div></div>`;
+    mbump("pillar_"+st.pillar.id,5);
+  } else if(st.type==="quote"){
+    body.innerHTML=`<div class="card" style="justify-content:center"><div class="kind">Insight</div>
+      <div class="quote">“${esc(st.quote.t)}”</div><div class="qby">— ${esc(st.quote.a)}</div></div>`;
+    next.textContent=D.i+1>=D.steps.length?"Finish":"Save & continue";
+    next.onclick=()=>{if(S.insights.indexOf(st.quote.t)<0){S.insights.push(st.quote.t);toast("Saved to your insights 💡");}advance();};
+  } else if(st.type==="scenario"){ renderChoice(body,next,st.scenario,true); }
+  else if(st.type==="drill"){ renderChoice(body,next,st.drill,false); }
+  else if(st.type==="reflect"){
+    body.innerHTML=`<div class="card reflect"><div class="kind">Reflect</div><div class="big">${st.prompt}</div>
+      <textarea id="reflectTxt" placeholder="Type a line for yourself… (optional)"></textarea></div>`;
+    next.textContent=D.i+1>=D.steps.length?"Finish":"Continue";
+    next.onclick=()=>{const v=($("#reflectTxt").value||"").trim();if(v){S.reflections.push({t:v,d:today()});D.gains.xp+=5;}advance();};
+  }
+}
+function renderChoice(body,next,item,isScn){
+  const opts=item.opts.map((o,idx)=>({o,idx}));
+  body.innerHTML=`<div class="card"><div class="kind">${isScn?"Scenario":"Drill"}${isScn&&item.icon?" "+item.icon:""}</div>
+    ${isScn?`<div class="body" style="margin:0 0 6px;color:var(--ink);font-weight:700">${item.ctx}</div>`:""}
+    <div class="big" style="font-size:21px">${item.prompt}</div>
+    <div class="opts">${opts.map(({o,idx})=>`<button class="opt" data-i="${idx}">${esc(o.t)}</button>`).join("")}</div>
+    <div class="fbcard" id="fb"><div class="ft" id="fbT"></div><p id="fbP"></p><span class="tac" id="fbTac" style="display:none"></span></div></div>`;
+  next.disabled=true;next.textContent="Pick one";
+  $$("#deckBody .opt").forEach(b=>b.onclick=()=>chooseOpt(+b.dataset.i,item,isScn,next));
+}
+function chooseOpt(i,item,isScn,next){
+  if(D.answered)return;D.answered=true;
+  const opt=item.opts[i];
+  const isBest=!!opt.best;
+  // determine "best" index for scenarios: highest w+c; for drills: opt.best
+  let bestIdx=-1;
+  if(isScn){let mx=-1;item.opts.forEach((o,k)=>{const s=(o.w||0)+(o.c||0);if(s>mx){mx=s;bestIdx=k;}});}
+  else {bestIdx=item.opts.findIndex(o=>o.best);}
+  $$("#deckBody .opt").forEach((b,k)=>{b.style.pointerEvents="none";if(k===bestIdx)b.classList.add("best");else if(k===i)b.classList.add("bad");
+    if(k===bestIdx)b.innerHTML+='<span class="mark" style="color:var(--good)">✓</span>';else if(k===i&&k!==bestIdx)b.innerHTML+='<span class="mark" style="color:var(--bad)">✕</span>';});
+  const good=(i===bestIdx);
+  // scoring
+  if(isScn){
+    const w=(opt.w||0), c=(opt.c||0);
+    award(w*0.9, c*0.9, {skill:item.skill, tac:opt.tac, m:good?12:5, xp:good?8:4});
+    D.gains.w+=w*0.9;D.gains.c+=c*0.9;D.gains.xp+=good?8:4;
+    if(S.seenScn.indexOf(item.id)<0)S.seenScn.push(item.id);
+  } else {
+    const aw=item.axis==="w";award(aw&&good?6:0, !aw&&good?6:0,{skill:item.skill,m:good?12:4,xp:good?6:3});
+    if(good){if(aw)D.gains.w+=6;else D.gains.c+=6;}D.gains.xp+=good?6:3;
+  }
+  // feedback
+  const fb=$("#fb");fb.classList.add("on");fb.classList.add(good?"good":"bad");
+  $("#fbT").textContent=good?"Charismatic ✓":"Almost";
+  $("#fbP").textContent=(isScn?item.opts[bestIdx].fb:item.opts[bestIdx].fb)|| opt.fb || "";
+  if(isScn){const tacId=item.opts[bestIdx].tac;const t=TACTICS.find(x=>x.id===tacId);if(t){$("#fbTac").style.display="inline-block";$("#fbTac").textContent="Tactic: "+t.name;}}
+  next.disabled=false;next.textContent=D.i+1>=D.steps.length?"Finish":"Continue";
+  save();
+}
+function advance(){D.i++;if(D.i>=D.steps.length)return finishSession();renderStep();}
+function finishSession(){
+  $("#deckProg").style.width="100%";
+  S.sessions++;markDayActive();bumpStreak();
+  const gained=checkBadges();save();renderAll();
+  bridge("SHOW_TOAST",{message:"Charisma session complete ✨"});
+  const body=$("#deckBody");
+  body.innerHTML=`<div class="reward"><div class="auraorb"></div>
+    <h2>Session complete</h2><p class="sub">${quadrant(S.warmth,S.competence)==="Magnetic"?"You're in Magnetic territory — high warmth and high competence.":"Your signature shifted. Keep stacking reps."}</p>
+    <div class="rwtiles">
+      <div class="rwtile"><div class="k">Warmth</div><div class="v" style="color:var(--warmc)">${D.gains.w>=0?"+":""}${Math.round(D.gains.w)}</div></div>
+      <div class="rwtile"><div class="k">Competence</div><div class="v" style="color:var(--compc)">${D.gains.c>=0?"+":""}${Math.round(D.gains.c)}</div></div>
+      <div class="rwtile"><div class="k">XP</div><div class="v" style="color:var(--gold)">+${D.gains.xp}</div></div>
+      <div class="rwtile"><div class="k">Streak</div><div class="v" style="color:var(--coral)">${S.streak} 🔥</div></div>
+    </div>${gained?`<div class="tac" style="display:inline-block;font-size:12px;font-weight:850;color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent);padding:7px 14px;border-radius:999px">🏅 New badge: ${gained.n}</div>`:""}</div>`;
+  const next=$("#deckNext");next.textContent="Done";next.disabled=false;next.onclick=()=>{endDeck();show("today");};
+}
+
+/* ===================== single play (Practice tab) ===================== */
+function playSingle(step){D.steps=[step,{type:"reflect",prompt:reflectPrompt()}];D.i=0;D.gains={w:0,c:0,xp:0};$("#deck").classList.add("on");renderStep();}
+
+/* ===================== UI util ===================== */
+let _tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove("on"),1900);}
+
+/* ===================== WIRING ===================== */
+$$("#nav button").forEach(b=>b.onclick=()=>show(b.dataset.tab));
+$("#startBtn").onclick=startSession;
+$("#focusCard").onclick=()=>{const f=TACTICS.find(t=>t.id===S.weekFocus);if(f)openTactic(f.id);};
+$("#seeProgress").onclick=()=>show("progress");
+$("#meScience").onclick=openScience;$("#scienceRow")&&($("#scienceRow").onclick=openScience);
+$("#meTheme").onclick=()=>setTheme(themeIsDark()?"light":"dark");
+$("#meReset").onclick=()=>{sheet(`<h2 style="font-size:22px">Reset progress?</h2><p style="font-size:14px;color:var(--muted);line-height:1.5;margin-top:8px">This clears your signature, streak, badges and history. This can't be undone.</p>
+   <button class="btn" id="rsYes" style="margin-top:18px;background:linear-gradient(135deg,var(--bad),#c81e3a)">Yes, reset everything</button>
+   <button class="btn ghost" id="rsNo" style="margin-top:10px">Cancel</button>`);
+   setTimeout(()=>{$("#rsYes").onclick=()=>{S=Object.assign({},DEFAULT,{theme:S.theme});S.mastery={};S.activeDays=[];S.insights=[];S.badges=[];S.seenScn=[];S.reflections=[];save();closeSheet();renderAll();toast("Progress reset");};$("#rsNo").onclick=closeSheet;},0);};
+
+function renderAll(){renderToday();if($("#s-learn").classList.contains("on"))renderLearn();if($("#s-practice").classList.contains("on"))renderPractice();if($("#s-progress").classList.contains("on"))renderProgress();}
+window.__startFocus=()=>{};
+
+/* boot */
+setTheme(S.theme);
+ensureFocus();
+renderToday();
+})();
+</script>
 </body>
 </html>
