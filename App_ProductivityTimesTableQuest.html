@@ -1,1245 +1,695 @@
 <!--
-KINETIK APP STANDARD v0.4
+KINETIK APP STANDARD v1.0 — Times Table Quest
+A polished single-file Kinetik mini-app. Analog feel: Duolingo (hearts, XP, streaks,
+crowns, adaptive difficulty, boss rounds) — interaction quality only, no copied assets.
 
-PRODUCT:
-Kinetik is a private life app for Family and Friends circles.
+This is the FLAGSHIP of the Quiz/Drill engine (Batch 1). Architecture is built to be
+lifted into siblings (Clock Trainer, Data Detective, …) by swapping the CONTENT pack:
+  - Engine = adaptive fact selection + 6 question renderers + progression + retention.
+  - Content = the multiplication facts + skill-path nodes below (CONTENT section).
 
-APP:
-Times Table Quest is a polished standalone Kinetik mini app.
-Analog inspiration: Duolingo Math, Khan Academy Kids, Brilliant.
-
-IMPORTANT:
-- This app closely follows proven interaction patterns from the analog target.
-- It does not copy protected logos, mascots, names, exact artwork, or exact trade dress.
-- It keeps distinct Kinetik branding, icons, colors, and data contracts.
-
-ARCHITECTURE:
-- Single self-contained HTML file.
-- Inline CSS and vanilla JavaScript only.
-- No external frameworks, CDNs, build step, or backend dependency.
-- Works directly from a local HTML file.
-- Works embedded inside the Kinetik shell iframe.
-- Uses AppBridge messages for future parent-shell persistence.
-- Uses localStorage for direct-file progress and history.
-
-KINETIK INTEGRATION:
-- Detects embedded mode with window.self !== window.top.
-- Listens for INIT_APP messages.
-- Accepts circleId, circleType, memberId, personId, theme, and context.
-- Sends DATA_CREATE, DATA_UPDATE, OPEN_APP, and SHOW_TOAST bridge messages when relevant.
-
-DATA:
-- Storage prefix: kinetik_polished_times_table_quest.
-- App-specific future records should be stored in AppRecords with circleId, appId, collection, and payloadJson.
-- This app must not access another circle's data.
-
-React/TypeScript app scale-up note:
-- This single-file app should later become a React feature module or standalone route.
-- It must keep using AppBridge/DataAPI contracts.
-- It must not access another circle's data.
-- It must store app-specific data in AppRecords using circleId, appId, collection, payloadJson.
+Integration: detects embedded mode, honors INIT_APP theme, persists progress to
+localStorage (kinetik_polished_times_table_quest_*), posts XP to the circle via the
+DATA_CREATE bridge and reads the circle league via DATA_LIST.
 -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Times Table Quest — Kinetik</title>
+<script type="application/kinetik-app+json">
+{
+  "appId": "times-table-quest",
+  "name": "Times Table Quest",
+  "shortName": "Times Tables",
+  "icon": "✖️",
+  "gradient": ["#ffb545", "#ff5d8f"],
+  "category": "productivity",
+  "tagline": "Fast multiplication quests.",
+  "about": "A playful multiplication drill with hearts, XP, streaks, crowns and boss rounds. Adapts to each child — weak facts come back more often until they stick. Parent-ready progress, fully offline.",
+  "audience": "kids",
+  "circleTypes": ["family", "friends"],
+  "worksWith": ["offline", "standalone"],
+  "status": "live",
+  "minMembers": 1
+}
+</script>
+<meta name="theme-color" content="#fff7f9">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Times Table Quest</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✖️</text></svg>">
 <style>
-:root {
-  --bg: #F5F5F0;
-  --bg2: #FFFFFF;
-  --bg3: #EEEEE8;
-  --text: #1A1A2E;
-  --text2: #6B6B80;
-  --text3: #9B9BAA;
-  --border: rgba(0,0,0,0.08);
-  --green: #58CC02;
-  --green-bg: #D7FFB8;
-  --green-dark: #3EA000;
-  --red: #FF4B4B;
-  --red-bg: #FFD5D5;
-  --amber: #FF9600;
-  --amber-bg: #FFF0D5;
-  --purple: #CE82FF;
-  --purple-bg: #F0E0FF;
-  --blue: #1CB0F6;
-  --blue-bg: #D6F1FF;
-  --crown1: #58CC02;
-  --crown2: #1CB0F6;
-  --crown3: #CE82FF;
-  --crown4: #FF9600;
-  --crown5: #FF4B4B;
-  --card-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  --radius: 16px;
-  --radius-sm: 12px;
-  --radius-xs: 8px;
-  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+:root{
+  --a:#ffb545;--b:#ff5d8f;
+  --bg:#f6f8ff;--bg2:#eef2fc;--ink:#141a2b;--muted:#5b6478;--faint:#9aa3b8;
+  --panel:rgba(255,255,255,.9);--solid:#fff;--line:rgba(20,26,43,.09);--line2:rgba(20,26,43,.14);
+  --good:#19b56b;--goodbg:#e7f9f0;--bad:#ef4444;--badbg:#fdeaea;--warn:#f59e0b;
+  --shadow:0 22px 60px rgba(40,55,95,.16);
+  --font:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color-scheme:light;
 }
-[data-theme="dark"] {
-  --bg: #13111C;
-  --bg2: #1E1B2E;
-  --bg3: #2A2640;
-  --text: #F0F0F5;
-  --text2: #A0A0B8;
-  --text3: #6B6B85;
-  --border: rgba(255,255,255,0.08);
-  --card-shadow: 0 2px 8px rgba(0,0,0,0.25);
+[data-theme=dark]{
+  --bg:#080d18;--bg2:#0e1424;--ink:#f5f8ff;--muted:#aeb8cc;--faint:#717c95;
+  --panel:rgba(18,25,42,.86);--solid:#121a2c;--line:rgba(255,255,255,.1);--line2:rgba(255,255,255,.16);
+  --goodbg:rgba(25,181,107,.16);--badbg:rgba(239,68,68,.16);--shadow:0 22px 60px rgba(0,0,0,.4);
+  color-scheme:dark;
 }
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html, body { height:100%; overflow:hidden; }
-body {
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
-  transition: background .3s, color .3s;
-}
-.screen { display:none; height:100vh; height:100dvh; flex-direction:column; overflow:hidden; }
-.screen.active { display:flex; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--font);color:var(--ink);background:
+  radial-gradient(120% 70% at 10% -10%,color-mix(in srgb,var(--a) 26%,transparent),transparent 42%),
+  radial-gradient(120% 70% at 95% 0%,color-mix(in srgb,var(--b) 22%,transparent),transparent 40%),
+  linear-gradient(180deg,var(--bg),var(--bg2));
+  -webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+h1,h2,h3,p{margin:0}
+.app{height:100dvh;max-width:620px;margin:0 auto;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+.screen.on{display:flex;animation:fade .26s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:0 16px 26px}
+.scroll::-webkit-scrollbar{display:none}
+.safetop{height:max(env(safe-area-inset-top,0px),8px)}
 
-/* ═══ TOPBAR ═══ */
-.topbar {
-  padding: calc(var(--safe-top) + 8px) 20px 8px;
-  display:flex; align-items:center; justify-content:space-between;
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  z-index: 10;
-}
-.topbar-title { font-size:18px; font-weight:700; letter-spacing:-0.3px; }
-.topbar-stats { display:flex; gap:16px; align-items:center; }
-.stat { display:flex; align-items:center; gap:4px; font-size:13px; font-weight:600; }
-.stat-icon { font-size:16px; }
+/* ---------- HOME header ---------- */
+.hdr{display:flex;align-items:center;gap:11px;padding:12px 16px 8px}
+.mark{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:23px;color:#fff;
+  background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 14px 30px color-mix(in srgb,var(--a) 30%,transparent);flex:0 0 auto}
+.htitle{flex:1;min-width:0}
+.htitle h1{font-size:19px;letter-spacing:-.02em;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.htitle p{font-size:12px;color:var(--muted);font-weight:700;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{width:42px;height:42px;border-radius:13px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;font-size:17px;flex:0 0 auto}
+.iconbtn:active{transform:scale(.94)}
+.stats{display:flex;gap:8px;padding:2px 16px 10px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;background:var(--panel);
+  border:1px solid var(--line);font-size:13px;font-weight:850;letter-spacing:-.01em}
+.chip b{font-size:13.5px}
+.chip.tap{cursor:pointer}.chip.tap:active{transform:scale(.96)}
 
-/* ═══ THEME TOGGLE ═══ */
-.theme-toggle {
-  width:44px; height:26px; border-radius:13px;
-  background: var(--bg3); border:1px solid var(--border);
-  position:relative; cursor:pointer; transition: background .3s;
-  flex-shrink:0;
-}
-.theme-toggle::after {
-  content:'☀️'; font-size:14px; line-height:22px; text-align:center;
-  position:absolute; top:1px; left:1px; width:22px; height:22px;
-  background: var(--bg2); border-radius:50%;
-  transition: transform .3s, content .3s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-[data-theme="dark"] .theme-toggle::after { content:'🌙'; transform:translateX(18px); }
+/* ---------- goal card ---------- */
+.goal{display:flex;align-items:center;gap:16px;background:var(--panel);border:1px solid var(--line);
+  border-radius:24px;padding:15px 17px;box-shadow:var(--shadow);margin:6px 0 20px}
+.ring{width:64px;height:64px;flex:0 0 auto}
+.goal .gt b{font-size:15px;letter-spacing:-.01em}
+.goal .gt p{font-size:12.5px;color:var(--muted);font-weight:650;margin-top:3px;line-height:1.3}
 
-/* ═══ SKILL PATH ═══ */
-.path-scroll {
-  flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
-  padding: 24px 20px calc(var(--safe-bottom) + 80px);
-}
-.path-container { max-width:400px; margin:0 auto; position:relative; }
-.path-line {
-  position:absolute; left:50%; top:0; bottom:0; width:4px;
-  background: var(--bg3); transform:translateX(-50%);
-  border-radius:2px; z-index:0;
-}
-.skill-node {
-  position:relative; z-index:1;
-  display:flex; align-items:center; gap:16px;
-  margin-bottom:20px; cursor:pointer;
-  transition: transform .15s;
-}
-.skill-node:active { transform:scale(0.97); }
-.skill-node.locked { opacity:0.45; pointer-events:none; }
-.node-circle {
-  width:64px; height:64px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-size:22px; font-weight:800;
-  flex-shrink:0; position:relative;
-  border: 4px solid; transition: all .2s;
-}
-.node-circle.crown0 { background:var(--bg3); border-color:var(--border); color:var(--text3); }
-.node-circle.crown1 { background:var(--green-bg); border-color:var(--green); color:var(--green-dark); }
-.node-circle.crown2 { background:var(--blue-bg); border-color:var(--blue); color:#0D8ECF; }
-.node-circle.crown3 { background:var(--purple-bg); border-color:var(--purple); color:#A050DD; }
-.node-circle.crown4 { background:var(--amber-bg); border-color:var(--amber); color:#CC7700; }
-.node-circle.crown5 { background:linear-gradient(135deg,#FFD700,#FFA500); border-color:#FFD700; color:#8B6508; }
-.node-crown {
-  position:absolute; top:-8px; right:-8px;
-  font-size:14px; background:var(--bg2); border-radius:50%;
-  width:24px; height:24px; display:flex; align-items:center; justify-content:center;
-  border:2px solid var(--border); font-weight:700;
-}
-.node-info { flex:1; }
-.node-title { font-size:15px; font-weight:700; margin-bottom:2px; }
-.node-sub { font-size:12px; color:var(--text2); }
-.node-progress { height:4px; background:var(--bg3); border-radius:2px; margin-top:6px; overflow:hidden; }
-.node-progress-fill { height:100%; border-radius:2px; transition:width .4s; }
-.node-start {
-  padding:6px 16px; border-radius:20px; font-size:13px; font-weight:700;
-  border:none; cursor:pointer; flex-shrink:0;
-  transition: transform .1s;
-}
-.node-start:active { transform:scale(0.95); }
-.current-pulse { animation: pulse 2s ease-in-out infinite; }
-@keyframes pulse {
-  0%,100% { box-shadow:0 0 0 0 rgba(88,204,2,0.4); }
-  50% { box-shadow:0 0 0 12px rgba(88,204,2,0); }
-}
-.boss-node .node-circle {
-  width:72px; height:72px; font-size:26px;
-  border-width:5px;
-}
+/* ---------- skill path ---------- */
+.sectlabel{font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:4px 2px 12px}
+.path{display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+.node{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px;padding:7px 0}
+.node .bub{width:78px;height:70px;border-radius:50%;display:grid;place-items:center;position:relative;
+  background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 12px 26px color-mix(in srgb,var(--b) 26%,transparent),inset 0 -5px 0 rgba(0,0,0,.14),inset 0 2px 0 rgba(255,255,255,.4);
+  transition:transform .15s ease;cursor:pointer;border:0}
+.node .bub:active{transform:translateY(2px) scale(.97)}
+.node .bub span{font-size:21px;font-weight:950;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.18)}
+.node.locked .bub{background:linear-gradient(135deg,#aab2c6,#8c95ad);box-shadow:0 8px 18px rgba(0,0,0,.14),inset 0 -5px 0 rgba(0,0,0,.12);cursor:default}
+[data-theme=dark] .node.locked .bub{background:linear-gradient(135deg,#39425a,#2b3245)}
+.node.done .bub{background:linear-gradient(135deg,#19b56b,#0ea968)}
+.node .lab{font-size:12.5px;font-weight:850;color:var(--ink);letter-spacing:-.01em}
+.node.locked .lab{color:var(--faint)}
+.crowns{display:flex;gap:3px;height:11px}
+.crowns i{width:9px;height:9px;border-radius:2px;transform:rotate(45deg);background:var(--line2)}
+.crowns i.on{background:linear-gradient(135deg,#ffd75e,#ffb01f);box-shadow:0 1px 3px rgba(245,158,11,.5)}
+.node .conn{position:absolute;top:-12px;width:4px;height:16px;background:var(--line2);border-radius:2px;left:calc(50% - 2px)}
+.node:first-child .conn{display:none}
+.node.z1{transform:translateX(-58px)}
+.node.z3{transform:translateX(58px)}
+.node .start{position:absolute;top:-46px;left:50%;transform:translateX(-50%) scale(.9);background:var(--solid);color:var(--ink);
+  border:1px solid var(--line);box-shadow:var(--shadow);border-radius:13px;padding:7px 13px;font-size:12px;font-weight:900;white-space:nowrap;opacity:0;pointer-events:none;transition:.18s ease;z-index:5}
+.node .start:after{content:"";position:absolute;left:50%;bottom:-6px;transform:translateX(-50%) rotate(45deg);width:11px;height:11px;background:var(--solid);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.node.sel .start{opacity:1;pointer-events:auto;transform:translateX(-50%) scale(1)}
 
-/* ═══ LESSON SCREEN ═══ */
-.lesson-topbar {
-  padding: calc(var(--safe-top) + 8px) 16px 12px;
-  display:flex; align-items:center; gap:12px;
-  background: var(--bg2); border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
-.lesson-close {
-  width:36px; height:36px; border-radius:50%; border:none;
-  background:var(--bg3); color:var(--text2); font-size:18px;
-  cursor:pointer; display:flex; align-items:center; justify-content:center;
-}
-.lesson-progress { flex:1; height:12px; background:var(--bg3); border-radius:6px; overflow:hidden; }
-.lesson-progress-fill { height:100%; background:var(--green); border-radius:6px; transition:width .4s ease; }
-.lesson-hearts { display:flex; gap:3px; flex-shrink:0; }
-.heart { font-size:20px; transition: transform .2s, opacity .3s; }
-.heart.lost { opacity:0.2; transform:scale(0.8); }
+/* ---------- league preview ---------- */
+.lgcard{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:15px 16px;box-shadow:var(--shadow);cursor:pointer}
+.lgcard:active{transform:scale(.99)}
+.lghead{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.lghead b{font-size:15px;letter-spacing:-.01em}.lghead span{font-size:12px;color:var(--faint);font-weight:700}
+.lgrow{display:flex;align-items:center;gap:11px;padding:7px 0}
+.lgrow+.lgrow{border-top:1px solid var(--line)}
+.rank{width:24px;text-align:center;font-weight:950;font-size:14px;color:var(--faint);flex:0 0 auto}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:900;font-size:13px;flex:0 0 auto}
+.lgrow .nm{flex:1;min-width:0;font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lgrow .xp{font-size:13px;font-weight:900;color:var(--muted)}
+.lgrow.me{background:color-mix(in srgb,var(--a) 12%,transparent);margin:0 -10px;padding:8px 10px;border-radius:12px;border:0}
 
-.lesson-body {
-  flex:1; display:flex; flex-direction:column;
-  padding:24px 20px; overflow-y:auto; -webkit-overflow-scrolling:touch;
-}
-.question-prompt {
-  font-size:22px; font-weight:700; text-align:center;
-  margin-bottom:8px; line-height:1.3;
-}
-.question-sub {
-  font-size:14px; color:var(--text2); text-align:center;
-  margin-bottom:28px;
-}
-.question-big {
-  font-size:52px; font-weight:800; text-align:center;
-  margin:16px 0 32px; letter-spacing:-1px;
-  color:var(--text);
-}
+/* ---------- LESSON ---------- */
+.lhead{display:flex;align-items:center;gap:13px;padding:12px 16px 8px}
+.xbtn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:var(--faint);font-size:22px;flex:0 0 auto}
+.xbtn:active{transform:scale(.9)}
+.pbar{flex:1;height:14px;border-radius:999px;background:var(--line2);overflow:hidden}
+.pbar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--a),var(--b));transition:width .3s cubic-bezier(.4,1.3,.5,1)}
+.hearts{display:flex;align-items:center;gap:1px;font-size:15px;flex:0 0 auto}
+.timer{height:6px;border-radius:999px;background:var(--line2);margin:0 16px;overflow:hidden;display:none}
+.timer.on{display:block}
+.timer i{display:block;height:100%;background:linear-gradient(90deg,var(--warn),var(--bad));width:100%}
+.qbody{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:8px 18px 6px;display:flex;flex-direction:column}
+.qbody::-webkit-scrollbar{display:none}
+.qkind{font-size:12px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin:6px 0 12px}
+.visual{align-self:center;width:min(290px,86%);background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:14px;margin-bottom:14px;box-shadow:0 10px 26px rgba(40,55,95,.1)}
+.visual svg{display:block;width:100%;height:auto}
+.prompt{font-size:34px;font-weight:950;letter-spacing:-.02em;text-align:center;margin:2px 0 18px}
+.prompt .q{color:var(--b)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.choice{min-height:64px;border-radius:18px;background:var(--solid);border:2px solid var(--line2);font-size:21px;font-weight:900;
+  display:grid;place-items:center;transition:transform .12s ease,border-color .12s,background .12s}
+.choice:active{transform:scale(.97)}
+.choice.sel{border-color:var(--b);background:color-mix(in srgb,var(--b) 10%,var(--solid))}
+.choice.right{border-color:var(--good);background:var(--goodbg);color:var(--good)}
+.choice.wrongpick{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
+.choice.dim{opacity:.45}
+.tf{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tf .choice{min-height:72px;font-size:18px;gap:8px}
+/* keypad */
+.kpwrap{margin-top:auto}
+.kpdisp{min-height:62px;border-radius:16px;border:2px solid var(--line2);background:var(--solid);display:grid;place-items:center;
+  font-size:30px;font-weight:950;letter-spacing:.04em;margin-bottom:12px}
+.kpdisp.empty{color:var(--faint)}
+.kpdisp.right{border-color:var(--good);background:var(--goodbg);color:var(--good)}
+.kpdisp.wrongpick{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.kp button{min-height:56px;border-radius:15px;background:var(--panel);border:1px solid var(--line);font-size:23px;font-weight:850}
+.kp button:active{transform:scale(.95);background:color-mix(in srgb,var(--a) 12%,var(--panel))}
+/* match */
+.match{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.mcol{display:flex;flex-direction:column;gap:10px}
+.mtile{min-height:56px;border-radius:15px;background:var(--solid);border:2px solid var(--line2);font-size:18px;font-weight:900;display:grid;place-items:center;transition:.12s}
+.mtile:active{transform:scale(.97)}
+.mtile.sel{border-color:var(--b);background:color-mix(in srgb,var(--b) 12%,var(--solid))}
+.mtile.gone{opacity:0;pointer-events:none;transform:scale(.6)}
+.mtile.bad{animation:shake .34s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
-/* Multiple choice */
-.mc-grid { display:flex; flex-direction:column; gap:10px; max-width:400px; margin:0 auto; width:100%; }
-.mc-option {
-  padding:16px 20px; border-radius:var(--radius-sm); border:2.5px solid var(--border);
-  background:var(--bg2); font-size:18px; font-weight:600; text-align:center;
-  cursor:pointer; transition:all .15s; user-select:none;
-}
-.mc-option:active { transform:scale(0.98); }
-.mc-option.selected { border-color:var(--blue); background:var(--blue-bg); }
-.mc-option.correct { border-color:var(--green); background:var(--green-bg); color:var(--green-dark); }
-.mc-option.wrong { border-color:var(--red); background:var(--red-bg); color:var(--red); }
+/* footer / feedback */
+.lfoot{flex:0 0 auto;padding:13px 16px calc(13px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--solid)}
+[data-theme=dark] .lfoot{background:var(--bg2)}
+.lfoot.good{background:var(--goodbg);border-color:transparent}
+.lfoot.bad{background:var(--badbg);border-color:transparent}
+.fb{display:none;align-items:center;gap:11px;margin-bottom:11px}
+.fb.on{display:flex}
+.fbic{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:21px;flex:0 0 auto}
+.fb.good .fbic{background:var(--good)}.fb.bad .fbic{background:var(--bad)}
+.fb .ft b{font-size:15px;display:block}.fb.good .ft b{color:var(--good)}.fb.bad .ft b{color:var(--bad)}
+.fb .ft p{font-size:13px;color:var(--muted);font-weight:650;margin-top:2px}
+.btn{width:100%;min-height:54px;border-radius:16px;font-size:16px;font-weight:950;letter-spacing:.02em;color:#fff;
+  background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 14px 28px color-mix(in srgb,var(--a) 26%,transparent);transition:transform .12s ease,opacity .12s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.45;box-shadow:none}
+.btn.green{background:linear-gradient(135deg,#19b56b,#0ea968);box-shadow:0 14px 28px rgba(25,181,107,.28)}
+.btn.gho{background:var(--panel);color:var(--ink);border:1px solid var(--line);box-shadow:none}
 
-/* Type answer */
-.type-input-wrap { max-width:300px; margin:0 auto; width:100%; text-align:center; }
-.type-input {
-  width:100%; padding:16px; border-radius:var(--radius-sm);
-  border:2.5px solid var(--border); background:var(--bg2);
-  font-size:32px; font-weight:700; text-align:center;
-  color:var(--text); outline:none; font-family:var(--font);
-  transition: border-color .2s;
-}
-.type-input:focus { border-color:var(--blue); }
-.type-input.correct { border-color:var(--green); background:var(--green-bg); }
-.type-input.wrong { border-color:var(--red); background:var(--red-bg); }
+/* ---------- COMPLETE ---------- */
+.done-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 22px;gap:6px}
+.bigcrown{font-size:74px;filter:drop-shadow(0 12px 22px rgba(245,158,11,.4));animation:pop .5s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+.done-wrap h2{font-size:26px;letter-spacing:-.02em;margin-top:4px}
+.done-wrap .sub{font-size:14px;color:var(--muted);font-weight:700}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:11px;width:100%;max-width:340px;margin:18px 0 4px}
+.tile{border-radius:18px;border:1px solid var(--line);background:var(--panel);padding:13px;text-align:left}
+.tile .k{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+.tile .v{font-size:24px;font-weight:950;margin-top:5px;letter-spacing:-.02em}
+.tile.xp .v{color:var(--a)}.tile.gem .v{color:#3aa0ff}.tile.acc .v{color:var(--good)}.tile.str .v{color:var(--b)}
+.done-foot{width:100%;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:9px}
 
-/* Match pairs */
-.match-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:400px; margin:0 auto; width:100%; }
-.match-card {
-  padding:14px 8px; border-radius:var(--radius-sm); border:2.5px solid var(--border);
-  background:var(--bg2); font-size:16px; font-weight:600; text-align:center;
-  cursor:pointer; transition:all .15s; user-select:none; min-height:52px;
-  display:flex; align-items:center; justify-content:center;
-}
-.match-card.selected { border-color:var(--blue); background:var(--blue-bg); }
-.match-card.matched { border-color:var(--green); background:var(--green-bg); color:var(--green-dark); opacity:0.6; pointer-events:none; }
-.match-card.wrong-flash { border-color:var(--red); background:var(--red-bg); }
+/* ---------- sheets (league / shop) ---------- */
+.sheethead{display:flex;align-items:center;gap:12px;padding:13px 16px 6px}
+.sheethead h2{font-size:20px;letter-spacing:-.02em;flex:1}
+.shopitem{display:flex;align-items:center;gap:13px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:11px}
+.shopitem .si{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-size:23px;background:color-mix(in srgb,var(--a) 14%,var(--solid));flex:0 0 auto}
+.shopitem .sd{flex:1;min-width:0}.shopitem .sd b{font-size:14.5px}.shopitem .sd p{font-size:12px;color:var(--muted);font-weight:650;margin-top:2px;line-height:1.3}
+.cost{padding:9px 14px;border-radius:12px;background:linear-gradient(135deg,var(--a),var(--b));color:#fff;font-weight:900;font-size:13px;white-space:nowrap}
+.cost:disabled{opacity:.4}
+.cost.owned{background:var(--good)}
 
-/* Check button */
-.lesson-footer {
-  padding: 12px 20px calc(var(--safe-bottom) + 12px);
-  background:var(--bg2); border-top:1px solid var(--border);
-  flex-shrink:0;
-}
-.check-btn {
-  width:100%; padding:16px; border-radius:var(--radius-sm); border:none;
-  font-size:16px; font-weight:700; cursor:pointer;
-  transition: all .15s; font-family:var(--font);
-}
-.check-btn:active { transform:scale(0.98); }
-.check-btn.ready { background:var(--green); color:#fff; }
-.check-btn.disabled { background:var(--bg3); color:var(--text3); pointer-events:none; }
-.check-btn.next-correct { background:var(--green); color:#fff; }
-.check-btn.next-wrong { background:var(--red); color:#fff; }
-
-/* Feedback banner */
-.feedback-banner {
-  padding:12px 20px; text-align:center; font-weight:700; font-size:15px;
-  transition: all .3s;
-}
-.feedback-banner.correct { background:var(--green-bg); color:var(--green-dark); }
-.feedback-banner.wrong { background:var(--red-bg); color:var(--red); }
-
-/* ═══ REWARD SCREEN ═══ */
-.reward-screen {
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  padding:40px 24px calc(var(--safe-bottom) + 24px); text-align:center; gap:16px;
-}
-.reward-icon { font-size:72px; animation:bounceIn .6s ease; }
-@keyframes bounceIn {
-  0%{transform:scale(0) rotate(-20deg);opacity:0}
-  60%{transform:scale(1.2) rotate(5deg)}
-  100%{transform:scale(1) rotate(0deg);opacity:1}
-}
-.reward-title { font-size:28px; font-weight:800; }
-.reward-stats { display:flex; gap:24px; margin:16px 0; }
-.reward-stat { text-align:center; }
-.reward-stat-val { font-size:28px; font-weight:800; }
-.reward-stat-lab { font-size:12px; color:var(--text2); margin-top:2px; }
-.reward-btn {
-  padding:16px 48px; border-radius:var(--radius-sm); border:none;
-  background:var(--green); color:#fff; font-size:16px; font-weight:700;
-  cursor:pointer; font-family:var(--font); margin-top:8px;
-  transition: transform .1s;
-}
-.reward-btn:active { transform:scale(0.97); }
-
-/* ═══ ONBOARDING ═══ */
-.onboard-screen {
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  padding:40px 28px calc(var(--safe-bottom) + 28px); text-align:center; gap:20px;
-}
-.onboard-icon { font-size:80px; }
-.onboard-title { font-size:26px; font-weight:800; line-height:1.2; }
-.onboard-desc { font-size:15px; color:var(--text2); line-height:1.6; max-width:340px; }
-.onboard-features { display:flex; flex-direction:column; gap:12px; width:100%; max-width:320px; text-align:left; }
-.onboard-feat { display:flex; align-items:center; gap:12px; font-size:14px; }
-.onboard-feat-icon { font-size:24px; width:40px; text-align:center; flex-shrink:0; }
-.onboard-btn {
-  padding:16px 48px; border-radius:var(--radius-sm); border:none;
-  background:var(--green); color:#fff; font-size:16px; font-weight:700;
-  cursor:pointer; font-family:var(--font); width:100%; max-width:320px;
-  transition: transform .1s;
-}
-.onboard-btn:active { transform:scale(0.97); }
-
-/* ═══ CONFETTI ═══ */
-.confetti-container { position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:999; overflow:hidden; }
-.confetti-piece {
-  position:absolute; width:10px; height:10px; top:-20px;
-  animation: confettiFall 2.5s ease-in forwards;
-}
-@keyframes confettiFall {
-  0% { transform:translateY(0) rotate(0deg) scale(1); opacity:1; }
-  100% { transform:translateY(100vh) rotate(720deg) scale(0.5); opacity:0; }
-}
-
-/* ═══ STREAK MODAL ═══ */
-.modal-overlay {
-  position:fixed; inset:0; background:rgba(0,0,0,0.5);
-  display:none; align-items:center; justify-content:center;
-  z-index:100; padding:20px;
-}
-.modal-overlay.active { display:flex; }
-.modal-card {
-  background:var(--bg2); border-radius:var(--radius);
-  padding:32px 28px; text-align:center; max-width:340px; width:100%;
-  animation: modalPop .3s ease;
-}
-@keyframes modalPop { 0%{transform:scale(0.9);opacity:0} 100%{transform:scale(1);opacity:1} }
-.modal-icon { font-size:56px; margin-bottom:12px; }
-.modal-title { font-size:22px; font-weight:800; margin-bottom:8px; }
-.modal-desc { font-size:14px; color:var(--text2); margin-bottom:20px; line-height:1.5; }
-.modal-btn {
-  padding:14px 36px; border-radius:var(--radius-sm); border:none;
-  background:var(--green); color:#fff; font-size:15px; font-weight:700;
-  cursor:pointer; font-family:var(--font);
-}
-
-/* ═══ NO HEARTS SCREEN ═══ */
-.no-hearts-screen { text-align:center; padding:60px 28px; }
-.no-hearts-icon { font-size:64px; margin-bottom:16px; }
-.no-hearts-title { font-size:22px; font-weight:800; margin-bottom:8px; }
-.no-hearts-desc { font-size:14px; color:var(--text2); margin-bottom:24px; line-height:1.6; }
-.no-hearts-timer { font-size:28px; font-weight:800; color:var(--red); margin-bottom:24px; }
-.no-hearts-btn {
-  padding:14px 36px; border-radius:var(--radius-sm); border:none;
-  background:var(--bg3); color:var(--text); font-size:15px; font-weight:700;
-  cursor:pointer; font-family:var(--font);
-}
-
-/* ═══ SCROLLBAR ═══ */
-::-webkit-scrollbar { width:4px; }
-::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+/* toast / flash */
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);opacity:0;
+  background:rgba(20,26,43,.94);color:#fff;font-size:13.5px;font-weight:800;padding:11px 16px;border-radius:999px;
+  max-width:84%;box-shadow:0 16px 38px rgba(0,0,0,.3);pointer-events:none;transition:.24s;z-index:60}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:50;transition:opacity .12s}
+.flash.good{background:radial-gradient(circle at 50% 60%,rgba(25,181,107,.28),transparent 60%);opacity:1}
+.flash.bad{background:radial-gradient(circle at 50% 60%,rgba(239,68,68,.26),transparent 60%);opacity:1}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media (max-width:360px){.prompt{font-size:30px}.node .bub{width:70px;height:64px}}
 </style>
 </head>
-<body data-theme="light">
-
-<!-- ═══ ONBOARDING ═══ -->
-<div class="screen" id="screen-onboard">
-  <div class="onboard-screen">
-    <div class="onboard-icon">✖️</div>
-    <div class="onboard-title">Times Table Quest</div>
-    <div class="onboard-desc">Master multiplication from ×2 to ×12 with quick, fun challenges. Just a few minutes a day!</div>
-    <div class="onboard-features">
-      <div class="onboard-feat"><div class="onboard-feat-icon">🎯</div><div>Quick lessons — 2-3 minutes each</div></div>
-      <div class="onboard-feat"><div class="onboard-feat-icon">❤️</div><div>5 hearts — mistakes matter!</div></div>
-      <div class="onboard-feat"><div class="onboard-feat-icon">⭐</div><div>Earn XP and climb the crowns</div></div>
-      <div class="onboard-feat"><div class="onboard-feat-icon">🔥</div><div>Build your daily streak</div></div>
-      <div class="onboard-feat"><div class="onboard-feat-icon">🏆</div><div>5 crown levels per times table</div></div>
+<body>
+<div class="app">
+  <!-- HOME -->
+  <section class="screen on" id="s-home">
+    <div class="safetop"></div>
+    <header class="hdr">
+      <div class="mark">✕</div>
+      <div class="htitle"><h1>Times Table Quest</h1><p id="homeSub">Standalone · keep your streak alive</p></div>
+      <button class="iconbtn" id="themeBtn" aria-label="Theme">◐</button>
+    </header>
+    <div class="stats">
+      <span class="chip"><span>🔥</span><b id="cStreak">0</b></span>
+      <span class="chip tap" id="goShop"><span>💎</span><b id="cGems">0</b></span>
+      <span class="chip"><span>⭐</span><b id="cXp">0</b></span>
     </div>
-    <button class="onboard-btn" onclick="startApp()">Let's go!</button>
-  </div>
-</div>
-
-<!-- ═══ HOME / PATH ═══ -->
-<div class="screen" id="screen-home">
-  <div class="topbar">
-    <div class="topbar-title">✖️ Quest</div>
-    <div class="topbar-stats">
-      <div class="stat" style="color:var(--amber)"><span class="stat-icon">⭐</span><span id="home-xp">0</span></div>
-      <div class="stat" style="color:var(--red)"><span class="stat-icon">🔥</span><span id="home-streak">0</span></div>
-      <div class="stat" style="color:var(--red)"><span class="stat-icon">❤️</span><span id="home-hearts">5</span></div>
-      <div class="theme-toggle" onclick="toggleTheme()"></div>
+    <div class="scroll">
+      <div class="goal">
+        <svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--line2)" stroke-width="5"/>
+          <circle id="goalArc" cx="18" cy="18" r="15.5" fill="none" stroke="url(#gg)" stroke-width="5" stroke-linecap="round" stroke-dasharray="0 100" transform="rotate(-90 18 18)"/>
+          <defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--a)"/><stop offset="1" stop-color="var(--b)"/></linearGradient></defs>
+          <text id="goalTxt" x="18" y="21.5" text-anchor="middle" font-size="9" font-weight="900" fill="var(--ink)">0%</text></svg>
+        <div class="gt"><b id="goalHd">Daily goal</b><p id="goalSub">Earn 30 XP today to keep the flame.</p></div>
+      </div>
+      <div class="sectlabel">Your quest</div>
+      <div class="path" id="path"></div>
+      <div class="lgcard" id="goLeague">
+        <div class="lghead"><b>Family League</b><span>This week ›</span></div>
+        <div id="leaguePrev"></div>
+      </div>
     </div>
-  </div>
-  <div class="path-scroll">
-    <div class="path-container">
-      <div class="path-line"></div>
-      <div id="skill-path"></div>
+  </section>
+
+  <!-- LESSON -->
+  <section class="screen" id="s-lesson">
+    <div class="safetop"></div>
+    <header class="lhead">
+      <button class="xbtn" id="quitLesson">✕</button>
+      <div class="pbar"><i id="prog"></i></div>
+      <div class="hearts" id="hearts"></div>
+    </header>
+    <div class="timer" id="timer"><i></i></div>
+    <div class="qbody" id="qbody"></div>
+    <footer class="lfoot" id="lfoot">
+      <div class="fb" id="fb"><div class="fbic" id="fbic"></div><div class="ft"><b id="fbT"></b><p id="fbP"></p></div></div>
+      <button class="btn" id="checkBtn" disabled>Check</button>
+    </footer>
+  </section>
+
+  <!-- COMPLETE -->
+  <section class="screen" id="s-done">
+    <div class="safetop"></div>
+    <div class="done-wrap">
+      <div class="bigcrown" id="doneIcon">👑</div>
+      <h2 id="doneTitle">Lesson complete!</h2>
+      <p class="sub" id="doneSub"></p>
+      <div class="tiles" id="doneTiles"></div>
     </div>
-  </div>
-</div>
+    <div class="done-foot">
+      <button class="btn green" id="doneCont">Continue</button>
+    </div>
+  </section>
 
-<!-- ═══ LESSON ═══ -->
-<div class="screen" id="screen-lesson">
-  <div class="lesson-topbar">
-    <button class="lesson-close" onclick="exitLesson()">✕</button>
-    <div class="lesson-progress"><div class="lesson-progress-fill" id="lesson-progress-fill"></div></div>
-    <div class="lesson-hearts" id="lesson-hearts"></div>
-  </div>
-  <div class="lesson-body" id="lesson-body"></div>
-  <div id="feedback-area"></div>
-  <div class="lesson-footer">
-    <button class="check-btn disabled" id="check-btn" onclick="handleCheck()">Check</button>
-  </div>
-</div>
+  <!-- LEAGUE -->
+  <section class="screen" id="s-league">
+    <div class="safetop"></div>
+    <header class="sheethead"><button class="iconbtn" id="leagueBack">‹</button><h2>Family League</h2></header>
+    <div class="scroll"><p style="font-size:13px;color:var(--muted);font-weight:650;margin:2px 2px 14px">This week's XP across the circle. Every lesson you finish climbs the board.</p><div id="leagueFull"></div></div>
+  </section>
 
-<!-- ═══ REWARD ═══ -->
-<div class="screen" id="screen-reward">
-  <div class="reward-screen">
-    <div class="reward-icon" id="reward-icon">🎉</div>
-    <div class="reward-title" id="reward-title">Lesson complete!</div>
-    <div class="reward-stats" id="reward-stats"></div>
-    <div id="reward-crown-msg" style="font-size:14px;color:var(--text2)"></div>
-    <button class="reward-btn" onclick="goHome()">Continue</button>
-  </div>
+  <!-- SHOP -->
+  <section class="screen" id="s-shop">
+    <div class="safetop"></div>
+    <header class="sheethead"><button class="iconbtn" id="shopBack">‹</button><h2>Shop</h2><span class="chip"><span>💎</span><b id="shopGems">0</b></span></header>
+    <div class="scroll" id="shopBody"></div>
+  </section>
 </div>
-
-<!-- ═══ STREAK MODAL ═══ -->
-<div class="modal-overlay" id="streak-modal">
-  <div class="modal-card">
-    <div class="modal-icon" id="streak-modal-icon">🔥</div>
-    <div class="modal-title" id="streak-modal-title">1 day streak!</div>
-    <div class="modal-desc" id="streak-modal-desc">You're on fire! Keep it going tomorrow.</div>
-    <button class="modal-btn" onclick="closeStreakModal()">Awesome!</button>
-  </div>
-</div>
-
-<!-- ═══ CONFETTI ═══ -->
-<div class="confetti-container" id="confetti"></div>
+<div class="flash" id="flash"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════
-// SOUND ENGINE (Web Audio API - no external files)
-// ═══════════════════════════════════════════════
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
-let audioCtx;
-function ensureAudio() { if (!audioCtx) audioCtx = new AudioCtx(); }
+(function(){
+"use strict";
+const APP_ID="times-table-quest";
+const PREFIX="kinetik_polished_times_table_quest";
+const GOAL_XP=30, MAX_HEARTS=5, BOSS_TIME=6000;
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const today=()=>new Date().toISOString().slice(0,10);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const COLORS=["#ff5d8f","#7c9cff","#19b56b","#ffb545","#a78bfa","#22d3ee","#f472b6"];
 
-function playSound(type) {
-  try {
-    ensureAudio();
-    const ctx = audioCtx;
-    if (type === 'correct') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.frequency.setValueAtTime(523, ctx.currentTime);
-      osc.frequency.setValueAtTime(659, ctx.currentTime + 0.08);
-      osc.frequency.setValueAtTime(784, ctx.currentTime + 0.16);
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
-      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35);
-    } else if (type === 'wrong') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(200, ctx.currentTime);
-      osc.frequency.setValueAtTime(150, ctx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
-    } else if (type === 'tap') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.frequency.setValueAtTime(600, ctx.currentTime);
-      gain.gain.setValueAtTime(0.06, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
-      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.08);
-    } else if (type === 'levelup') {
-      [523,659,784,1047].forEach((f,i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.frequency.setValueAtTime(f, ctx.currentTime + i*0.12);
-        gain.gain.setValueAtTime(0.12, ctx.currentTime + i*0.12);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i*0.12 + 0.3);
-        osc.start(ctx.currentTime + i*0.12); osc.stop(ctx.currentTime + i*0.12 + 0.3);
-      });
-    }
-  } catch(e) {}
+/* ===================== EMBED + BRIDGE ===================== */
+const embedded=(()=>{try{return window.self!==window.top}catch(e){return true}})();
+if(embedded)document.body.classList.add("embedded");
+const Bridge={
+  embedded, reqs:{}, rid:0,
+  send(type,payload){try{if(embedded&&window.parent&&window.parent!==window)window.parent.postMessage({type,appId:APP_ID,payload},"*");}catch(e){}},
+  list(collection){ return new Promise(res=>{ if(!embedded)return res(null);
+      const reqId=APP_ID+"_"+(++this.rid); this.reqs[reqId]=res;
+      try{window.parent.postMessage({type:"DATA_LIST",appId:APP_ID,collection,reqId},"*");}catch(e){return res(null);}
+      setTimeout(()=>{if(this.reqs[reqId]){delete this.reqs[reqId];res(null);}},2500); }); },
+  create(collection,payload){ if(embedded)try{window.parent.postMessage({type:"DATA_CREATE",appId:APP_ID,collection,payload},"*");}catch(e){} }
+};
+addEventListener("message",e=>{
+  const m=e.data||{}; if(m.type==="INIT_APP"&&m.payload)applyCtx(m.payload);
+  if(m.type==="DATA_RESULT"&&m.reqId&&Bridge.reqs[m.reqId]){const f=Bridge.reqs[m.reqId];delete Bridge.reqs[m.reqId];f(m.items||[]);}
+});
+
+/* ===================== STATE ===================== */
+const DEFAULT={theme:"light",xp:0,gems:0,streak:0,lastDay:"",day:"",dayXp:0,crowns:{},facts:{},sound:true,freeze:0,boost:0};
+let S=load();
+function load(){try{return Object.assign({},DEFAULT,JSON.parse(localStorage.getItem(PREFIX+"_state")||"{}"));}catch(e){return Object.assign({},DEFAULT);}}
+function save(){try{localStorage.setItem(PREFIX+"_state",JSON.stringify(S));}catch(e){}}
+let CTX={circleId:"standalone",circleType:"family",personId:"me",personName:"You",people:[]};
+function applyCtx(p){
+  CTX.circleId=p.circleId||CTX.circleId; CTX.circleType=p.circleType||CTX.circleType;
+  CTX.personId=p.personId||p.memberId||CTX.personId;
+  CTX.people=Array.isArray(p.people)?p.people:[];
+  const me=CTX.people.find(x=>x.id===CTX.personId); CTX.personName=(me&&me.name)||p.personName||"You";
+  if(p.theme)setTheme(p.theme);
+  $("#homeSub").textContent=cap(CTX.circleType)+" circle · keep your streak alive";
+  loadLeague();
 }
+function cap(s){return s?s[0].toUpperCase()+s.slice(1):s;}
 
-// ═══════════════════════════════════════════════
-// STATE / PERSISTENCE
-// ═══════════════════════════════════════════════
-const SKILLS = [
-  { id:2,  label:'×2',  table:2,  boss:false },
-  { id:3,  label:'×3',  table:3,  boss:false },
-  { id:4,  label:'×4',  table:4,  boss:false },
-  { id:'b1', label:'Boss', table:0, boss:true, requires:[2,3,4] },
-  { id:5,  label:'×5',  table:5,  boss:false },
-  { id:6,  label:'×6',  table:6,  boss:false },
-  { id:7,  label:'×7',  table:7,  boss:false },
-  { id:'b2', label:'Boss', table:0, boss:true, requires:[5,6,7] },
-  { id:8,  label:'×8',  table:8,  boss:false },
-  { id:9,  label:'×9',  table:9,  boss:false },
-  { id:10, label:'×10', table:10, boss:false },
-  { id:'b3', label:'Boss', table:0, boss:true, requires:[8,9,10] },
-  { id:11, label:'×11', table:11, boss:false },
-  { id:12, label:'×12', table:12, boss:false },
-  { id:'final', label:'Grand Master', table:0, boss:true, requires:[11,12] },
+/* ===================== CONTENT (swap this for sibling apps) ===================== */
+const TABLES=[2,5,10,3,4,6,7,8,9,11,12];
+function facList(t){const a=[];for(let b=1;b<=12;b++)a.push([t,b]);return a;}
+function facMix(ts){const a=[];ts.forEach(t=>{for(let b=2;b<=12;b++)a.push([t,b]);});return a;}
+const NODES=[
+  ...TABLES.map(t=>({id:"t"+t,label:t+"× Table",glyph:t+"×",facts:facList(t)})),
+  {id:"mixA",label:"Mixed Review",glyph:"∑",mixed:true,facts:facMix([2,5,10,3,4])},
+  {id:"mixB",label:"Mixed Review II",glyph:"∑",mixed:true,facts:facMix([6,7,8,9,11,12])},
+  {id:"boss",label:"Boss · Speed",glyph:"⚡",boss:true,facts:facMix(TABLES)}
 ];
 
-const DEFAULT_STATE = {
-  xp: 0,
-  streak: 0,
-  lastPlayDate: null,
-  hearts: 5,
-  heartsLostAt: null,
-  skills: {},
-  onboarded: false,
-};
-
-let state;
-
-function loadState() {
-  try {
-    const s = localStorage.getItem('ttq_state');
-    state = s ? { ...DEFAULT_STATE, ...JSON.parse(s) } : { ...DEFAULT_STATE };
-  } catch { state = { ...DEFAULT_STATE }; }
-  regenHearts();
+/* ===================== ADAPTIVE ENGINE ===================== */
+const fkey=(a,b)=>a+"x"+b;
+const fget=(a,b)=>S.facts[fkey(a,b)]||{s:0,n:0};
+function frecord(a,b,ok){const k=fkey(a,b),f=S.facts[k]||{s:0,n:0};f.n++;f.s=clamp(ok?f.s+1:f.s-1,0,5);S.facts[k]=f;}
+/* weak/new facts weighted into each session; mistake recycling happens live */
+function buildQueue(node){
+  const pool=node.facts, LEN=node.boss?20:14, bag=[];
+  pool.forEach(([a,b])=>{const f=fget(a,b);const w=(6-f.s)+(f.n===0?3:1);for(let i=0;i<w;i++)bag.push([a,b]);});
+  shuffle(bag);
+  const q=[],seen=new Set();
+  for(const fc of bag){if(q.length>=LEN)break;const k=fkey(fc[0],fc[1]);if(seen.has(k)&&pool.length>=LEN)continue;seen.add(k);q.push(fc);}
+  while(q.length<LEN)q.push(pool[Math.floor(Math.random()*pool.length)]);
+  return q.slice(0,LEN);
 }
-
-function saveState() {
-  try { localStorage.setItem('ttq_state', JSON.stringify(state)); } catch {}
+/* plausible wrong answers near the product */
+function distractors(a,b,answer){
+  const c=new Set(),add=v=>{if(v>0&&v!==answer)c.add(v);};
+  add(a*(b+1));add(a*(b-1));add((a+1)*b);add((a-1)*b);add(answer+a);add(answer-a);add(answer+b);add(answer-b);add(a+b);add(answer+1);add(answer-1);add(answer+10);
+  return shuffle([...c]).slice(0,3);
 }
+const crownOf=id=>S.crowns[id]||0;
+function nodeUnlocked(i){return i===0|| crownOf(NODES[i-1].id)>=1;}
 
-function getSkillState(id) {
-  if (!state.skills[id]) state.skills[id] = { crown:0, lessonsInCrown:0 };
-  return state.skills[id];
+/* ===================== AUDIO + HAPTIC ===================== */
+const Snd={ac:null,init(){if(!this.ac&&(window.AudioContext||window.webkitAudioContext)){try{this.ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}},
+  beep(freq,t,dur,type){if(!S.sound||!this.ac)return;try{const o=this.ac.createOscillator(),g=this.ac.createGain();o.type=type||"sine";o.frequency.value=freq;
+    o.connect(g);g.connect(this.ac.destination);const n=this.ac.currentTime+t;g.gain.setValueAtTime(.0001,n);g.gain.exponentialRampToValueAtTime(.22,n+.02);g.gain.exponentialRampToValueAtTime(.0001,n+dur);o.start(n);o.stop(n+dur+.02);}catch(e){}},
+  correct(){this.init();[[660,0],[880,.08],[1175,.16]].forEach(([f,t])=>this.beep(f,t,.18,"triangle"));},
+  wrong(){this.init();this.beep(180,0,.22,"sawtooth");this.beep(140,.08,.22,"sawtooth");},
+  win(){this.init();[[523,0],[659,.1],[784,.2],[1046,.32]].forEach(([f,t])=>this.beep(f,t,.26,"triangle"));}};
+const vibrate=ms=>{try{navigator.vibrate&&navigator.vibrate(ms);}catch(e){}};
+
+/* ===================== THEME / NAV ===================== */
+function setTheme(t){S.theme=(t==="dark")?"dark":"light";document.documentElement.dataset.theme=S.theme;
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=S.theme==="dark"?"#0e1424":"#fff7f9";save();}
+function show(id){$$(".screen").forEach(s=>s.classList.toggle("on",s.id==="s-"+id));}
+
+/* ===================== HOME RENDER ===================== */
+function renderHome(){
+  rolloverDay();
+  $("#cStreak").textContent=S.streak;
+  $("#cGems").textContent=S.gems;
+  $("#cXp").textContent=S.xp;
+  const pct=clamp(Math.round(S.dayXp/GOAL_XP*100),0,100);
+  $("#goalArc").setAttribute("stroke-dasharray",(pct*0.973)+" 100");
+  $("#goalTxt").textContent=pct+"%";
+  $("#goalSub").textContent=S.dayXp>=GOAL_XP?"Goal smashed — flame secured! 🔥":("Earn "+(GOAL_XP-S.dayXp)+" more XP today to keep the flame.");
+  $("#goalHd").textContent=S.dayXp>=GOAL_XP?"Daily goal · done":"Daily goal";
+  const z=["z1","z2","z3","z2"];
+  $("#path").innerHTML=NODES.map((n,i)=>{
+    const unlocked=nodeUnlocked(i), c=crownOf(n.id), done=c>=5;
+    const cls=["node",z[i%4],unlocked?"":"locked",done?"done":""].join(" ");
+    const crowns=`<div class="crowns">${[0,1,2,3,4].map(k=>`<i class="${k<c?"on":""}"></i>`).join("")}</div>`;
+    const glyph=!unlocked?"🔒":(done?"👑":n.glyph);
+    return `<div class="${cls}" data-i="${i}"><div class="conn"></div>
+      <button class="bub" data-i="${i}"><span>${glyph}</span></button>
+      <div class="lab">${n.label}</div>${crowns}
+      <button class="start" data-i="${i}">${c?"Practice":"Start"} · crown ${Math.min(c+1,5)}/5</button></div>`;
+  }).join("");
+  renderLeaguePrev();
 }
+function rolloverDay(){const d=today();if(S.day!==d){S.day=d;S.dayXp=0;save();}}
 
-function regenHearts() {
-  if (state.hearts >= 5) return;
-  if (!state.heartsLostAt) return;
-  const elapsed = Date.now() - state.heartsLostAt;
-  const regenCount = Math.floor(elapsed / (4 * 60 * 60 * 1000)); // 4hrs per heart (shortened for testing: use 30000 for 30s)
-  if (regenCount > 0) {
-    state.hearts = Math.min(5, state.hearts + regenCount);
-    if (state.hearts >= 5) state.heartsLostAt = null;
-    else state.heartsLostAt = Date.now() - (elapsed % (4 * 60 * 60 * 1000));
-    saveState();
+/* ===================== LESSON FLOW ===================== */
+const L={node:null,q:[],i:0,hearts:MAX_HEARTS,correct:0,total:0,wrong:0,answered:false,cur:null,timerId:null};
+let kpVal="";
+function startLesson(idx){
+  Snd.init();
+  const node=NODES[idx]; L.node=node;L.q=buildQueue(node);L.i=0;L.hearts=MAX_HEARTS;L.correct=0;L.total=0;L.wrong=0;
+  $("#lfoot").className="lfoot";show("lesson");renderQuestion();
+}
+function lessonTypes(){
+  const c=crownOf(L.node.id); if(L.node.boss)return shuffle(["mc","type","tf"]);
+  const sets=[["mc"],["mc","tf"],["mc","tf","type"],["mc","tf","type","missing"],["type","missing","mc","tf","match"]];
+  let set=sets[Math.min(c,4)].slice();
+  if(set.includes("match")&&(L.q.length-L.i<4||Math.random()>0.34))set.splice(set.indexOf("match"),1);
+  return shuffle(set);
+}
+function renderHearts(){$("#hearts").innerHTML=Array.from({length:MAX_HEARTS},(_,k)=>k<L.hearts?"❤️":"🤍").join("");}
+function renderQuestion(){
+  L.answered=false;
+  $("#prog").style.width=(L.i/L.q.length*100)+"%";
+  renderHearts();
+  $("#fb").className="fb";$("#lfoot").className="lfoot";
+  const btn=$("#checkBtn");btn.className="btn";btn.textContent="Check";btn.disabled=true;btn.onclick=submit;
+  stopTimer();
+  const [a,b]=L.q[L.i]; const type=lessonTypes()[0];
+  L.cur={a,b,type,answer:a*b,picked:null};
+  const body=$("#qbody"); body.scrollTop=0;
+  if(type==="match")return renderMatch(body);
+  let head={mc:"Pick the answer",tf:"True or false?",type:"Type the answer",missing:"Find the missing number"}[type];
+  if(L.node.boss)head="⚡ Beat the clock";
+  let html=`<div class="qkind">${head}</div>`;
+  if(type==="mc"||type==="tf")html+=dotVisual(a,b);
+  if(type==="mc"){
+    html+=`<div class="prompt">${a} × ${b} = <span class="q">?</span></div>`;
+    const opts=shuffle([a*b,...distractors(a,b,a*b)]);
+    html+=`<div class="choices">${opts.map(o=>`<button class="choice" data-v="${o}">${o}</button>`).join("")}</div>`;
+  }else if(type==="tf"){
+    const showWrong=Math.random()<.5; const shown=showWrong?(distractors(a,b,a*b)[0]||a*b+1):a*b;
+    L.cur.tfTrue=shown===a*b;
+    html+=`<div class="prompt">${a} × ${b} = ${shown}</div>`;
+    html+=`<div class="tf"><button class="choice" data-v="true">✓ True</button><button class="choice" data-v="false">✗ False</button></div>`;
+  }else if(type==="type"){
+    html+=`<div class="prompt">${a} × ${b} = <span class="q">?</span></div>`+keypad();
+  }else if(type==="missing"){
+    const hideA=Math.random()<.5; L.cur.answer=hideA?a:b;
+    html+=`<div class="prompt">${hideA?'<span class="q">?</span>':a} × ${hideA?b:'<span class="q">?</span>'} = ${a*b}</div>`+keypad();
   }
+  body.innerHTML=html;
+  if(type==="mc"||type==="tf")wireChoices();
+  else wireKeypad();
+  if(L.node.boss)startTimer();
 }
-
-// ═══════════════════════════════════════════════
-// STREAK LOGIC
-// ═══════════════════════════════════════════════
-function checkStreak() {
-  const today = new Date().toISOString().slice(0, 10);
-  if (state.lastPlayDate === today) return false;
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  if (state.lastPlayDate === yesterday) {
-    state.streak++;
-  } else if (state.lastPlayDate !== today) {
-    state.streak = 1;
-  }
-  state.lastPlayDate = today;
-  saveState();
-  return true;
+function dotVisual(a,b){
+  const cols=Math.min(b,12),rows=Math.min(a,12),pad=10;
+  const cw=(260-pad*2)/cols, rh=Math.min(cw,18), r=Math.max(3,Math.min(cw/2-1.5,7));
+  const W=260,H=pad*2+rows*rh;
+  let dots="";for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)dots+=`<circle cx="${pad+cw*x+cw/2}" cy="${pad+rh*y+rh/2}" r="${r}" fill="url(#dg)"/>`;
+  return `<div class="visual"><svg viewBox="0 0 ${W} ${H}"><defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--a)"/><stop offset="1" stop-color="var(--b)"/></linearGradient></defs>${dots}</svg></div>`;
 }
-
-// ═══════════════════════════════════════════════
-// THEME
-// ═══════════════════════════════════════════════
-function toggleTheme() {
-  const body = document.body;
-  const newTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  body.setAttribute('data-theme', newTheme);
-  try { localStorage.setItem('ttq_theme', newTheme); } catch {}
-  playSound('tap');
+function keypad(){
+  return `<div class="kpwrap"><div class="kpdisp empty" id="kpDisp">–</div>
+   <div class="kp">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-k="${n}">${n}</button>`).join("")}
+   <button data-k="clr">⌫</button><button data-k="0">0</button><button data-k="ok" style="background:linear-gradient(135deg,var(--a),var(--b));color:#fff">✓</button></div></div>`;
 }
-
-function loadTheme() {
-  try {
-    const t = localStorage.getItem('ttq_theme');
-    if (t) document.body.setAttribute('data-theme', t);
-  } catch {}
-}
-
-// ═══════════════════════════════════════════════
-// SCREENS
-// ═══════════════════════════════════════════════
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + id).classList.add('active');
-}
-
-function startApp() {
-  state.onboarded = true;
-  saveState();
-  goHome();
-}
-
-function goHome() {
-  showScreen('home');
-  renderPath();
-  updateHomeStats();
-}
-
-function updateHomeStats() {
-  document.getElementById('home-xp').textContent = state.xp;
-  document.getElementById('home-streak').textContent = state.streak;
-  document.getElementById('home-hearts').textContent = state.hearts;
-}
-
-// ═══════════════════════════════════════════════
-// SKILL PATH RENDERING
-// ═══════════════════════════════════════════════
-function isSkillUnlocked(skill, idx) {
-  if (idx === 0) return true;
-  if (skill.boss) {
-    return skill.requires.every(id => getSkillState(id).crown >= 1);
-  }
-  const prev = SKILLS[idx - 1];
-  if (prev.boss) {
-    return getSkillState(prev.id).crown >= 1;
-  }
-  return getSkillState(prev.id).crown >= 1;
-}
-
-function renderPath() {
-  const container = document.getElementById('skill-path');
-  container.innerHTML = '';
-  const offsets = [0, 40, -40, 20, -20, 30, -30, 0, 40, -40, 20, -20, 30, -30, 0];
-
-  SKILLS.forEach((skill, idx) => {
-    const ss = getSkillState(skill.id);
-    const unlocked = isSkillUnlocked(skill, idx);
-    const isCurrent = unlocked && ss.crown < 5;
-    const crownClass = 'crown' + Math.min(ss.crown, 5);
-
-    const node = document.createElement('div');
-    node.className = 'skill-node' + (unlocked ? '' : ' locked') + (skill.boss ? ' boss-node' : '');
-    node.style.paddingLeft = (offsets[idx % offsets.length] + 40) + 'px';
-
-    const lessonsNeeded = skill.boss ? 1 : 4;
-    const progressPct = ss.crown >= 5 ? 100 : (ss.lessonsInCrown / lessonsNeeded) * 100;
-    const crownColors = ['var(--text3)','var(--green)','var(--blue)','var(--purple)','var(--amber)','#FFD700'];
-
-    node.innerHTML = `
-      <div class="node-circle ${crownClass} ${isCurrent ? 'current-pulse' : ''}">
-        ${skill.boss ? '👑' : skill.label}
-        ${ss.crown > 0 ? `<div class="node-crown" style="color:${crownColors[ss.crown]}">${ss.crown}</div>` : ''}
-      </div>
-      <div class="node-info">
-        <div class="node-title">${skill.boss ? (skill.id === 'final' ? 'Grand Master' : 'Checkpoint') : skill.label + ' Times Table'}</div>
-        <div class="node-sub">${ss.crown >= 5 ? 'Mastered! ⭐' : (ss.crown === 0 ? (skill.boss ? 'Pass to unlock next section' : 'Start learning') : 'Crown ' + ss.crown + ' of 5')}</div>
-        ${ss.crown < 5 && ss.crown > 0 ? `<div class="node-progress"><div class="node-progress-fill" style="width:${progressPct}%;background:${crownColors[Math.min(ss.crown+1,5)]}"></div></div>` : ''}
-      </div>
-      ${unlocked && ss.crown < 5 ? `<button class="node-start" style="background:${isCurrent ? 'var(--green)' : 'var(--bg3)'};color:${isCurrent ? '#fff' : 'var(--text)'}">Start</button>` : ''}
-    `;
-
-    if (unlocked && ss.crown < 5) {
-      node.onclick = () => startLesson(skill);
-    }
-    container.appendChild(node);
+function wireKeypad(){
+  kpVal="";const disp=$("#kpDisp");
+  $$(".kp button").forEach(bt=>bt.onclick=()=>{
+    if(L.answered)return;const k=bt.dataset.k;
+    if(k==="clr")kpVal=kpVal.slice(0,-1);
+    else if(k==="ok"){if(kpVal)submit();return;}
+    else if(kpVal.length<4)kpVal+=k;
+    disp.textContent=kpVal||"–";disp.classList.toggle("empty",!kpVal);
+    $("#checkBtn").disabled=!kpVal;
   });
 }
-
-// ═══════════════════════════════════════════════
-// QUESTION GENERATION
-// ═══════════════════════════════════════════════
-function generateQuestions(skill) {
-  const questions = [];
-  const crown = getSkillState(skill.id).crown;
-  const tables = [];
-
-  if (skill.boss) {
-    skill.requires.forEach(id => {
-      const s = SKILLS.find(sk => sk.id === id);
-      if (s) tables.push(s.table);
-    });
-  } else if (skill.id === 'final') {
-    for (let t = 2; t <= 12; t++) tables.push(t);
-  } else {
-    tables.push(skill.table);
-  }
-
-  const totalQ = skill.boss ? 15 : 12;
-  const allPairs = [];
-  tables.forEach(t => {
-    for (let m = 1; m <= 12; m++) allPairs.push([t, m]);
+function wireChoices(){
+  $$(".choice").forEach(ch=>ch.onclick=()=>{
+    if(L.answered)return;
+    $$(".choice").forEach(c=>c.classList.remove("sel"));ch.classList.add("sel");
+    L.cur.picked=ch.dataset.v;$("#checkBtn").disabled=false;
   });
-
-  // Shuffle and pick
-  const shuffled = allPairs.sort(() => Math.random() - 0.5);
-  const picked = [];
-  while (picked.length < totalQ) {
-    picked.push(...shuffled);
-  }
-  const selected = picked.slice(0, totalQ);
-
-  // Assign question types based on crown level
-  selected.forEach((pair, i) => {
-    const [a, b] = pair;
-    const answer = a * b;
-    const qTypes = getQuestionTypes(crown, i, totalQ);
-    const type = qTypes[Math.floor(Math.random() * qTypes.length)];
-
-    if (type === 'mc') {
-      const opts = generateMCOptions(answer, a, b);
-      questions.push({ type:'mc', a, b, answer, prompt:`${a} × ${b}`, options:opts });
-    } else if (type === 'type') {
-      questions.push({ type:'type', a, b, answer, prompt:`${a} × ${b}` });
-    } else if (type === 'match') {
-      // Generate 4 pairs for matching
-      const matchPairs = [[a, b]];
-      const used = new Set([`${a}x${b}`]);
-      while (matchPairs.length < 4) {
-        const rp = allPairs[Math.floor(Math.random() * allPairs.length)];
-        const key = `${rp[0]}x${rp[1]}`;
-        if (!used.has(key)) { matchPairs.push(rp); used.add(key); }
+}
+function renderMatch(body){
+  const pool=[],seen=new Set();
+  const cand=[L.q[L.i],...shuffle(L.node.facts.slice())];
+  for(const fc of cand){const k=fkey(fc[0],fc[1]);if(seen.has(k))continue;seen.add(k);pool.push(fc);if(pool.length>=4)break;}
+  L.cur.match={done:0,n:pool.length};
+  const left=pool.map((fc,i)=>({i,t:fc[0]+" × "+fc[1]}));
+  const right=shuffle(pool.map((fc,i)=>({i,t:String(fc[0]*fc[1])})));
+  body.innerHTML=`<div class="qkind">Match each fact to its answer</div>
+    <div class="match"><div class="mcol">${left.map(o=>`<button class="mtile" data-side="L" data-i="${o.i}">${o.t}</button>`).join("")}</div>
+    <div class="mcol">${right.map(o=>`<button class="mtile" data-side="R" data-i="${o.i}">${o.t}</button>`).join("")}</div></div>`;
+  const btn=$("#checkBtn");btn.disabled=true;btn.textContent="Match them all";
+  let selL=null,selR=null;
+  $$(".mtile").forEach(t=>t.onclick=()=>{
+    if(t.classList.contains("gone")||L.answered)return;
+    if(t.dataset.side==="L"){$$('[data-side=L]').forEach(x=>x.classList.remove("sel"));t.classList.add("sel");selL=t;}
+    else{$$('[data-side=R]').forEach(x=>x.classList.remove("sel"));t.classList.add("sel");selR=t;}
+    if(selL&&selR){
+      if(selL.dataset.i===selR.dataset.i){
+        Snd.init();Snd.beep(720,0,.12,"triangle");[selL,selR].forEach(x=>{x.classList.add("gone");x.classList.remove("sel");});
+        L.cur.match.done++;selL=selR=null;
+        if(L.cur.match.done>=L.cur.match.n)finalizeAnswer(true,"Nice matching!","");
+      }else{
+        vibrate(20);[selL,selR].forEach(x=>{x.classList.add("bad");setTimeout(()=>x.classList.remove("bad"),350);x.classList.remove("sel");});
+        selL=selR=null;
       }
-      questions.push({
-        type:'match',
-        pairs: matchPairs.map(p => ({ q:`${p[0]} × ${p[1]}`, a:String(p[0]*p[1]) }))
-      });
-    } else if (type === 'reverse') {
-      const opts = generateReverseMCOptions(a, b);
-      questions.push({ type:'mc', a, b, answer:b, prompt:`${a} × ? = ${answer}`, options:opts });
     }
   });
-
-  return questions;
 }
-
-function getQuestionTypes(crown, qIndex, total) {
-  // Easy-hard-easy curve
-  const pos = qIndex / total;
-  const isWarmup = pos < 0.2;
-  const isCooldown = pos > 0.85;
-
-  if (crown <= 1) {
-    return isWarmup ? ['mc'] : ['mc','mc','mc','match'];
-  } else if (crown === 2) {
-    return isWarmup ? ['mc'] : isCooldown ? ['mc'] : ['mc','mc','type','match'];
-  } else if (crown === 3) {
-    return isWarmup ? ['mc','match'] : isCooldown ? ['mc'] : ['mc','type','type','match','reverse'];
-  } else if (crown === 4) {
-    return isWarmup ? ['mc','type'] : isCooldown ? ['mc','type'] : ['type','type','reverse','match'];
-  } else {
-    return ['type','type','type','reverse'];
-  }
+function submit(){
+  if(L.answered)return;
+  const {type,a,b}=L.cur; let ok=false;
+  if(type==="mc")ok=Number(L.cur.picked)===a*b;
+  else if(type==="tf")ok=(L.cur.picked==="true")===L.cur.tfTrue;
+  else if(type==="type")ok=Number(kpVal)===a*b;
+  else if(type==="missing")ok=Number(kpVal)===L.cur.answer;
+  if(type==="mc")$$(".choice").forEach(c=>{const v=Number(c.dataset.v);if(v===a*b)c.classList.add("right");else if(c.classList.contains("sel"))c.classList.add("wrongpick");else c.classList.add("dim");});
+  if(type==="tf")$$(".choice").forEach(c=>{const val=c.dataset.v==="true";if(val===L.cur.tfTrue)c.classList.add("right");else if(c.classList.contains("sel"))c.classList.add("wrongpick");});
+  if(type==="type"||type==="missing"){$("#kpDisp").classList.add(ok?"right":"wrongpick");if(!ok)$("#kpDisp").textContent=(kpVal||"–")+" → "+(type==="missing"?L.cur.answer:a*b);}
+  finalizeAnswer(ok,ok?pick(["Correct!","Nice!","Perfect!","You've got it!"]):"Not quite",ok?"":a+" × "+b+" = "+(a*b));
 }
-
-function generateMCOptions(answer, a, b) {
-  const opts = new Set([answer]);
-  const nearby = [answer-1, answer+1, answer-2, answer+2, a*(b-1), a*(b+1), (a-1)*b, (a+1)*b];
-  const filtered = nearby.filter(n => n > 0 && n !== answer);
-  while (opts.size < 4 && filtered.length) {
-    const idx = Math.floor(Math.random() * filtered.length);
-    opts.add(filtered.splice(idx, 1)[0]);
-  }
-  while (opts.size < 4) opts.add(answer + Math.floor(Math.random()*20) - 10 || answer + opts.size);
-  return [...opts].sort(() => Math.random() - 0.5);
-}
-
-function generateReverseMCOptions(a, b) {
-  const opts = new Set([b]);
-  [b-1, b+1, b-2, b+2, b+3].filter(n => n > 0 && n <= 12 && n !== b).forEach(n => opts.add(n));
-  while (opts.size < 4) opts.add(Math.floor(Math.random()*12)+1);
-  return [...opts].sort(() => Math.random() - 0.5);
-}
-
-// ═══════════════════════════════════════════════
-// LESSON ENGINE
-// ═══════════════════════════════════════════════
-let currentSkill = null;
-let questions = [];
-let currentQ = 0;
-let lessonHearts = 5;
-let lessonXP = 0;
-let lessonMistakes = 0;
-let lessonCorrectStreak = 0;
-let selectedAnswer = null;
-let answered = false;
-let mistakeQueue = [];
-let matchState = {};
-
-function startLesson(skill) {
-  if (state.hearts <= 0) {
-    showNoHearts();
-    return;
-  }
-  playSound('tap');
-  currentSkill = skill;
-  lessonHearts = state.hearts;
-  lessonXP = 0;
-  lessonMistakes = 0;
-  lessonCorrectStreak = 0;
-  currentQ = 0;
-  selectedAnswer = null;
-  answered = false;
-  mistakeQueue = [];
-  questions = generateQuestions(skill);
-  showScreen('lesson');
-  renderLessonQ();
-}
-
-function renderLessonQ() {
-  if (currentQ >= questions.length) {
-    if (mistakeQueue.length > 0) {
-      questions.push(mistakeQueue.shift());
-    } else {
-      finishLesson();
-      return;
-    }
-  }
-
-  const q = questions[currentQ];
-  const body = document.getElementById('lesson-body');
-  const progressPct = (currentQ / questions.length) * 100;
-  document.getElementById('lesson-progress-fill').style.width = progressPct + '%';
+function finalizeAnswer(ok,title,sub){
+  if(L.answered)return;
+  L.answered=true;stopTimer();L.total++;
+  frecord(L.cur.a,L.cur.b,ok);
+  if(ok)L.correct++; else {L.wrong++;L.hearts--;recycle(L.q[L.i]);}
   renderHearts();
-  clearFeedback();
-  answered = false;
-  selectedAnswer = null;
-  updateCheckBtn('disabled', 'Check');
+  const fl=$("#flash");fl.className="flash "+(ok?"good":"bad");setTimeout(()=>fl.className="flash",150);
+  ok?Snd.correct():Snd.wrong(); vibrate(ok?[12]:[40,30,40]);
+  const fb=$("#fb");fb.className="fb on "+(ok?"good":"bad");$("#fbic").textContent=ok?"✓":"✕";$("#fbT").textContent=title;$("#fbP").textContent=sub;
+  $("#lfoot").className="lfoot "+(ok?"good":"bad");
+  const btn=$("#checkBtn");btn.className="btn "+(ok?"green":"");btn.textContent=L.i+1>=L.q.length?"Finish":"Continue";btn.disabled=false;btn.onclick=next;
+  if(L.hearts<=0){btn.textContent="See results";btn.onclick=()=>finishLesson(false);}
+}
+function recycle(fc){const at=Math.min(L.q.length,L.i+2+Math.floor(Math.random()*2));L.q.splice(at,0,fc);}
+function next(){L.i++;if(L.i>=L.q.length)return finishLesson(true);renderQuestion();}
 
-  if (q.type === 'mc') {
-    body.innerHTML = `
-      <div class="question-sub">What is</div>
-      <div class="question-big">${q.prompt}</div>
-      <div class="mc-grid">
-        ${q.options.map((o,i) => `<div class="mc-option" data-val="${o}" onclick="selectMC(this, ${o})">${o}</div>`).join('')}
-      </div>
-    `;
-  } else if (q.type === 'type') {
-    body.innerHTML = `
-      <div class="question-sub">Type the answer</div>
-      <div class="question-big">${q.prompt}</div>
-      <div class="type-input-wrap">
-        <input class="type-input" type="number" inputmode="numeric" pattern="[0-9]*"
-          id="type-answer" placeholder="?" autofocus
-          onkeydown="if(event.key==='Enter')handleCheck()"
-          oninput="onTypeInput()">
-      </div>
-    `;
-    setTimeout(() => { const inp = document.getElementById('type-answer'); if(inp) inp.focus(); }, 100);
-  } else if (q.type === 'match') {
-    matchState = { selected:null, matched:0, pairs:q.pairs };
-    const left = q.pairs.map((p,i) => ({ text:p.q, idx:i, side:'q' })).sort(() => Math.random()-0.5);
-    const right = q.pairs.map((p,i) => ({ text:p.a, idx:i, side:'a' })).sort(() => Math.random()-0.5);
-    body.innerHTML = `
-      <div class="question-sub">Match the pairs</div>
-      <div class="match-grid" id="match-grid">
-        ${left.map((l,i) => `
-          <div class="match-card" data-side="q" data-idx="${l.idx}" onclick="selectMatch(this)">${l.text}</div>
-          <div class="match-card" data-side="a" data-idx="${right[i].idx}" onclick="selectMatch(this)">${right[i].text}</div>
-        `).join('')}
-      </div>
-    `;
-    updateCheckBtn('disabled', 'Match all pairs');
-  }
+/* boss timer */
+function startTimer(){const t=$("#timer");t.classList.add("on");const bar=t.querySelector("i");bar.style.transition="none";bar.style.width="100%";
+  requestAnimationFrame(()=>{bar.style.transition="width "+BOSS_TIME+"ms linear";bar.style.width="0%";});
+  L.timerId=setTimeout(()=>{if(!L.answered){
+    if(L.cur.type==="mc")$$(".choice").forEach(c=>{if(Number(c.dataset.v)===L.cur.a*L.cur.b)c.classList.add("right");});
+    if(L.cur.type==="tf")$$(".choice").forEach(c=>{if((c.dataset.v==="true")===L.cur.tfTrue)c.classList.add("right");});
+    finalizeAnswer(false,"Too slow!",L.cur.a+" × "+L.cur.b+" = "+(L.cur.a*L.cur.b));}},BOSS_TIME);}
+function stopTimer(){if(L.timerId){clearTimeout(L.timerId);L.timerId=null;}$("#timer").classList.remove("on");}
+
+/* ===================== FINISH + REWARDS ===================== */
+function finishLesson(reachedEnd){
+  stopTimer();
+  const passed=L.hearts>0&&reachedEnd;
+  const acc=Math.round(L.correct/Math.max(1,L.total)*100);
+  const perfect=L.wrong===0&&passed;
+  let xp=L.correct*2+(L.node.boss?6:4); if(perfect)xp+=5; if(S.boost>0){xp*=2;S.boost--;}
+  let gems=passed?(1+(perfect?2:0)+(L.node.boss?2:0)):0;
+  if(passed){const c=crownOf(L.node.id);if(c<5)S.crowns[L.node.id]=c+1;}
+  S.xp+=xp; S.gems+=gems; rolloverDay(); S.dayXp+=xp;
+  if(passed)bumpStreak();
+  save(); loadLeague();
+  Bridge.create("xp_events",{personId:CTX.personId,name:CTX.personName,xp,app:APP_ID,date:today()});
+  if(passed)Bridge.send("SHOW_TOAST",{message:"+"+xp+" XP in Times Table Quest"});
+  showComplete({xp,gems,acc,perfect,passed});
+}
+function bumpStreak(){
+  const d=today(); if(S.lastDay===d)return;
+  const yest=new Date(Date.now()-864e5).toISOString().slice(0,10);
+  if(S.lastDay===yest||S.lastDay==="")S.streak=(S.streak||0)+1;
+  else if(S.freeze>0){S.freeze--;S.streak=(S.streak||0)+1;}
+  else S.streak=1;
+  S.lastDay=d;save();
+}
+function showComplete(r){
+  $("#doneIcon").textContent=r.perfect?"🌟":r.passed?"👑":"💔";
+  $("#doneTitle").textContent=r.perfect?"Flawless!":r.passed?"Lesson complete!":"Out of hearts";
+  $("#doneSub").textContent=r.passed?(L.node.label+" · crown "+crownOf(L.node.id)+"/5"):"Give it another go — you'll get them next time.";
+  $("#doneTiles").innerHTML=`
+    <div class="tile xp"><div class="k">XP earned</div><div class="v">+${r.xp}</div></div>
+    <div class="tile acc"><div class="k">Accuracy</div><div class="v">${r.acc}%</div></div>
+    <div class="tile gem"><div class="k">Gems</div><div class="v">+${r.gems}</div></div>
+    <div class="tile str"><div class="k">Day streak</div><div class="v">${S.streak} 🔥</div></div>`;
+  const cont=$("#doneCont");cont.textContent=r.passed?"Continue":"Try again";
+  cont.onclick=()=>{ if(!r.passed){startLesson(NODES.indexOf(L.node));return;} renderHome();show("home"); };
+  show("done"); if(r.perfect)Snd.win();
 }
 
-function selectMC(el, val) {
-  if (answered) return;
-  playSound('tap');
-  document.querySelectorAll('.mc-option').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedAnswer = val;
-  updateCheckBtn('ready', 'Check');
+/* ===================== LEAGUE ===================== */
+let LEAGUE=[];
+async function loadLeague(){
+  let rows=null; try{rows=await Bridge.list("xp_events");}catch(e){}
+  const wkStart=weekStart(), agg={};
+  if(rows&&rows.length)rows.forEach(it=>{const p=it.payload||it;if(!p||(p.date&&p.date<wkStart))return;const id=p.personId||p.name||"?";agg[id]=agg[id]||{name:p.name||id,xp:0,id};agg[id].xp+=Number(p.xp)||0;});
+  const selfWeekly=S.dayXp;
+  (CTX.people.length?CTX.people:[{id:CTX.personId,name:CTX.personName}]).forEach(p=>{
+    if(!agg[p.id]){const seed=p.id===CTX.personId?selfWeekly:Math.round((Math.abs(hash(p.name||p.id))%70)+8);agg[p.id]={name:p.id===CTX.personId?"You":(p.name||"Member"),xp:seed,id:p.id};}
+  });
+  if(!agg[CTX.personId])agg[CTX.personId]={name:"You",xp:selfWeekly,id:CTX.personId};
+  else{agg[CTX.personId].xp=Math.max(agg[CTX.personId].xp,selfWeekly);agg[CTX.personId].name="You";}
+  LEAGUE=Object.values(agg).sort((a,b)=>b.xp-a.xp);
+  renderLeaguePrev(); if($("#s-league").classList.contains("on"))renderLeagueFull();
+}
+function weekStart(){const d=new Date();const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d.toISOString().slice(0,10);}
+function hash(s){let h=0;s=String(s);for(let i=0;i<s.length;i++)h=(h<<5)-h+s.charCodeAt(i)|0;return h;}
+function leagueRow(p,rank){
+  const me=p.id===CTX.personId, medal=["🥇","🥈","🥉"][rank-1]||rank;
+  const col=COLORS[Math.abs(hash(p.id))%COLORS.length];
+  return `<div class="lgrow ${me?"me":""}"><div class="rank">${medal}</div>
+    <div class="av" style="background:${col}">${(p.name||"?")[0].toUpperCase()}</div>
+    <div class="nm">${p.name}</div><div class="xp">${p.xp} XP</div></div>`;
+}
+function fallbackLeague(){return LEAGUE.length?LEAGUE:[{id:CTX.personId,name:"You",xp:S.dayXp}];}
+function renderLeaguePrev(){$("#leaguePrev").innerHTML=fallbackLeague().slice(0,3).map((p,i)=>leagueRow(p,i+1)).join("");}
+function renderLeagueFull(){$("#leagueFull").innerHTML=fallbackLeague().map((p,i)=>leagueRow(p,i+1)).join("");}
+
+/* ===================== SHOP ===================== */
+const SHOP=[
+  {id:"freeze",ic:"🧊",name:"Streak Freeze",desc:"Protects your streak for one missed day.",cost:10,max:2},
+  {id:"boost",ic:"⚡",name:"XP Boost",desc:"Double XP on your next lesson.",cost:15,max:3},
+  {id:"refill",ic:"❤️",name:"Heart Refill",desc:"Hearts refill at the start of every lesson — you're always covered.",cost:0,free:true}
+];
+function renderShop(){
+  $("#shopGems").textContent=S.gems;
+  $("#shopBody").innerHTML=`<p style="font-size:13px;color:var(--muted);font-weight:650;margin:2px 2px 14px">Earn 💎 by finishing lessons. Spend them to protect your streak and power up.</p>`+
+    SHOP.map(it=>{
+      const owned=it.id==="freeze"?S.freeze:it.id==="boost"?S.boost:0;
+      const btn=it.free?`<span class="cost owned">Built in</span>`:`<button class="cost" data-buy="${it.id}" ${S.gems<it.cost||owned>=it.max?"disabled":""}>${owned>=it.max?"Max":it.cost+" 💎"}</button>`;
+      const sub=it.id==="freeze"&&S.freeze?` · you have ${S.freeze}`:it.id==="boost"&&S.boost?` · ${S.boost} ready`:"";
+      return `<div class="shopitem"><div class="si">${it.ic}</div><div class="sd"><b>${it.name}${sub}</b><p>${it.desc}</p></div>${btn}</div>`;
+    }).join("");
+  $$("[data-buy]").forEach(b=>b.onclick=()=>buy(b.dataset.buy));
+}
+function buy(id){const it=SHOP.find(x=>x.id===id);if(!it||S.gems<it.cost)return;
+  if(id==="freeze"){if(S.freeze>=it.max)return;S.freeze++;}
+  if(id==="boost"){if(S.boost>=it.max)return;S.boost++;}
+  S.gems-=it.cost;save();Snd.init();Snd.beep(880,0,.12,"triangle");UI.toast(it.name+" purchased!");renderShop();$("#cGems").textContent=S.gems;
 }
 
-function onTypeInput() {
-  const v = document.getElementById('type-answer')?.value;
-  updateCheckBtn(v ? 'ready' : 'disabled', 'Check');
-  selectedAnswer = v ? parseInt(v) : null;
-}
+/* ===================== UI util ===================== */
+const UI={toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(this._t);this._t=setTimeout(()=>t.classList.remove("on"),1900);}};
 
-function selectMatch(el) {
-  if (el.classList.contains('matched')) return;
-  playSound('tap');
+/* ===================== WIRING ===================== */
+$("#themeBtn").onclick=()=>setTheme(S.theme==="dark"?"light":"dark");
+$("#quitLesson").onclick=()=>{stopTimer();renderHome();show("home");};
+$("#goShop").onclick=()=>{renderShop();show("shop");};
+$("#shopBack").onclick=()=>{renderHome();show("home");};
+$("#goLeague").onclick=()=>{renderLeagueFull();show("league");};
+$("#leagueBack").onclick=()=>{renderHome();show("home");};
+$("#path").addEventListener("click",e=>{
+  const start=e.target.closest(".start"); if(start){const i=+start.dataset.i;if(nodeUnlocked(i))startLesson(i);return;}
+  const bub=e.target.closest(".bub"); if(!bub)return;
+  const i=+bub.dataset.i; if(!nodeUnlocked(i)){UI.toast("Finish the previous quest to unlock this!");return;}
+  const node=bub.closest(".node"), open=node.classList.contains("sel");
+  $$(".node").forEach(n=>n.classList.remove("sel")); if(!open)node.classList.add("sel");
+});
 
-  if (!matchState.selected) {
-    document.querySelectorAll('.match-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    matchState.selected = el;
-  } else {
-    const prev = matchState.selected;
-    const prevSide = prev.dataset.side;
-    const elSide = el.dataset.side;
-
-    if (prevSide === elSide) {
-      prev.classList.remove('selected');
-      el.classList.add('selected');
-      matchState.selected = el;
-      return;
-    }
-
-    const prevIdx = parseInt(prev.dataset.idx);
-    const elIdx = parseInt(el.dataset.idx);
-
-    if (prevIdx === elIdx) {
-      // Match!
-      playSound('correct');
-      prev.classList.remove('selected');
-      prev.classList.add('matched');
-      el.classList.add('matched');
-      matchState.selected = null;
-      matchState.matched++;
-      if (matchState.matched >= matchState.pairs.length) {
-        answered = true;
-        lessonXP += 10;
-        lessonCorrectStreak++;
-        setTimeout(() => {
-          showFeedback(true);
-          updateCheckBtn('next-correct', 'Continue');
-        }, 300);
-      }
-    } else {
-      // Wrong
-      playSound('wrong');
-      el.classList.add('wrong-flash');
-      prev.classList.add('wrong-flash');
-      setTimeout(() => {
-        el.classList.remove('wrong-flash');
-        prev.classList.remove('wrong-flash');
-        prev.classList.remove('selected');
-      }, 500);
-      matchState.selected = null;
-      loseHeart();
-    }
-  }
-}
-
-function handleCheck() {
-  const q = questions[currentQ];
-  if (q.type === 'match') {
-    if (answered) { nextQuestion(); }
-    return;
-  }
-
-  if (answered) {
-    nextQuestion();
-    return;
-  }
-  if (selectedAnswer === null) return;
-
-  answered = true;
-  const correct = selectedAnswer === q.answer;
-
-  if (correct) {
-    playSound('correct');
-    lessonXP += 10;
-    lessonCorrectStreak++;
-    if (lessonCorrectStreak >= 3) lessonXP += 2; // streak bonus
-
-    if (q.type === 'mc') {
-      document.querySelectorAll('.mc-option').forEach(o => {
-        if (parseInt(o.dataset.val) === q.answer) o.classList.add('correct');
-        else o.classList.remove('selected');
-      });
-    } else if (q.type === 'type') {
-      document.getElementById('type-answer').classList.add('correct');
-    }
-    showFeedback(true);
-    updateCheckBtn('next-correct', 'Continue');
-  } else {
-    playSound('wrong');
-    lessonMistakes++;
-    lessonCorrectStreak = 0;
-
-    if (q.type === 'mc') {
-      document.querySelectorAll('.mc-option').forEach(o => {
-        if (parseInt(o.dataset.val) === q.answer) o.classList.add('correct');
-        if (o.classList.contains('selected')) o.classList.add('wrong');
-      });
-    } else if (q.type === 'type') {
-      const inp = document.getElementById('type-answer');
-      inp.classList.add('wrong');
-      inp.value = q.answer;
-    }
-    showFeedback(false, q.answer);
-    updateCheckBtn('next-wrong', 'Got it');
-    loseHeart();
-
-    // Mistake recycling: re-add this question later
-    if (q.type !== 'match') {
-      mistakeQueue.push({ ...q });
-    }
-  }
-}
-
-function loseHeart() {
-  lessonHearts--;
-  state.hearts = lessonHearts;
-  if (lessonHearts <= 0) state.heartsLostAt = Date.now();
-  saveState();
-  renderHearts();
-
-  if (lessonHearts <= 0) {
-    setTimeout(() => {
-      finishLesson(true);
-    }, 1200);
-  }
-}
-
-function nextQuestion() {
-  currentQ++;
-  renderLessonQ();
-}
-
-function renderHearts() {
-  const container = document.getElementById('lesson-hearts');
-  container.innerHTML = '';
-  for (let i = 0; i < 5; i++) {
-    const h = document.createElement('span');
-    h.className = 'heart' + (i < lessonHearts ? '' : ' lost');
-    h.textContent = '❤️';
-    container.appendChild(h);
-  }
-}
-
-function showFeedback(correct, correctAnswer) {
-  const area = document.getElementById('feedback-area');
-  if (correct) {
-    const msgs = ['Nice!', 'Correct!', 'Amazing!', 'You got it!', 'Perfect!', 'Brilliant!'];
-    area.innerHTML = `<div class="feedback-banner correct">${msgs[Math.floor(Math.random()*msgs.length)]}</div>`;
-  } else {
-    area.innerHTML = `<div class="feedback-banner wrong">Correct answer: ${correctAnswer}</div>`;
-  }
-}
-
-function clearFeedback() {
-  document.getElementById('feedback-area').innerHTML = '';
-}
-
-function updateCheckBtn(state, text) {
-  const btn = document.getElementById('check-btn');
-  btn.className = 'check-btn ' + state;
-  btn.textContent = text;
-}
-
-function exitLesson() {
-  playSound('tap');
-  goHome();
-}
-
-// ═══════════════════════════════════════════════
-// LESSON COMPLETION
-// ═══════════════════════════════════════════════
-function finishLesson(ranOutOfHearts) {
-  if (ranOutOfHearts) {
-    // Still give partial XP
-    lessonXP = Math.floor(lessonXP * 0.5);
-  }
-
-  // Award XP
-  const bonusXP = lessonMistakes === 0 ? 5 : 0;
-  const totalXP = lessonXP + bonusXP;
-  state.xp += totalXP;
-
-  // Crown progress
-  if (!ranOutOfHearts && currentSkill) {
-    const ss = getSkillState(currentSkill.id);
-    if (ss.crown < 5) {
-      ss.lessonsInCrown++;
-      const needed = currentSkill.boss ? 1 : 4;
-      if (ss.lessonsInCrown >= needed) {
-        ss.crown++;
-        ss.lessonsInCrown = 0;
-      }
-    }
-  }
-
-  // Streak
-  const isNewStreak = checkStreak();
-  saveState();
-
-  // Show reward
-  showScreen('reward');
-  const icon = ranOutOfHearts ? '💔' : (lessonMistakes === 0 ? '⭐' : '🎉');
-  const title = ranOutOfHearts ? 'Out of hearts!' : (lessonMistakes === 0 ? 'Perfect lesson!' : 'Lesson complete!');
-
-  document.getElementById('reward-icon').textContent = icon;
-  document.getElementById('reward-title').textContent = title;
-
-  document.getElementById('reward-stats').innerHTML = `
-    <div class="reward-stat">
-      <div class="reward-stat-val" style="color:var(--amber)">+${totalXP}</div>
-      <div class="reward-stat-lab">XP earned</div>
-    </div>
-    <div class="reward-stat">
-      <div class="reward-stat-val" style="color:var(--red)">${lessonMistakes}</div>
-      <div class="reward-stat-lab">mistakes</div>
-    </div>
-    <div class="reward-stat">
-      <div class="reward-stat-val" style="color:var(--green)">${Math.round((1 - lessonMistakes / questions.length) * 100)}%</div>
-      <div class="reward-stat-lab">accuracy</div>
-    </div>
-  `;
-
-  const ss = currentSkill ? getSkillState(currentSkill.id) : null;
-  const crownMsg = document.getElementById('reward-crown-msg');
-  if (ranOutOfHearts) {
-    crownMsg.textContent = 'Practice more to earn hearts back!';
-  } else if (ss && ss.lessonsInCrown === 0 && ss.crown > 0) {
-    crownMsg.innerHTML = `<span style="font-size:20px">👑</span> Crown ${ss.crown} unlocked!`;
-    playSound('levelup');
-  } else if (ss && ss.crown < 5) {
-    const needed = currentSkill.boss ? 1 : 4;
-    crownMsg.textContent = `${ss.lessonsInCrown}/${needed} lessons to next crown`;
-  } else {
-    crownMsg.textContent = '';
-  }
-
-  if (!ranOutOfHearts && lessonMistakes === 0) {
-    spawnConfetti();
-  }
-
-  if (isNewStreak) {
-    setTimeout(() => showStreakModal(), 1200);
-  }
-}
-
-// ═══════════════════════════════════════════════
-// NO HEARTS
-// ═══════════════════════════════════════════════
-function showNoHearts() {
-  const body = document.getElementById('lesson-body');
-  showScreen('lesson');
-  document.getElementById('lesson-progress-fill').style.width = '0%';
-  renderHearts();
-  document.getElementById('check-btn').style.display = 'none';
-
-  const nextHeart = state.heartsLostAt ? new Date(state.heartsLostAt + 4*60*60*1000) : null;
-  body.innerHTML = `
-    <div class="no-hearts-screen">
-      <div class="no-hearts-icon">💔</div>
-      <div class="no-hearts-title">No hearts left!</div>
-      <div class="no-hearts-desc">Hearts regenerate over time. Come back soon to keep learning!</div>
-      ${nextHeart ? `<div class="no-hearts-timer" id="heart-timer"></div>` : ''}
-      <button class="no-hearts-btn" onclick="goHome();document.getElementById('check-btn').style.display=''">Back to path</button>
-    </div>
-  `;
-
-  if (nextHeart) {
-    const updateTimer = () => {
-      const diff = nextHeart - Date.now();
-      if (diff <= 0) {
-        regenHearts();
-        goHome();
-        return;
-      }
-      const h = Math.floor(diff / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      const el = document.getElementById('heart-timer');
-      if (el) el.textContent = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    };
-    updateTimer();
-    setInterval(updateTimer, 1000);
-  }
-}
-
-// ═══════════════════════════════════════════════
-// CONFETTI
-// ═══════════════════════════════════════════════
-function spawnConfetti() {
-  const container = document.getElementById('confetti');
-  container.innerHTML = '';
-  const colors = ['#58CC02','#FF9600','#CE82FF','#1CB0F6','#FF4B4B','#FFD700'];
-  for (let i = 0; i < 40; i++) {
-    const piece = document.createElement('div');
-    piece.className = 'confetti-piece';
-    piece.style.left = Math.random() * 100 + '%';
-    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-    piece.style.animationDelay = Math.random() * 0.8 + 's';
-    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-    piece.style.width = (6 + Math.random()*8) + 'px';
-    piece.style.height = (6 + Math.random()*8) + 'px';
-    container.appendChild(piece);
-  }
-  setTimeout(() => container.innerHTML = '', 3000);
-}
-
-// ═══════════════════════════════════════════════
-// STREAK MODAL
-// ═══════════════════════════════════════════════
-function showStreakModal() {
-  const modal = document.getElementById('streak-modal');
-  const milestones = [7,30,50,100,200,365];
-  const isMilestone = milestones.includes(state.streak);
-
-  document.getElementById('streak-modal-icon').textContent = isMilestone ? '🏆' : '🔥';
-  document.getElementById('streak-modal-title').textContent = `${state.streak} day streak!`;
-  document.getElementById('streak-modal-desc').textContent = isMilestone
-    ? `Incredible! ${state.streak} days in a row — that's real dedication!`
-    : (state.streak === 1 ? "Great start! Come back tomorrow to keep it going." : `${state.streak} days strong — keep it up!`);
-  modal.classList.add('active');
-}
-
-function closeStreakModal() {
-  document.getElementById('streak-modal').classList.remove('active');
-}
-
-// ═══════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════
-loadTheme();
-loadState();
-
-if (!state.onboarded) {
-  showScreen('onboard');
-} else {
-  goHome();
-}
+/* boot */
+setTheme(S.theme);
+renderHome();
+loadLeague();
+})();
 </script>
 </body>
 </html>
