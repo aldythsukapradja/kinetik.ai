@@ -1,156 +1,879 @@
-<!--
-KINETIK APP STANDARD v0.4
-
-PRODUCT:
-Kinetik is a private life app for Family and Friends circles.
-
-APP:
-Cook Simple is a polished standalone Kinetik mini app.
-Analog inspiration: Tasty, SideChef, Kitchen Stories.
-
-IMPORTANT:
-- This app closely follows proven interaction patterns from the analog target.
-- It does not copy protected logos, mascots, names, exact artwork, or exact trade dress.
-- It keeps distinct Kinetik branding, icons, colors, and data contracts.
-
-ARCHITECTURE:
-- Single self-contained HTML file.
-- Inline CSS and vanilla JavaScript only.
-- No external frameworks, CDNs, build step, or backend dependency.
-- Works directly from a local HTML file.
-- Works embedded inside the Kinetik shell iframe.
-- Uses AppBridge messages for future parent-shell persistence.
-- Uses localStorage for direct-file progress and history.
-
-KINETIK INTEGRATION:
-- Detects embedded mode with window.self !== window.top.
-- Listens for INIT_APP messages.
-- Accepts circleId, circleType, memberId, personId, theme, and context.
-- Sends DATA_CREATE, DATA_UPDATE, OPEN_APP, and SHOW_TOAST bridge messages when relevant.
-
-DATA:
-- Storage prefix: kinetik_polished_cook_simple.
-- App-specific future records should be stored in AppRecords with circleId, appId, collection, and payloadJson.
-- This app must not access another circle's data.
-
-React/TypeScript app scale-up note:
-- This single-file app should later become a React feature module or standalone route.
-- It must keep using AppBridge/DataAPI contracts.
-- It must not access another circle's data.
-- It must store app-specific data in AppRecords using circleId, appId, collection, payloadJson.
--->
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f7faff">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="theme-color" content="#fbf6f2">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Cook Simple">
-  <title>Cook Simple - Kinetik Polished</title>
+  <meta name="apple-mobile-web-app-title" content="Cook">
+  <title>Cook Simple - Kinetik</title>
   <script type="application/kinetik-app+json">
 {
   "appId": "cook-simple",
   "name": "Cook Simple",
-  "shortName": "CS",
+  "shortName": "Cook",
   "icon": "🍳",
-  "gradient": [
-    "#ff8b3d",
-    "#f35d9f"
-  ],
-  "category": "life",
-  "tagline": "Swipe-style recipe coaching for busy family meals.",
-  "about": "A visual recipe app with ingredient prep, step cards, timers, and cooked history.",
-  "audience": "family and friends circles",
-  "circleTypes": [
-    "family",
-    "friends",
-    "learning",
-    "work"
-  ],
-  "worksWith": [
-    "offline",
-    "standalone",
-    "embedded",
-    "local progress"
-  ],
+  "gradient": ["#ec5c3b", "#f59e0b"],
+  "category": "productivity",
+  "tagline": "Save recipes, cook step-by-step, plan the week, shop in one tap.",
+  "about": "A recipe and meal-planner for Kinetik circles. Cook mode with timers, send ingredients to Grocery Buddy, schedule dinners to the circle calendar, and put dinner to a vote in Event Poll. Saves through AppRecords.",
+  "audience": "all",
+  "circleTypes": ["family", "friends"],
+  "worksWith": ["offline", "circle-sync", "standalone"],
   "status": "live",
   "minMembers": 1
 }
   </script>
   <style>
-    :root{color-scheme:light;--bg:#f5f8ff;--bg2:#edf3ff;--ink:#111827;--muted:#6b7280;--faint:#9ca3af;--panel:rgba(255,255,255,.88);--solid:#fff;--line:rgba(17,24,39,.1);--a:#ff8b3d;--b:#f35d9f;--good:#18b978;--warn:#f59e0b;--bad:#ef4444;--shadow:0 22px 58px rgba(35,52,92,.15);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    [data-theme=dark]{color-scheme:dark;--bg:#08101b;--bg2:#101827;--ink:#f8fbff;--muted:#b9c3d2;--faint:#7e8aa2;--panel:rgba(18,26,42,.82);--solid:#111827;--line:rgba(255,255,255,.12);--shadow:0 22px 58px rgba(0,0,0,.35)}
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;width:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink)}body{background:radial-gradient(circle at 12% -8%,color-mix(in srgb,var(--a) 22%,transparent),transparent 34%),radial-gradient(circle at 94% 0%,color-mix(in srgb,var(--b) 18%,transparent),transparent 32%),linear-gradient(180deg,var(--bg),var(--bg2))}button,input{font:inherit}button{border:0;color:inherit;cursor:pointer}h1,h2,h3,p{margin:0}.app{height:100dvh;max-width:780px;margin:0 auto;display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden}.top{padding:calc(12px + env(safe-area-inset-top,0px)) 16px 10px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px}.mark{width:46px;height:46px;border-radius:16px;color:white;display:grid;place-items:center;font-size:12px;font-weight:950;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 16px 32px color-mix(in srgb,var(--a) 24%,transparent)}.title{min-width:0}.title h1{font-size:22px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title p{margin-top:5px;color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.iconbtn{width:42px;height:42px;border-radius:15px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 10px 24px rgba(0,0,0,.06)}.content{min-height:0;overflow-y:auto;overflow-x:hidden;padding:6px 16px 18px;scrollbar-width:none}.content::-webkit-scrollbar,.hscroll::-webkit-scrollbar{display:none}.hero{position:relative;overflow:hidden;border-radius:30px;padding:18px;color:white;background:radial-gradient(circle at 14% 0%,rgba(255,255,255,.34),transparent 31%),linear-gradient(135deg,var(--a),var(--b));box-shadow:var(--shadow)}.hero:after{content:"";position:absolute;right:-42px;bottom:-78px;width:172px;height:172px;border-radius:50%;border:30px solid rgba(255,255,255,.14)}.hero>*{position:relative;z-index:1}.kicker{font-size:11px;letter-spacing:1.8px;font-weight:950;text-transform:uppercase;opacity:.74}.hero h2{margin-top:8px;font-size:29px;line-height:1;letter-spacing:0}.hero p{margin-top:9px;color:rgba(255,255,255,.82);font-size:13px;line-height:1.35;font-weight:750}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:16px}.stat{min-height:62px;padding:10px;border-radius:18px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(14px)}.stat b{font-size:20px}.stat span{display:block;margin-top:6px;color:rgba(255,255,255,.78);font-size:11px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .tabs{position:sticky;top:0;z-index:2;margin:14px 0;padding:4px;border-radius:18px;background:rgba(255,255,255,.64);border:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;backdrop-filter:blur(20px)}[data-theme=dark] .tabs{background:rgba(18,26,42,.74)}.tab{height:40px;border-radius:14px;background:transparent;color:var(--muted);font-size:13px;font-weight:950}.tab.active{color:var(--ink);background:var(--solid);box-shadow:0 8px 18px rgba(0,0,0,.08)}.screen{display:none}.screen.active{display:block;animation:rise .24s ease both}@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.panel{border-radius:28px;background:var(--panel);border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.08);padding:15px;margin-bottom:12px;backdrop-filter:blur(20px)}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.panel h3{font-size:16px}.muted{color:var(--muted);font-size:12px;font-weight:760;line-height:1.35}.chip{display:inline-flex;align-items:center;height:29px;padding:0 10px;border-radius:999px;background:color-mix(in srgb,var(--a) 10%,transparent);border:1px solid color-mix(in srgb,var(--a) 17%,transparent);color:var(--a);font-size:11px;font-weight:950}.grid{display:grid;gap:10px}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.tile,.choice{width:100%;border-radius:22px;background:var(--solid);border:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.06);padding:13px;text-align:left;transition:transform .18s ease,border-color .18s ease}.tile:active,.choice:active,.primary:active,.secondary:active,.iconbtn:active{transform:scale(.98)}.tile b{display:block;font-size:14px;line-height:1.15}.tile span{display:block;margin-top:6px;color:var(--muted);font-size:12px;font-weight:750;line-height:1.3}.visual{min-height:168px;border-radius:26px;background:radial-gradient(circle at 22% 20%,color-mix(in srgb,var(--a) 18%,transparent),transparent 32%),linear-gradient(135deg,color-mix(in srgb,var(--a) 8%,var(--solid)),color-mix(in srgb,var(--b) 8%,var(--solid)));border:1px solid var(--line);display:grid;place-items:center;margin-bottom:13px;overflow:hidden}.visual svg{width:min(250px,82vw);height:150px}.prompt{font-size:24px;line-height:1.08;margin-top:10px}.choices{display:grid;gap:10px;margin-top:14px}.choice{font-size:15px;font-weight:900;min-height:58px;border-width:2px}.choice.selected{border-color:var(--a);background:color-mix(in srgb,var(--a) 9%,var(--solid))}.choice.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--solid))}.choice.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--solid))}.feedback{display:none;margin-top:12px;border-radius:20px;padding:13px;background:color-mix(in srgb,var(--a) 8%,var(--solid));border:1px solid var(--line)}.feedback.show{display:block}.feedback b{font-size:14px}.feedback p{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.35;font-weight:750}.meter{height:9px;border-radius:999px;background:rgba(120,140,160,.16);overflow:hidden;margin-top:10px}.meter i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--a),var(--b));transition:width .28s ease}.hscroll{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none}.appcard{flex:0 0 70%;min-height:150px;color:white;background:linear-gradient(135deg,var(--x),var(--y));border:0}.appicon{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-weight:950}.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}.check{width:34px;height:34px;border-radius:13px;display:grid;place-items:center;background:rgba(120,140,160,.14);border:1px solid var(--line);font-weight:950;color:transparent}.done .check{color:white;background:linear-gradient(135deg,var(--good),var(--a));border-color:transparent}.done .row-label{text-decoration:line-through;color:var(--muted)}.row-label{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.inputrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}.input{height:48px;border-radius:17px;border:1px solid var(--line);padding:0 13px;background:var(--solid);color:var(--ink)}.bottom{padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--bg) 94%,transparent) 35%,var(--bg));backdrop-filter:blur(18px)}.primary,.secondary{min-height:52px;border-radius:18px;font-size:15px;font-weight:950;display:inline-flex;align-items:center;justify-content:center;gap:8px}.primary{color:white;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 16px 32px color-mix(in srgb,var(--a) 24%,transparent)}.primary:disabled{opacity:.5;box-shadow:none}.secondary{min-width:56px;background:var(--panel);border:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.06)}.toast{position:fixed;left:50%;bottom:calc(82px + env(safe-area-inset-bottom,0px));transform:translate(-50%,18px);opacity:0;max-width:min(340px,calc(100vw - 32px));padding:12px 14px;border-radius:999px;background:rgba(17,24,39,.92);color:white;font-size:13px;font-weight:850;box-shadow:0 18px 42px rgba(0,0,0,.22);transition:opacity .22s ease,transform .22s ease;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
-    .clock{width:158px;height:158px;border-radius:50%;background:var(--solid);border:8px solid color-mix(in srgb,var(--a) 22%,white);position:relative;box-shadow:0 18px 38px rgba(0,0,0,.13)}.hand{position:absolute;left:50%;top:50%;height:5px;border-radius:999px;background:var(--ink);transform-origin:left center}.hour{width:43px}.minute{width:60px;background:var(--a)}.pin{position:absolute;left:50%;top:50%;width:13px;height:13px;border-radius:50%;background:var(--b);transform:translate(-50%,-50%)}.tick{position:absolute;left:50%;top:50%;font-size:12px;font-weight:950;color:var(--muted)}
-    @media (min-width:720px){.content{padding-inline:24px}.two{grid-template-columns:repeat(3,minmax(0,1fr))}.appcard{flex-basis:38%}}@media (max-width:370px){.top{padding-inline:12px}.hero h2{font-size:25px}.prompt{font-size:22px}.two{grid-template-columns:1fr}.appcard{flex-basis:82%}}@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    :root{
+      color-scheme:light;
+      --bg:#fbf6f2;
+      --bg2:#f6ece4;
+      --surface:rgba(255,255,255,.84);
+      --surface2:rgba(255,255,255,.62);
+      --line:rgba(54,33,20,.1);
+      --line2:rgba(54,33,20,.16);
+      --text:#231712;
+      --muted:#7c6a5f;
+      --faint:#a99a8e;
+      --accent:#ec5c3b;
+      --accent2:#f59e0b;
+      --good:#10b981;
+      --danger:#e54865;
+      --warn:#d97706;
+      --shadow:0 18px 45px rgba(104,69,46,.14);
+      --r:16px;
+      --safe-b:env(safe-area-inset-bottom,0px);
+      --safe-t:env(safe-area-inset-top,0px);
+      --font:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    }
+    [data-theme="dark"]{
+      color-scheme:dark;
+      --bg:#120b08;
+      --bg2:#1c1410;
+      --surface:rgba(38,28,22,.84);
+      --surface2:rgba(255,255,255,.06);
+      --line:rgba(255,255,255,.1);
+      --line2:rgba(255,255,255,.16);
+      --text:#fbeee6;
+      --muted:#c4ab9c;
+      --faint:#7c6757;
+      --shadow:0 18px 54px rgba(0,0,0,.42);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%}
+    body{
+      margin:0;font-family:var(--font);color:var(--text);
+      background:
+        radial-gradient(120% 80% at 86% -10%, color-mix(in srgb,var(--accent2) 20%, transparent), transparent 54%),
+        radial-gradient(100% 76% at 0 0, color-mix(in srgb,var(--accent) 20%, transparent), transparent 48%),
+        linear-gradient(180deg,var(--bg2),var(--bg) 58%);
+      -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow:hidden;
+    }
+    button,input,textarea,select{font:inherit;color:inherit}
+    button{border:0;background:none;cursor:pointer}
+    input,textarea{border:0;outline:0}
+    h1,h2,h3,p{margin:0}
+    ::-webkit-scrollbar{width:0;height:0}
+
+    #app{max-width:520px;height:100dvh;margin:0 auto;display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+    header{
+      padding:calc(var(--safe-t) + 14px) 16px 10px;
+      background:linear-gradient(180deg,color-mix(in srgb,var(--bg2) 82%,transparent),transparent);
+      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:5;
+    }
+    .brandrow{display:flex;align-items:center;gap:10px}
+    .logo{
+      width:38px;height:38px;border-radius:13px;display:grid;place-items:center;flex:none;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;font-size:21px;
+      box-shadow:0 10px 22px color-mix(in srgb,var(--accent) 26%,transparent);
+    }
+    .brand{min-width:0}
+    .brand h1{font-size:18px;font-weight:900;line-height:1.05;white-space:nowrap}
+    .brand p{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .spacer{flex:1}
+    .xp-pill{min-width:54px;height:36px;padding:0 11px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:5px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:900;box-shadow:0 8px 22px rgba(80,50,30,.06)}
+    .xp-pill b{color:var(--accent)}
+    .iconbtn{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);box-shadow:0 8px 22px rgba(80,50,30,.06)}
+    .iconbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+    main{min-height:0;overflow:hidden;padding:8px 14px calc(74px + var(--safe-b))}
+    .view{display:none;height:100%;min-height:0;overflow-y:auto;animation:fade .22s ease}
+    .view.active{display:block}
+    #v-recipes.active{display:flex;flex-direction:column;overflow:hidden}
+    .sticky-top{flex:none;position:relative;z-index:4;padding-bottom:6px}
+    .sticky-top:after{content:"";position:absolute;left:-14px;right:-14px;bottom:-12px;height:18px;pointer-events:none;background:linear-gradient(180deg,var(--bg),transparent)}
+    .scroll-body{min-height:0;overflow-y:auto;padding:2px 0 6px}
+    @keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+    .searchbar{
+      display:flex;align-items:center;gap:8px;padding:7px;border-radius:20px;margin-bottom:13px;
+      background:linear-gradient(135deg,rgba(255,255,255,.74),rgba(255,255,255,.5));
+      border:1px solid rgba(54,33,20,.08);box-shadow:0 16px 40px rgba(90,60,40,.11);
+    }
+    [data-theme="dark"] .searchbar{background:var(--surface);border-color:var(--line)}
+    .searchbar .mag{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;color:var(--muted);flex:none}
+    .searchbar input{flex:1;min-width:0;background:transparent;font-size:14px;font-weight:650;padding:8px 3px}
+    .searchbar input::placeholder{color:var(--faint)}
+    .newbtn{height:34px;padding:0 12px;border-radius:12px;display:inline-flex;align-items:center;gap:5px;flex:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;font-size:12px;font-weight:950;box-shadow:0 8px 18px color-mix(in srgb,var(--accent) 22%,transparent)}
+    .newbtn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+
+    .section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:13px 2px 9px}
+    .section-head h2{font-size:13px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .section-head small{font-size:11.5px;color:var(--faint);font-weight:850}
+    .chips{display:flex;gap:9px;overflow-x:auto;padding:1px 2px 12px;margin:0 -2px;scroll-snap-type:x proximity}
+    .chip{flex:none;padding:8px 13px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);color:var(--muted);font-size:12.5px;font-weight:850;white-space:nowrap;scroll-snap-align:start}
+    .chip.on{color:white;border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 20%,transparent)}
+
+    .recipe-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .recipe-card{
+      position:relative;border-radius:20px;overflow:hidden;text-align:left;
+      background:var(--surface);border:1px solid var(--line);box-shadow:0 14px 32px rgba(90,60,40,.1);
+      transition:transform .14s ease;display:flex;flex-direction:column;
+    }
+    .recipe-card:active{transform:scale(.97)}
+    .recipe-hero{height:96px;display:grid;place-items:center;font-size:46px;position:relative}
+    .recipe-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,color-mix(in srgb,var(--surface) 92%,transparent))}
+    .recipe-body{padding:10px 12px 13px}
+    .recipe-body h3{font-size:14.5px;font-weight:900;line-height:1.15;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+    .recipe-meta{margin-top:7px;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11.5px;font-weight:800}
+    .recipe-meta span{display:inline-flex;align-items:center;gap:4px}
+    .recipe-meta svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+    .recipe-card .planned{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:9px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 88%,white);color:white;font-size:13px;box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 30%,transparent)}
+    .add-card{
+      border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:150px;
+      color:var(--accent);font-weight:950;font-size:13px;
+      background:linear-gradient(150deg,color-mix(in srgb,var(--accent) 12%,var(--surface)),color-mix(in srgb,var(--accent2) 10%,var(--surface2)));
+      border:1px dashed color-mix(in srgb,var(--accent) 40%,transparent);
+    }
+    .add-card .plus{width:42px;height:42px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;font-size:24px;box-shadow:0 10px 22px color-mix(in srgb,var(--accent) 26%,transparent)}
+
+    /* PLAN */
+    .plan-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 2px 12px}
+    .plan-head h2{font-size:16px;font-weight:950}
+    .plan-head .wk{font-size:11.5px;color:var(--muted);font-weight:800;margin-top:2px}
+    .day-card{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:11px;padding:11px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 24px rgba(90,60,40,.07);margin-bottom:9px}
+    .day-card .day{display:flex;flex-direction:column;align-items:center;justify-content:center;width:48px;height:48px;border-radius:13px;background:color-mix(in srgb,var(--accent) 10%,transparent)}
+    .day-card .day .dn{font-size:10px;font-weight:900;text-transform:uppercase;color:var(--accent);letter-spacing:.05em}
+    .day-card .day .dd{font-size:17px;font-weight:950;line-height:1}
+    .day-card.today .day{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+    .day-card.today .day .dn,.day-card.today .day .dd{color:white}
+    .day-meal{min-width:0}
+    .day-meal b{display:block;font-size:14px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .day-meal small{display:block;margin-top:2px;color:var(--faint);font-size:11px;font-weight:800}
+    .day-meal.empty b{color:var(--faint);font-weight:700}
+    .day-card .plan-act{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--surface2);border:1px solid var(--line);color:var(--muted)}
+    .day-card .plan-act svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+    .plan-cta{margin:14px 0 4px}
+
+    /* COOK MODE picker */
+    .cook-pick{padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:10px;display:grid;grid-template-columns:46px 1fr auto;gap:11px;align-items:center}
+    .cook-pick .ce{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-size:26px;background:color-mix(in srgb,var(--accent) 9%,transparent)}
+    .cook-pick b{font-size:14.5px;font-weight:900}
+    .cook-pick small{display:block;margin-top:2px;color:var(--muted);font-size:11.5px;font-weight:800}
+    .cook-pick .play{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;box-shadow:0 8px 18px color-mix(in srgb,var(--accent) 26%,transparent)}
+    .cook-pick .play svg{width:18px;height:18px;fill:currentColor}
+
+    /* generic buttons */
+    .btn{width:100%;min-height:50px;border-radius:15px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;box-shadow:0 12px 26px color-mix(in srgb,var(--accent) 24%,transparent)}
+    .btn.ghost{background:var(--surface);color:var(--text);border:1px solid var(--line2);box-shadow:none}
+    .btn:active{transform:scale(.98)}
+    .btn:disabled{opacity:.42;pointer-events:none}
+    .btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+
+    /* YOU */
+    .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+    .stat{padding:14px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 24px rgba(90,60,40,.07)}
+    .stat .v{font-size:24px;font-weight:950;line-height:1;color:var(--accent)}
+    .stat .k{margin-top:5px;font-size:11.5px;color:var(--muted);font-weight:800}
+    .tiercard{padding:15px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:14px}
+    .tiercard .top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .tiercard .gem{font-size:30px}
+    .tiercard .top b{font-size:16px;font-weight:950;display:block}
+    .tiercard .top small{font-size:11.5px;color:var(--muted);font-weight:800}
+    .bar{height:9px;border-radius:999px;background:var(--surface2);overflow:hidden}
+    .bar>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .8s cubic-bezier(.2,.8,.2,1)}
+    .bar-lbl{display:flex;justify-content:space-between;margin-top:7px;font-size:11.5px;color:var(--muted);font-weight:800}
+    .standings{padding:13px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+    .standings h2{font-size:14px;margin-bottom:4px;font-weight:950}
+    .standings .hint{font-size:11px;color:var(--faint);font-weight:800;margin-bottom:8px}
+    .lb-row{display:grid;grid-template-columns:24px 30px 1fr auto;align-items:center;gap:9px;padding:9px 2px;border-top:1px solid var(--line)}
+    .lb-row:first-of-type{border-top:0}
+    .avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:white;font-size:11px;font-weight:900}
+    .lb-row b{font-size:13px}
+    .lb-row small{display:block;color:var(--faint);font-size:10.5px;font-weight:800;margin-top:1px}
+    .points{color:var(--accent);font-weight:950;font-size:13px}
+    .link-line{display:block;text-align:center;margin-top:12px;font-size:12.5px;color:var(--accent);font-weight:900}
+    .settings{margin-top:14px}
+    .srow{display:flex;align-items:center;gap:12px;padding:13px;border-radius:14px;background:var(--surface);border:1px solid var(--line);margin-bottom:8px}
+    .srow .si{width:20px;height:20px;color:var(--muted)}
+    .srow .si svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .srow .t{flex:1;font-weight:800;font-size:13.5px}
+
+    .empty{padding:52px 22px;text-align:center;color:var(--muted)}
+    .empty .big{font-size:43px;margin-bottom:12px}
+    .empty h3{font-size:16px;margin-bottom:6px;color:var(--text);font-weight:900}
+    .empty p{font-size:13px;line-height:1.5;font-weight:600}
+
+    /* SHEETS / MODALS */
+    .layer{position:fixed;inset:0;z-index:60;display:grid;place-items:end center;padding:0;background:rgba(20,12,8,.32);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:fade .2s ease}
+    .sheet{width:min(100%,520px);max-height:92dvh;display:flex;flex-direction:column;border-radius:26px 26px 0 0;background:var(--bg);border:1px solid var(--line);box-shadow:0 -10px 60px rgba(0,0,0,.3);animation:slideup .26s cubic-bezier(.2,.9,.3,1)}
+    @keyframes slideup{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+    .sheet-grab{width:40px;height:5px;border-radius:999px;background:var(--line2);margin:9px auto 2px;flex:none}
+    .sheet-scroll{overflow-y:auto;padding:6px 18px calc(18px + var(--safe-b))}
+    .sheet-hero{height:120px;border-radius:20px;display:grid;place-items:center;font-size:62px;margin:6px 0 14px;background:linear-gradient(140deg,color-mix(in srgb,var(--accent) 16%,var(--surface)),color-mix(in srgb,var(--accent2) 14%,var(--surface)))}
+    .sheet h2{font-size:21px;font-weight:950;letter-spacing:-.2px}
+    .sheet .sub{margin-top:5px;color:var(--muted);font-size:13px;font-weight:800;display:flex;gap:12px;align-items:center}
+    .sheet .sub svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
+    .serv{display:flex;align-items:center;gap:12px;margin:16px 0;padding:11px 14px;border-radius:15px;background:var(--surface);border:1px solid var(--line)}
+    .serv .lab{flex:1;font-weight:900;font-size:13.5px}
+    .stepper{display:flex;align-items:center;gap:12px}
+    .stepper button{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--surface2);border:1px solid var(--line2);font-size:20px;font-weight:900;color:var(--accent)}
+    .stepper b{min-width:22px;text-align:center;font-size:16px;font-weight:950}
+    .ings h3,.steps h3{font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:16px 0 9px}
+    .ing{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;padding:9px 2px;border-top:1px solid var(--line)}
+    .ing:first-of-type{border-top:0}
+    .ing .ie{font-size:19px;text-align:center}
+    .ing .inm{font-size:14px;font-weight:750}
+    .ing .iq{font-size:12.5px;font-weight:950;color:var(--accent);background:color-mix(in srgb,var(--accent) 11%,transparent);padding:3px 9px;border-radius:999px;white-space:nowrap}
+    .stepline{display:grid;grid-template-columns:26px 1fr;gap:11px;padding:9px 0;border-top:1px solid var(--line)}
+    .stepline:first-of-type{border-top:0}
+    .stepline .sn{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);font-size:12px;font-weight:950}
+    .stepline p{font-size:13.5px;line-height:1.45;font-weight:600;color:var(--text)}
+    .stepline .tmr{margin-top:4px;font-size:11px;font-weight:900;color:var(--muted);display:inline-flex;gap:4px;align-items:center}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
+    .actions .btn{min-height:46px;font-size:13px;border-radius:14px}
+    .actions .btn.full{grid-column:1/-1}
+    .actions .btn.sec{background:var(--surface);color:var(--text);border:1px solid var(--line2);box-shadow:none}
+    .actions .btn.sec svg{color:var(--accent)}
+
+    /* COOK MODE fullscreen */
+    .cookmode{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;background:
+      radial-gradient(120% 70% at 80% -10%, color-mix(in srgb,var(--accent2) 22%,transparent), transparent 55%),
+      linear-gradient(180deg,var(--bg2),var(--bg) 60%);padding:calc(var(--safe-t) + 12px) 18px calc(18px + var(--safe-b))}
+    .cm-top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    .cm-top .x{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);color:var(--text)}
+    .cm-top .x svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round}
+    .cm-top .cmt{flex:1;min-width:0}
+    .cm-top .cmt b{font-size:15px;font-weight:950;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cm-top .cmt small{font-size:11.5px;color:var(--muted);font-weight:850}
+    .cm-prog{display:flex;gap:5px;margin-bottom:18px}
+    .cm-prog i{flex:1;height:5px;border-radius:999px;background:var(--line2)}
+    .cm-prog i.on{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+    .cm-stage{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;justify-content:center}
+    .cm-step-n{font-size:13px;font-weight:950;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px}
+    .cm-step-t{font-size:26px;font-weight:850;line-height:1.32;letter-spacing:-.3px}
+    .cm-timer{margin-top:26px;display:none;align-items:center;gap:14px;padding:14px 16px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+    .cm-timer.show{display:flex}
+    .cm-timer .tval{font-size:30px;font-weight:950;font-variant-numeric:tabular-nums;letter-spacing:-1px;min-width:104px}
+    .cm-timer .tbtn{margin-left:auto;height:42px;padding:0 18px;border-radius:13px;font-weight:950;font-size:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white}
+    .cm-timer .tbtn.paused{background:var(--surface2);color:var(--text);border:1px solid var(--line2)}
+    .cm-nav{display:flex;gap:10px;margin-top:18px}
+    .cm-nav button{flex:1;min-height:54px;border-radius:16px;font-size:15px;font-weight:950;background:var(--surface);border:1px solid var(--line2);color:var(--text)}
+    .cm-nav button.primary{flex:2;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;border-color:transparent;box-shadow:0 12px 26px color-mix(in srgb,var(--accent) 26%,transparent)}
+    .cm-nav button:disabled{opacity:.4;pointer-events:none}
+
+    /* compose form */
+    .field{margin-bottom:12px}
+    .field label{display:block;font-size:11.5px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px}
+    .field input,.field textarea,.field select{width:100%;padding:13px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line2);font-size:14px;font-weight:650}
+    .field textarea{min-height:96px;resize:vertical;line-height:1.5}
+    .field .hint{margin-top:5px;font-size:11px;color:var(--faint);font-weight:700}
+    .pickrow{display:flex;gap:9px;flex-wrap:wrap}
+    .pickrow .chip{cursor:pointer}
+
+    .confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+    .confirm-actions button{height:44px;border-radius:14px;font-size:13px;font-weight:950;border:1px solid var(--line2);background:var(--surface2)}
+    .confirm-actions .go{background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;border-color:transparent}
+    .confirm-actions .danger{background:linear-gradient(135deg,#ef4444,#fb7185);color:white;border-color:transparent}
+
+    .toast{position:fixed;left:50%;bottom:calc(88px + var(--safe-b));z-index:90;max-width:90%;transform:translateX(-50%) translateY(18px);opacity:0;pointer-events:none;padding:11px 16px;border-radius:999px;background:#2a1c14;color:white;font-size:13px;font-weight:850;box-shadow:0 12px 34px rgba(0,0,0,.28);transition:all .22s ease;text-align:center}
+    [data-theme="dark"] .toast{background:#3a2a20}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .toast b{color:var(--accent2)}
+
+    nav{position:fixed;left:0;right:0;bottom:0;z-index:20;max-width:520px;margin:0 auto;display:flex;padding:8px 12px calc(8px + var(--safe-b));background:color-mix(in srgb,var(--surface) 88%,transparent);border-top:1px solid var(--line);backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2)}
+    .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;color:var(--muted);font-size:10.5px;font-weight:850}
+    .tab svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .tab.on{color:var(--accent)}
+
+    @media(max-width:360px){.recipe-grid{gap:9px}.cm-step-t{font-size:23px}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
-  <main class="app">
-    <header class="top">
-      <div class="mark">CS</div>
-      <div class="title"><h1>Cook Simple</h1><p id="circleLine">Standalone circle</p></div>
-      <button class="iconbtn" id="themeBtn" type="button" aria-label="Toggle theme">T</button>
+  <div id="app">
+    <header>
+      <div class="brandrow">
+        <div class="logo">🍳</div>
+        <div class="brand"><h1>Cook Simple</h1><p id="sub">Recipes for your circle</p></div>
+        <div class="spacer"></div>
+        <div class="xp-pill" title="Your cook points this week">⚡ <b id="xpVal">0</b></div>
+        <button class="iconbtn" id="themeBtn" aria-label="Theme"><svg viewBox="0 0 24 24"><path d="M12 3v2.2M12 18.8V21M4.4 4.4 6 6M18 18l1.6 1.6M3 12h2.2M18.8 12H21M4.4 19.6 6 18M18 6l1.6-1.6"/><circle cx="12" cy="12" r="4.2"/></svg></button>
+      </div>
     </header>
-    <section class="content">
-      <article class="hero"><div class="kicker">Tasty, SideChef, Kitchen Stories</div><h2>Swipe-style recipe coaching for busy family meals.</h2><p>A visual recipe app with ingredient prep, step cards, timers, and cooked history.</p><div class="stats"><div class="stat"><b id="score">0</b><span>score</span></div><div class="stat"><b id="streak">0</b><span>streak</span></div><div class="stat"><b id="session">0</b><span>sessions</span></div></div></article>
-      <nav class="tabs"><button class="tab active" data-tab="play" type="button">Play</button><button class="tab" data-tab="progress" type="button">Progress</button><button class="tab" data-tab="about" type="button">About</button></nav>
-      <section class="screen active" id="play"></section>
-      <section class="screen" id="progress"></section>
-      <section class="screen" id="about"></section>
-    </section>
-    <footer class="bottom"><button class="primary" id="primary" type="button">Continue</button><button class="secondary" id="next" type="button">Next</button></footer>
-  </main>
+
+    <main>
+      <!-- RECIPES -->
+      <section class="view active" id="v-recipes">
+        <div class="sticky-top">
+          <div class="searchbar">
+            <span class="mag"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m16.5 16.5 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+            <input id="searchInput" placeholder="Search recipes" autocomplete="off">
+            <button class="newbtn" id="newRecipe" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> New</button>
+          </div>
+          <div class="chips" id="catChips"></div>
+        </div>
+        <div class="scroll-body">
+          <div class="section-head"><h2 id="gridTitle">All recipes</h2><small id="resultCount"></small></div>
+          <div class="recipe-grid" id="recipeGrid"></div>
+        </div>
+      </section>
+
+      <!-- PLAN -->
+      <section class="view" id="v-plan">
+        <div class="plan-head"><div><h2>This week</h2><div class="wk" id="weekLabel"></div></div></div>
+        <div id="planBody"></div>
+        <button class="btn plan-cta" id="planToGrocery"><svg viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M6 6 5 3H3"/></svg> Send week's ingredients to Grocery</button>
+      </section>
+
+      <!-- COOK -->
+      <section class="view" id="v-cook">
+        <div class="section-head"><h2>Ready to cook</h2><small>Step-by-step mode</small></div>
+        <div id="cookBody"></div>
+      </section>
+
+      <!-- YOU -->
+      <section class="view" id="v-you">
+        <div class="statgrid">
+          <div class="stat"><div class="v" id="sWeek">0</div><div class="k">Points this week</div></div>
+          <div class="stat"><div class="v" id="sCooked">0</div><div class="k">Recipes cooked</div></div>
+          <div class="stat"><div class="v" id="sPlanned">0</div><div class="k">Meals planned</div></div>
+          <div class="stat"><div class="v" id="sShared">0</div><div class="k">Sent to grocery</div></div>
+        </div>
+        <div class="tiercard">
+          <div class="top"><div class="gem" id="tierGem">🥉</div><div><b id="tierName">Bronze</b><small>Earn points across the circle</small></div></div>
+          <div class="bar"><i id="tierBar" style="width:0%"></i></div>
+          <div class="bar-lbl"><span id="tierLo">0 pts</span><span id="tierHi">100 to Silver</span></div>
+        </div>
+        <div class="standings">
+          <h2>Circle standings</h2>
+          <div class="hint">All apps combined · this week</div>
+          <div id="miniLb"></div>
+          <a class="link-line" id="openPoll">Open full leaderboard in Event Poll →</a>
+        </div>
+        <div class="settings">
+          <div class="srow"><span class="si"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg></span><span class="t">Light appearance</span><button class="iconbtn" id="lightToggle">🌙</button></div>
+          <div class="srow"><span class="si"><svg viewBox="0 0 24 24"><path d="M9 17H7a5 5 0 0 1 0-10h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg></span><span class="t" id="chState">Channel: cook-simple</span></div>
+          <div class="srow" id="resetRow"><span class="si"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 4v4h4"/></svg></span><span class="t">Reset demo data</span></div>
+        </div>
+      </section>
+    </main>
+
+    <nav>
+      <button class="tab on" data-v="recipes" aria-label="Recipes"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H7a2 2 0 0 1-2-2z"/><path d="M9 8h7M9 12h7M9 16h4"/></svg><span>Recipes</span></button>
+      <button class="tab" data-v="plan" aria-label="Plan"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg><span>Plan</span></button>
+      <button class="tab" data-v="cook" aria-label="Cook"><svg viewBox="0 0 24 24"><path d="M6 14h12v3a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z"/><path d="M8 14a4 4 0 0 1 8 0"/><path d="M12 6V4M9 6.5 8 5M15 6.5 16 5"/></svg><span>Cook</span></button>
+      <button class="tab" data-v="you" aria-label="You"><svg viewBox="0 0 24 24"><path d="M12 3 9.2 8.8 3 9.7l4.5 4.4-1.1 6.2L12 17.4l5.6 2.9-1.1-6.2L21 9.7l-6.2-.9z"/></svg><span>You</span></button>
+    </nav>
+  </div>
   <div class="toast" id="toast"></div>
+
   <script>
-    (function(){
-      "use strict";
-      const App={"appId":"cook-simple","name":"Cook Simple","file":"App_CookSimple.html","icon":"CS","gradient":["#ff8b3d","#f35d9f"],"category":"life","mode":"recipe","analog":"Tasty, SideChef, Kitchen Stories","tagline":"Swipe-style recipe coaching for busy family meals.","about":"A visual recipe app with ingredient prep, step cards, timers, and cooked history.","recipes":[{"title":"Egg Fried Rice","time":12,"type":"Quick","ingredients":["Cooked rice","2 eggs","Soy sauce","Spring onion"],"steps":["Scramble eggs first","Add rice and stir","Season lightly","Finish with spring onion"]},{"title":"Chicken Pasta","time":25,"type":"Family","ingredients":["Pasta","Chicken strips","Tomato sauce","Parmesan"],"steps":["Boil pasta","Cook chicken","Add sauce","Toss pasta together"]},{"title":"Salmon Rice Bowl","time":20,"type":"Healthy","ingredients":["Salmon","Rice","Cucumber","Yogurt sauce"],"steps":["Cook salmon","Prepare rice","Slice cucumber","Top with sauce"]}]};
-      const Config={appId:App.appId,storagePrefix:"kinetik_polished_cook_simple",collection:App.mode+"_records"};
-      const $=(s)=>document.querySelector(s);const $$=(s)=>Array.from(document.querySelectorAll(s));
-      const fallback={theme:"light",circleId:"standalone_demo",circleType:"family",personId:"standalone_person",memberId:"standalone_person",tab:"play",index:0,selected:null,checked:false,score:0,streak:0,sessions:0,done:{},customItems:[],installed:{},step:0,wheel:0};
-      const state=Object.assign(fallback,readJson(Config.storagePrefix+"_state",{}));state.embedded=isEmbedded();setTheme(state.theme,false);listen();wire();render();
-      function isEmbedded(){try{return window.self!==window.top}catch(e){return true}}
-      const Bridge={send(type,payload){if(!state.embedded||!window.parent||window.parent===window)return;window.parent.postMessage({type,appId:Config.appId,payload},"*")}};
-      function listen(){window.addEventListener("message",(event)=>{const msg=event.data||{};if(msg.type!=="INIT_APP")return;const p=msg.payload||{};state.circleId=p.circleId||state.circleId;state.circleType=p.circleType||state.circleType;state.personId=p.personId||p.memberId||state.personId;state.memberId=p.memberId||p.personId||state.memberId;if(p.theme)setTheme(p.theme,true);save();render()})}
-      function wire(){$("#themeBtn").onclick=()=>setTheme(state.theme==="dark"?"light":"dark",true);$$(".tab").forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;save();render()});$("#next").onclick=next;$("#primary").onclick=primary}
-      function render(){$("#circleLine").textContent=(state.embedded?"":"Standalone ")+titleCase(state.circleType)+" circle";$("#score").textContent=state.score;$("#streak").textContent=state.streak;$("#session").textContent=state.sessions;$$(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===state.tab));["play","progress","about"].forEach(id=>$("#"+id).classList.toggle("active",state.tab===id));renderPlay();renderProgress();renderAbout();renderButtons()}
-      function renderPlay(){if(App.mode==="store")return renderStore();if(App.mode==="grocery")return renderGrocery();if(App.mode==="recipe")return renderRecipe();return renderChallenge()}
-      function renderStore(){const featured=(App.items||[]).slice(0,6);$("#play").innerHTML='<div class="hscroll">'+featured.map(item=>'<button class="tile appcard" style="--x:'+item.gradient[0]+';--y:'+item.gradient[1]+'" data-app="'+escAttr(item.appId)+'"><span class="appicon">'+esc(item.icon)+'</span><b>'+esc(item.name)+'</b><span>'+esc(item.tagline)+'</span><span class="chip">'+(state.installed[item.appId]?"OPEN":"GET")+'</span></button>').join("")+'</div><div class="panel" style="margin-top:12px"><div class="panel-head"><div><h3>Browse all apps</h3><p class="muted">Local Kinetik apps discovered from rebuilt manifests.</p></div></div><div class="grid two">'+(App.items||[]).map(item=>'<button class="tile" data-app="'+escAttr(item.appId)+'"><span class="row"><span class="appicon" style="background:linear-gradient(135deg,'+item.gradient[0]+','+item.gradient[1]+')">'+esc(item.icon)+'</span><span><b>'+esc(item.name)+'</b><span>'+esc(item.category)+'</span></span><span class="chip">'+(state.installed[item.appId]?"OPEN":"GET")+'</span></span></button>').join("")+'</div></div>';$$("[data-app]").forEach(btn=>btn.onclick=()=>{const id=btn.dataset.app;state.installed[id]=true;complete(1,"Installed "+id);Bridge.send("OPEN_APP",{appId:id})})}
-      function renderGrocery(){const sections=App.sections||[];$("#play").innerHTML=sections.map((section,idx)=>{const items=idx===0?section.items.concat(state.customItems||[]):section.items;return '<div class="panel"><div class="panel-head"><div><h3>'+esc(section.icon)+' '+esc(section.name)+'</h3><p class="muted">Tap to move items into cart.</p></div><span class="chip">'+items.filter(item=>state.done[section.name+'_'+item]).length+'/'+items.length+'</span></div><div class="grid">'+items.map(item=>row(section.name,item)).join("")+'</div></div>'}).join("")+'<div class="panel"><div class="inputrow"><input class="input" id="addInput" placeholder="Add item"><button class="secondary" id="addBtn">Add</button></div></div>';$$("[data-item]").forEach(b=>b.onclick=()=>{state.done[b.dataset.key]=!state.done[b.dataset.key];complete(1,"Cart updated");render()});$("#addBtn").onclick=()=>{const input=$("#addInput");const text=input.value.trim();if(!text)return;state.customItems.push(text);input.value="";complete(1,"Item added");render()}}
-      function renderRecipe(){const recipe=(App.recipes||[])[state.index%(App.recipes||[]).length];const active=recipe.steps[state.step]||recipe.steps[0];$("#play").innerHTML='<div class="panel"><div class="visual">'+visual("recipe",recipe)+'</div><span class="chip">'+esc(recipe.type)+' / '+recipe.time+' min</span><h2 class="prompt">'+esc(recipe.title)+'</h2><p class="muted">'+esc(recipe.ingredients.join(", "))+'</p></div><div class="panel"><div class="panel-head"><div><h3>Step '+(state.step+1)+'</h3><p class="muted">'+esc(active)+'</p></div><span class="chip">'+(state.step+1)+'/'+recipe.steps.length+'</span></div><div class="meter"><i style="width:'+Math.round((state.step+1)/recipe.steps.length*100)+'%"></i></div></div>'}
-      function renderChallenge(){const item=current();$("#play").innerHTML='<div class="panel"><div class="visual">'+visual(item.visual||App.mode,item)+'</div><span class="chip">'+esc(item.kind)+'</span><h2 class="prompt">'+esc(item.prompt)+'</h2><div class="choices">'+item.choices.map((choice,i)=>'<button class="choice '+choiceClass(i)+'" data-choice="'+i+'">'+esc(choice)+'</button>').join("")+'</div><div class="feedback '+(state.checked?'show':'')+'"><b>'+(state.selected===item.answer?'Correct':'Try this idea')+'</b><p>'+esc(item.explain)+'</p></div></div>';$$("[data-choice]").forEach(btn=>btn.onclick=()=>{if(state.checked)return;state.selected=Number(btn.dataset.choice);save();render()})}
-      function renderProgress(){$("#progress").innerHTML='<div class="panel"><div class="panel-head"><div><h3>Progress</h3><p class="muted">Saved locally for this app and circle.</p></div><span class="chip">'+state.score+' pts</span></div><div class="meter"><i style="width:'+Math.min(100,state.score%101)+'%"></i></div></div><div class="grid two"><div class="tile"><b>'+state.score+'</b><span>Total score</span></div><div class="tile"><b>'+state.streak+'</b><span>Current streak</span></div><div class="tile"><b>'+state.sessions+'</b><span>Sessions</span></div><div class="tile"><b>'+esc(App.analog)+'</b><span>Analog target</span></div></div>'}
-      function renderAbout(){$("#about").innerHTML='<div class="panel"><span class="chip">'+esc(App.mode)+'</span><h2 class="prompt">'+esc(App.name)+'</h2><p class="muted">'+esc(App.about)+'</p></div><div class="panel"><h3>Interaction target</h3><p class="muted">'+esc(App.analog)+'</p></div>'}
-      function renderButtons(){if(App.mode==="store"){$("#primary").textContent="Install featured";$("#next").textContent="Reset"}else if(App.mode==="grocery"){$("#primary").textContent="Finish shop";$("#next").textContent="Clear"}else if(App.mode==="recipe"){$("#primary").textContent="Next step";$("#next").textContent="Recipe"}else{$("#primary").textContent=state.checked?"Continue":"Check";$("#primary").disabled=state.selected==null;$("#next").textContent=App.mode==="spin"?"Spin":"Next"}}
-      function primary(){if(App.mode==="store"){const first=(App.items||[])[0];if(first){state.installed[first.appId]=true;complete(1,"Featured installed");render()}return}if(App.mode==="grocery"){complete(8,"Shopping saved");return}if(App.mode==="recipe"){const recipe=(App.recipes||[])[state.index%(App.recipes||[]).length];if(state.step<recipe.steps.length-1){state.step++;save();render()}else{complete(12,"Cooked saved");next()}return}if(!state.checked){check();return}next()}
-      function check(){const item=current();state.checked=true;if(state.selected===item.answer){complete(10,"Correct")}else{state.streak=0;toast(item.explain);save()}Bridge.send("DATA_CREATE",{collection:Config.collection,payload:record({item:item.title,correct:state.selected===item.answer})});render()}
-      function next(){if(App.mode==="store"){state.installed={};save();render();return}if(App.mode==="grocery"){state.done={};save();render();return}if(App.mode==="recipe"){state.index=(state.index+1)%(App.recipes||[]).length;state.step=0;save();render();return}if(App.mode==="spin"){state.wheel=(state.wheel+137)%360}state.index=(state.index+1)%(App.items||[]).length;state.selected=null;state.checked=false;save();render()}
-      function complete(points,msg){state.score+=points;state.streak+=1;state.sessions+=1;save();toast(msg||"Saved")}
-      function row(section,item){const key=section+"_"+item;return '<button class="tile '+(state.done[key]?'done':'')+'" data-item data-key="'+escAttr(key)+'"><span class="row"><span class="check">OK</span><span class="row-label">'+esc(item)+'</span><span class="muted">'+esc(section)+'</span></span></button>'}
-      function current(){return (App.items||[])[state.index%(App.items||[]).length]}
-      function choiceClass(i){if(state.selected===i&&!state.checked)return"selected";if(state.checked&&i===current().answer)return"correct";if(state.checked&&i===state.selected&&i!==current().answer)return"wrong";return""}
-      function record(extra){return Object.assign({circleId:state.circleId,circleType:state.circleType,appId:Config.appId,ownerPersonId:state.personId,createdAt:new Date().toISOString()},extra||{})}
-      function visual(type,item){if(type==="clock")return clock(item.hour,item.minute);if(type==="spin")return spin();if(type==="bars"||type==="line"||type==="dots"||type==="people")return chart(type);if(type==="chess")return board();if(type==="ladder")return ladder();if(type==="wave")return wave();if(type==="habit")return habit();if(type==="wisdom")return wisdom();return generic(type)}
-      function generic(type){return '<svg viewBox="0 0 260 150"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--a)"/><stop offset="1" stop-color="var(--b)"/></linearGradient></defs><rect x="30" y="26" width="200" height="98" rx="32" fill="url(#g)" opacity=".16"/><circle cx="82" cy="76" r="34" fill="url(#g)" opacity=".88"/><rect x="126" y="48" width="78" height="14" rx="7" fill="url(#g)" opacity=".9"/><rect x="126" y="72" width="56" height="14" rx="7" fill="url(#g)" opacity=".56"/><rect x="126" y="96" width="88" height="14" rx="7" fill="url(#g)" opacity=".34"/></svg>'}
-      function chart(type){return '<svg viewBox="0 0 260 150"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="var(--a)"/><stop offset="1" stop-color="var(--b)"/></linearGradient></defs><rect x="38" y="30" width="184" height="96" rx="24" fill="url(#g)" opacity=".12"/><rect x="60" y="82" width="24" height="28" rx="8" fill="url(#g)"/><rect x="102" y="58" width="24" height="52" rx="8" fill="url(#g)" opacity=".82"/><rect x="144" y="72" width="24" height="38" rx="8" fill="url(#g)" opacity=".62"/><path d="M62 88c28-36 54 10 82-20s42-2 58-28" fill="none" stroke="url(#g)" stroke-width="8" stroke-linecap="round" opacity="'+(type==="line"?".9":".2")+'"/></svg>'}
-      function board(){let s='<svg viewBox="0 0 160 160">';for(let y=0;y<4;y++){for(let x=0;x<4;x++){s+='<rect x="'+(22+x*28)+'" y="'+(22+y*28)+'" width="28" height="28" fill="'+((x+y)%2?'var(--a)':'var(--solid)')+'" opacity="'+((x+y)%2?'.72':'1')+'"/>'}}return s+'<text x="80" y="94" text-anchor="middle" font-size="34" fill="var(--ink)">N</text></svg>'}
-      function ladder(){return '<svg viewBox="0 0 260 150"><path d="M58 120 188 28" stroke="var(--a)" stroke-width="12" stroke-linecap="round"/><path d="M86 126 216 34" stroke="var(--b)" stroke-width="12" stroke-linecap="round"/><path d="M82 104h54M112 82h54M142 60h54" stroke="var(--ink)" stroke-width="8" stroke-linecap="round" opacity=".38"/><circle cx="68" cy="122" r="18" fill="var(--a)"/></svg>'}
-      function spin(){return '<svg viewBox="0 0 180 180"><g style="transform-origin:90px 90px;transform:rotate('+state.wheel+'deg)"><circle cx="90" cy="90" r="68" fill="var(--a)"/><path d="M90 90 90 22A68 68 0 0 1 158 90Z" fill="var(--b)"/><path d="M90 90 158 90A68 68 0 0 1 90 158Z" fill="var(--warn)"/><path d="M90 90 90 158A68 68 0 0 1 22 90Z" fill="var(--good)"/></g><circle cx="90" cy="90" r="22" fill="var(--solid)"/><path d="M90 8 104 34H76Z" fill="var(--ink)"/></svg>'}
-      function wave(){return '<svg viewBox="0 0 260 150"><path d="M40 94c24-42 42 42 68 0s42 42 68 0 28 12 44 0" fill="none" stroke="var(--a)" stroke-width="11" stroke-linecap="round"/><rect x="58" y="38" width="144" height="24" rx="12" fill="var(--b)" opacity=".22"/><circle cx="82" cy="104" r="18" fill="var(--b)"/></svg>'}
-      function habit(){return '<svg viewBox="0 0 260 150"><circle cx="92" cy="78" r="44" fill="var(--good)" opacity=".8"/><path d="M78 78l12 12 28-32" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><rect x="146" y="48" width="58" height="16" rx="8" fill="var(--a)"/><rect x="146" y="76" width="78" height="16" rx="8" fill="var(--b)" opacity=".7"/></svg>'}
-      function wisdom(){return '<svg viewBox="0 0 260 150"><rect x="66" y="26" width="128" height="98" rx="24" fill="var(--solid)" stroke="var(--line)"/><rect x="84" y="48" width="92" height="12" rx="6" fill="var(--a)"/><rect x="84" y="72" width="68" height="12" rx="6" fill="var(--b)" opacity=".72"/><rect x="84" y="96" width="84" height="12" rx="6" fill="var(--warn)" opacity=".56"/></svg>'}
-      function clock(h,m){const hour=((h%12)*30)+(m*.5)-90;const min=(m*6)-90;let ticks="";[12,3,6,9].forEach(n=>{const a=(n===12?-90:n*30-90)*Math.PI/180;const x=79+Math.cos(a)*61;const y=79+Math.sin(a)*61;ticks+='<span class="tick" style="transform:translate(-50%,-50%);left:'+x+'px;top:'+y+'px">'+n+'</span>'});return '<div class="clock">'+ticks+'<span class="hand hour" style="transform:rotate('+hour+'deg)"></span><span class="hand minute" style="transform:rotate('+min+'deg)"></span><span class="pin"></span></div>'}
-      function setTheme(theme,persist){state.theme=theme==="dark"?"dark":"light";document.documentElement.dataset.theme=state.theme;document.querySelector("meta[name='theme-color']").setAttribute("content",state.theme==="dark"?"#08101b":"#f7faff");if(persist)save()}
-      function save(){localStorage.setItem(Config.storagePrefix+"_state",JSON.stringify(state))}
-      function readJson(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
-      function toast(m){const n=$("#toast");n.textContent=m;n.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>n.classList.remove("show"),1500)}
-      function titleCase(v){v=String(v||"");return v.charAt(0).toUpperCase()+v.slice(1)}
-      function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-      function escAttr(v){return esc(v).replace(/\x60/g,"&#096;")}
+    /* ===================================================================
+       KINETIK BRIDGE  (same protocol as Grocery Buddy — keep in lockstep)
+       =================================================================== */
+    const APP_MANIFEST_ID = "cook-simple";
+    const APP_PREFIX = "cook";
+    const COLLECTIONS = { recipes:"cook_recipes", plan:"cook_plan", xp:"cook_xp" };
+    // cross-app channels (the three apps exchange data via app-supplied appId)
+    const CH = {
+      grocery:{prefix:"grocery", appId:"grocery-buddy", items:"grocery_items"},
+      poll:{prefix:"poll", appId:"event-poll", polls:"poll_polls"},
+      circle:{prefix:"circle", appId:"kinetik-circle", xp:"circle_xp"}   // shared leaderboard ledger
+    };
+    const $ = id => document.getElementById(id);
+    const embedded = (()=>{try{return window.self!==window.top}catch(e){return true}})();
+    const state = {
+      ctx:{appId:APP_MANIFEST_ID,circleId:"standalone",circleName:"Personal",circleType:"personal",personId:"you",personName:"You",people:[{id:"you",name:"You",color:"#ec5c3b"}]},
+      cat:"All",query:"",recipes:[],plan:{},xp:[],loaded:false,
+      cook:null
+    };
+
+    const Bridge = (() => {
+      let reqId=0; const pending={};
+      function send(type,payload={}){ if(!embedded) return; try{ window.parent.postMessage({type,appId:payload.appId||state.ctx.appId,...payload},"*"); }catch(e){} }
+      function request(type,payload={},timeout=1600){
+        if(!embedded) return Promise.resolve({items:[]});
+        const id="cook_"+(++reqId); send(type,{...payload,reqId:id});
+        return new Promise(res=>{ pending[id]=res; setTimeout(()=>{ if(pending[id]){delete pending[id];res({items:[],timeout:true});} },timeout); });
+      }
+      window.addEventListener("message",e=>{
+        const m=e.data||{};
+        if(m.type==="INIT_APP"){
+          const p=m.payload||{};
+          state.ctx={
+            appId:p.appId||state.ctx.appId, circleId:p.circleId||state.ctx.circleId,
+            circleName:p.circleName||state.ctx.circleName, circleType:p.circleType||state.ctx.circleType,
+            personId:p.personId||state.ctx.personId, personName:p.personName||p.userName||state.ctx.personName,
+            people:Array.isArray(p.people)&&p.people.length?p.people:state.ctx.people
+          };
+          applyContext(); loadAll();
+        }
+        if(m.type==="DATA_RESULT" && m.reqId && pending[m.reqId]){ pending[m.reqId]({items:m.items||[]}); delete pending[m.reqId]; }
+      });
+      return {request,send};
     })();
+
+    function keyFor(prefix,collection){ return "kinetik:"+prefix+":"+state.ctx.circleId+":"+collection; }
+    function lread(prefix,collection){ try{return JSON.parse(localStorage.getItem(keyFor(prefix,collection))||"[]")}catch(e){return []} }
+    function lwrite(prefix,collection,items){ try{localStorage.setItem(keyFor(prefix,collection),JSON.stringify(items))}catch(e){} }
+    function uid(p){ return p+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+    function cleanPayload(o){ const c={...o}; delete c._recordId; delete c._ownerPersonId; return c; }
+    function fromRecord(r){ return {...(r.payload||{}),_recordId:r.id,_ownerPersonId:r.ownerPersonId}; }
+
+    async function listRecords(collection,prefix=APP_PREFIX,appId=state.ctx.appId){
+      if(!embedded) return lread(prefix,collection);
+      const res=await Bridge.request("DATA_LIST",{collection,appId});
+      return (res.items||[]).map(fromRecord);
+    }
+    async function createRecord(collection,payload,prefix=APP_PREFIX,appId=state.ctx.appId){
+      const body=cleanPayload(payload);
+      if(!embedded){ const out={...body,_recordId:body.id||uid("local")}; const cur=lread(prefix,collection).filter(x=>x.id!==out.id); cur.push(out); lwrite(prefix,collection,cur); return out; }
+      const res=await Bridge.request("DATA_CREATE",{collection,payload:body,ownerPersonId:false,appId});
+      const rec=(res.items||[])[0]; return rec?fromRecord(rec):{...body,_recordId:body.id};
+    }
+    async function updateRecord(collection,item){
+      const body=cleanPayload(item);
+      if(!embedded){ const cur=lread(APP_PREFIX,collection).map(x=>x.id===body.id?{...x,...body}:x); lwrite(APP_PREFIX,collection,cur); return item; }
+      if(!item._recordId) return createRecord(collection,body);
+      await Bridge.request("DATA_UPDATE",{id:item._recordId,payload:body}); return item;
+    }
+    async function removeRecord(collection,item){
+      if(!embedded){ lwrite(APP_PREFIX,collection,lread(APP_PREFIX,collection).filter(x=>x.id!==item.id)); return; }
+      if(item._recordId) await Bridge.request("DATA_REMOVE",{id:item._recordId});
+    }
+
+    async function loadAll(){
+      const [recipes,planRows,xp]=await Promise.all([
+        listRecords(COLLECTIONS.recipes), listRecords(COLLECTIONS.plan), listRecords(COLLECTIONS.xp)
+      ]);
+      state.recipes = recipes.sort((a,b)=>(b.ts||0)-(a.ts||0));
+      state.plan = {}; planRows.forEach(r=>{ if(r.day!=null) state.plan[r.day]=r; });
+      state.xp = xp; state.loaded=true;
+      if(!state.recipes.length) await seedRecipes();
+      refreshAll();
+    }
+
+    function applyContext(){ $("sub").textContent = state.ctx.circleName ? `${state.ctx.personName} · ${state.ctx.circleName}` : `Hi ${state.ctx.personName}`; }
+    function applyTheme(t){ document.documentElement.dataset.theme=(t==="dark"?"dark":"light"); $("lightToggle").textContent=(t==="dark")?"☀️":"🌙"; $("themeBtn").setAttribute("aria-pressed",t==="dark"); try{localStorage.setItem("kinetik:cook:theme",t)}catch(e){} }
+    function bootTheme(){ let t="light"; try{t=localStorage.getItem("kinetik:cook:theme")||"light"}catch(e){} applyTheme(t); }
+    function escapeHtml(s){ return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+    function toast(html){ const t=$("toast"); t.innerHTML=html; t.classList.add("show"); Bridge.send("SHOW_TOAST",{message:t.textContent||""}); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1600); }
+    function weekKey(){ const d=new Date(),s=new Date(d); s.setDate(d.getDate()-d.getDay()); return s.getFullYear()+"-W"+Math.ceil((((s-new Date(s.getFullYear(),0,1))/864e5)+1)/7); }
+    function initials(n){ return String(n||"?").trim().slice(0,1).toUpperCase(); }
+    function personColor(id){ const p=state.ctx.people.find(x=>x.id===id||x.name===id); return (p&&p.color)||"#94795f"; }
+
+    function askConfirm(title,message,danger){
+      return new Promise(resolve=>{
+        const layer=document.createElement("div"); layer.className="layer"; layer.style.placeItems="center"; layer.style.padding="18px";
+        layer.innerHTML=`<div class="sheet" style="border-radius:22px;max-width:420px;padding:16px"><h2 style="font-size:17px">${escapeHtml(title)}</h2><p style="margin-top:6px;color:var(--muted);font-size:13px;font-weight:700;line-height:1.45">${escapeHtml(message)}</p><div class="confirm-actions"><button data-x>Cancel</button><button class="${danger?"danger":"go"}" data-ok>${danger?"Delete":"Confirm"}</button></div></div>`;
+        const done=v=>{layer.remove();resolve(v);};
+        layer.querySelector("[data-x]").onclick=()=>done(false);
+        layer.querySelector("[data-ok]").onclick=()=>done(true);
+        layer.onclick=e=>{if(e.target===layer)done(false);};
+        document.body.appendChild(layer);
+      });
+    }
+
+    /* ============================= XP ============================= */
+    async function recordXP(points,reason){
+      const ev={id:uid("xp"),personId:state.ctx.personId,personName:state.ctx.personName,points,reason,week:weekKey(),ts:Date.now(),source:"cook"};
+      const saved=await createRecord(COLLECTIONS.xp,ev); state.xp.push(saved);
+      // mirror into shared circle ledger so the Poll master leaderboard can aggregate everything
+      createRecord(CH.circle.xp,ev,CH.circle.prefix,CH.circle.appId);
+      renderYou();
+    }
+
+    /* ===================== INGREDIENT / CATALOG ==================== */
+    const AISLE_BY_KW=[
+      [/rice|pasta|noodle|flour|oil|salt|pepper|sugar|soy|sauce|spice|curry|stock|honey|bean|lentil|oat|cumin|paprika|vinegar|coconut/i,"Pantry"],
+      [/milk|cheese|butter|egg|yogurt|cream/i,"Dairy & Eggs"],
+      [/chicken|beef|pork|lamb|fish|salmon|shrimp|prawn|bacon|sausage|mince|tofu/i,"Meat & Fish"],
+      [/bread|bun|tortilla|pita|bagel/i,"Bakery"],
+      [/tomato|onion|garlic|pepper|chili|lettuce|carrot|potato|lemon|lime|spinach|broccoli|avocado|ginger|herb|parsley|coriander|cilantro|scallion|mushroom|cucumber|corn/i,"Produce"],
+      [/water|juice|wine|soda/i,"Drinks"]
+    ];
+    const ING_EMOJI=[[/rice/i,"🍚"],[/pasta|spaghetti|noodle/i,"🍝"],[/egg/i,"🥚"],[/milk/i,"🥛"],[/cheese/i,"🧀"],[/butter/i,"🧈"],[/chicken/i,"🍗"],[/beef|mince|steak/i,"🥩"],[/fish|salmon/i,"🐟"],[/shrimp|prawn/i,"🍤"],[/tomato/i,"🍅"],[/onion/i,"🧅"],[/garlic/i,"🧄"],[/pepper|chili/i,"🌶️"],[/lemon/i,"🍋"],[/lime/i,"🟢"],[/bread/i,"🍞"],[/oil/i,"🫒"],[/salt|pepper/i,"🧂"],[/soy|sauce/i,"🥫"],[/avocado/i,"🥑"],[/carrot/i,"🥕"],[/potato/i,"🥔"],[/spinach|herb|parsley|coriander|cilantro/i,"🌿"],[/coconut/i,"🥥"],[/flour/i,"🌾"],[/curry|spice|cumin|paprika/i,"🧂"],[/ginger/i,"🫚"],[/mushroom/i,"🍄"],[/cucumber/i,"🥒"],[/sugar|honey/i,"🍯"]];
+    function aisleFor(name){ for(const [re,a] of AISLE_BY_KW){ if(re.test(name)) return a; } return "Other"; }
+    function ingEmoji(name){ for(const [re,e] of ING_EMOJI){ if(re.test(name)) return e; } return "🛒"; }
+
+    /* ===================== SEED RECIPES ==================== */
+    async function seedRecipes(){
+      const R=[
+        {name:"Nasi Goreng",emoji:"🍳",category:"Mains",minutes:25,servings:2,
+          ingredients:[["Cooked rice",2,"cup"],["Eggs",2,""],["Chicken",200,"g"],["Soy sauce",2,"tbsp"],["Garlic",3,"clove"],["Onion",1,""],["Chili",2,""]],
+          steps:[["Heat oil and fry garlic, onion and chili until fragrant.",90],["Add chicken and cook through.",240],["Push aside, scramble the eggs.",60],["Add rice and soy sauce, toss until hot and glossy.",180]]},
+        {name:"Pasta Bolognese",emoji:"🍝",category:"Mains",minutes:35,servings:4,
+          ingredients:[["Spaghetti",400,"g"],["Beef mince",500,"g"],["Tomatoes",400,"g"],["Onion",1,""],["Garlic",3,"clove"],["Olive oil",2,"tbsp"]],
+          steps:[["Boil salted water for the spaghetti.",null],["Soften onion and garlic in olive oil.",180],["Brown the beef mince, breaking it up.",300],["Add tomatoes, simmer to a rich sauce.",600],["Cook pasta, toss with sauce, serve.",480]]},
+        {name:"Shakshuka",emoji:"🍅",category:"Breakfast",minutes:20,servings:2,
+          ingredients:[["Eggs",4,""],["Tomatoes",400,"g"],["Pepper",1,""],["Onion",1,""],["Garlic",2,"clove"],["Paprika",1,"tsp"]],
+          steps:[["Sauté onion, pepper and garlic.",180],["Add tomatoes and paprika, simmer.",420],["Make wells, crack in the eggs.",30],["Cover and cook until whites set.",360]]},
+        {name:"Grilled Salmon",emoji:"🐟",category:"Mains",minutes:18,servings:2,
+          ingredients:[["Salmon",2,"fillet"],["Lemon",1,""],["Olive oil",1,"tbsp"],["Salt",1,"tsp"],["Garlic",2,"clove"]],
+          steps:[["Pat salmon dry, season with salt.",null],["Rub with oil and crushed garlic.",60],["Grill skin-side down.",300],["Flip, finish, squeeze lemon over.",240]]},
+        {name:"Fluffy Pancakes",emoji:"🥞",category:"Breakfast",minutes:15,servings:3,
+          ingredients:[["Flour",200,"g"],["Milk",250,"ml"],["Eggs",2,""],["Sugar",2,"tbsp"],["Butter",30,"g"]],
+          steps:[["Whisk flour, sugar, eggs and milk to a batter.",120],["Rest the batter.",300],["Ladle onto a buttered pan.",60],["Flip when bubbles form, cook through.",90]]},
+        {name:"Chicken Curry",emoji:"🍛",category:"Mains",minutes:40,servings:4,
+          ingredients:[["Chicken",700,"g"],["Coconut milk",400,"ml"],["Onion",2,""],["Garlic",4,"clove"],["Ginger",1,"tbsp"],["Curry spice",2,"tbsp"]],
+          steps:[["Sauté onion, garlic and ginger.",240],["Toast the curry spice.",60],["Add chicken and brown.",300],["Pour coconut milk, simmer until tender.",900]]}
+      ];
+      for(const r of R){
+        const rec={id:uid("rec"),name:r.name,emoji:r.emoji,category:r.category,minutes:r.minutes,servings:r.servings,baseServings:r.servings,
+          ingredients:r.ingredients.map(([name,qty,unit])=>({name,qty,unit,emoji:ingEmoji(name),aisle:aisleFor(name)})),
+          steps:r.steps.map(([text,seconds])=>({text,seconds})),
+          byPersonId:state.ctx.personId,byName:state.ctx.personName,ts:Date.now()-Math.random()*1e6};
+        const saved=await createRecord(COLLECTIONS.recipes,rec); state.recipes.push(saved);
+      }
+      state.recipes.sort((a,b)=>(b.ts||0)-(a.ts||0));
+    }
+
+    /* ===================== RENDER: RECIPES ==================== */
+    const CATS=["All","Breakfast","Mains","Sides","Desserts"];
+    function refreshAll(){ renderRecipes(); renderPlan(); renderCook(); renderYou(); }
+
+    function renderRecipes(){
+      $("searchInput").value=state.query;
+      $("catChips").innerHTML=CATS.map(c=>`<button class="chip ${c===state.cat&&!state.query?"on":""}" data-cat="${c}">${c}</button>`).join("");
+      document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{state.cat=b.dataset.cat;state.query="";renderRecipes();});
+      let list=state.recipes.slice();
+      if(state.query){ const q=state.query.toLowerCase(); list=list.filter(r=>(r.name+" "+(r.category||"")).toLowerCase().includes(q)); }
+      else if(state.cat!=="All"){ list=list.filter(r=>r.category===state.cat); }
+      $("gridTitle").textContent=state.query?"Search results":state.cat;
+      $("resultCount").textContent=list.length+" recipe"+(list.length===1?"":"s");
+      const plannedIds=new Set(Object.values(state.plan).map(p=>p.recipeId));
+      const cards=list.map(r=>`<button class="recipe-card" data-open="${r.id}">
+        ${plannedIds.has(r.id)?'<span class="planned">📅</span>':''}
+        <div class="recipe-hero">${r.emoji||"🍽️"}</div>
+        <div class="recipe-body"><h3>${escapeHtml(r.name)}</h3>
+          <div class="recipe-meta">
+            <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>${r.minutes||"—"}m</span>
+            <span><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 5.6M15.5 19c0-2-1-3.6-2.4-4.6"/></svg>${r.servings||1}</span>
+          </div>
+        </div></button>`).join("");
+      $("recipeGrid").innerHTML=(cards||"")+`<button class="add-card" id="addCard"><span class="plus">＋</span>New recipe</button>`;
+      document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openRecipe(b.dataset.open));
+      $("addCard").onclick=openCompose;
+    }
+
+    /* ===================== RECIPE DETAIL SHEET ==================== */
+    function scaleQty(qty,base,serv){ if(base<=0) return qty; const v=qty*serv/base; return Math.round(v*100)/100; }
+    function fmtQty(v){ return Number.isInteger(v)?v:(Math.round(v*100)/100); }
+    function openRecipe(id){
+      const r=state.recipes.find(x=>x.id===id); if(!r) return;
+      let serv=r.servings||r.baseServings||1; const base=r.baseServings||r.servings||1;
+      const layer=document.createElement("div"); layer.className="layer";
+      function ingHtml(){ return r.ingredients.map(i=>`<div class="ing"><span class="ie">${i.emoji||"🛒"}</span><span class="inm">${escapeHtml(i.name)}</span><span class="iq">${i.qty?fmtQty(scaleQty(Number(i.qty),base,serv)):""} ${escapeHtml(i.unit||"")}</span></div>`).join(""); }
+      function paint(){
+        layer.querySelector("#servVal").textContent=serv;
+        layer.querySelector("#ingList").innerHTML=ingHtml();
+      }
+      layer.innerHTML=`<div class="sheet"><div class="sheet-grab"></div><div class="sheet-scroll">
+        <div class="sheet-hero">${r.emoji||"🍽️"}</div>
+        <h2>${escapeHtml(r.name)}</h2>
+        <div class="sub"><span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>${r.minutes||"—"} min</span><span>${escapeHtml(r.category||"Recipe")}</span><span>by ${escapeHtml(r.byName||"You")}</span></div>
+        <div class="serv"><span class="lab">Servings</span><div class="stepper"><button id="sDown">−</button><b id="servVal">${serv}</b><button id="sUp">＋</button></div></div>
+        <div class="ings"><h3>Ingredients</h3><div id="ingList">${ingHtml()}</div></div>
+        <div class="steps"><h3>Method · ${r.steps.length} steps</h3>${r.steps.map((s,i)=>`<div class="stepline"><span class="sn">${i+1}</span><div><p>${escapeHtml(s.text)}</p>${s.seconds?`<span class="tmr"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 13V9M9 3h6"/></svg>${Math.round(s.seconds/60)} min</span>`:""}</div></div>`).join("")}</div>
+        <div class="actions">
+          <button class="btn full" id="aCook"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Start cooking</button>
+          <button class="btn sec" id="aGrocery"><svg viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></svg> Add to Grocery</button>
+          <button class="btn sec" id="aSchedule"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg> Schedule</button>
+          <button class="btn sec full" id="aPoll"><svg viewBox="0 0 24 24"><path d="M6 20V10M12 20V4M18 20v-6"/></svg> Put dinner to a vote</button>
+          <button class="btn sec full" id="aDelete" style="color:var(--danger)">Delete recipe</button>
+        </div>
+      </div></div>`;
+      const close=()=>layer.remove();
+      layer.onclick=e=>{if(e.target===layer)close();};
+      document.body.appendChild(layer);
+      layer.querySelector("#sUp").onclick=()=>{serv++;paint();};
+      layer.querySelector("#sDown").onclick=()=>{if(serv>1){serv--;paint();}};
+      layer.querySelector("#aCook").onclick=()=>{close();startCook(r,serv);};
+      layer.querySelector("#aGrocery").onclick=async()=>{ await addRecipeToGrocery(r,serv,base); close(); };
+      layer.querySelector("#aSchedule").onclick=()=>{ close(); openSchedule(r); };
+      layer.querySelector("#aPoll").onclick=()=>{ close(); openPollCompose(r); };
+      layer.querySelector("#aDelete").onclick=async()=>{ if(await askConfirm("Delete recipe?",`"${r.name}" will be removed from your cookbook.`,true)){ await removeRecord(COLLECTIONS.recipes,r); state.recipes=state.recipes.filter(x=>x.id!==r.id); close(); refreshAll(); toast("Recipe deleted"); } };
+    }
+
+    /* ===================== CROSS-APP: → GROCERY ==================== */
+    async function addRecipeToGrocery(r,serv,base){
+      base=base||r.baseServings||r.servings||1;
+      const tag=`${state.ctx.personName} · ${r.name}`;
+      for(const i of r.ingredients){
+        const item={id:uid("item"),name:i.name,emoji:i.emoji||ingEmoji(i.name),aisle:i.aisle||aisleFor(i.name),
+          qty:1,byPersonId:state.ctx.personId,byName:tag,from:{app:"Cook",recipe:r.name},ts:Date.now()};
+        await createRecord(CH.grocery.items,item,CH.grocery.prefix,CH.grocery.appId);
+      }
+      await recordXP(2,"Sent "+r.name+" to grocery");
+      toast(`🔗 <b>${r.ingredients.length}</b> ingredients sent to Grocery`);
+    }
+
+    /* ===================== CROSS-APP: → CALENDAR ==================== */
+    function openSchedule(r){
+      const layer=document.createElement("div"); layer.className="layer"; layer.style.placeItems="center"; layer.style.padding="18px";
+      const today=new Date(); const def=new Date(today.getTime()+864e5).toISOString().slice(0,10);
+      layer.innerHTML=`<div class="sheet" style="border-radius:22px;max-width:420px;padding:18px">
+        <h2 style="font-size:18px">Schedule ${escapeHtml(r.emoji)} ${escapeHtml(r.name)}</h2>
+        <p style="margin-top:6px;color:var(--muted);font-size:13px;font-weight:700">Adds a dinner block to your circle calendar.</p>
+        <div class="field" style="margin-top:14px"><label>Date</label><input type="date" id="schDate" value="${def}"></div>
+        <div class="field"><label>Time</label><input type="time" id="schTime" value="19:00"></div>
+        <div class="confirm-actions"><button data-x>Cancel</button><button class="go" data-ok>Add to calendar</button></div>
+      </div>`;
+      const close=()=>layer.remove();
+      layer.onclick=e=>{if(e.target===layer)close();};
+      document.body.appendChild(layer);
+      layer.querySelector("[data-x]").onclick=close;
+      layer.querySelector("[data-ok]").onclick=async()=>{
+        const date=layer.querySelector("#schDate").value, time=layer.querySelector("#schTime").value||"19:00";
+        const start=new Date(date+"T"+time); const end=new Date(start.getTime()+60*60*1000);
+        const ev={title:`${r.emoji} ${r.name} dinner`, start:start.toISOString(), end:end.toISOString(), notes:`Cook Simple · ${r.ingredients.length} ingredients · serves ${r.servings}`, allDay:false, source:"cook-simple"};
+        if(embedded){ Bridge.send("ADD_TO_CALENDAR",{event:ev}); }
+        else { downloadICS(ev); }
+        await recordXP(3,"Scheduled "+r.name);
+        close(); toast(`📅 <b>${r.name}</b> scheduled`);
+      };
+    }
+    function downloadICS(ev){
+      const dt=s=>new Date(s).toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
+      const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Kinetik//Cook//EN","BEGIN:VEVENT","UID:"+uid("ev")+"@kinetik","DTSTAMP:"+dt(Date.now()),"DTSTART:"+dt(ev.start),"DTEND:"+dt(ev.end),"SUMMARY:"+ev.title,"DESCRIPTION:"+ev.notes,"END:VEVENT","END:VCALENDAR"].join("\r\n");
+      const a=document.createElement("a"); a.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(ics); a.download=ev.title.replace(/[^\w]+/g,"-")+".ics"; document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    /* ===================== CROSS-APP: → POLL (dinner vote) ==================== */
+    function openPollCompose(seedRecipe){
+      const layer=document.createElement("div"); layer.className="layer";
+      const chosen=new Set(seedRecipe?[seedRecipe.id]:[]);
+      function paint(){ layer.querySelectorAll("[data-pick]").forEach(c=>c.classList.toggle("on",chosen.has(c.dataset.pick))); layer.querySelector("#pollGo").disabled=chosen.size<2; layer.querySelector("#pickCount").textContent=chosen.size+" picked · need 2+"; }
+      layer.innerHTML=`<div class="sheet"><div class="sheet-grab"></div><div class="sheet-scroll">
+        <h2>🍽️ Put dinner to a vote</h2>
+        <p class="sub" style="margin-bottom:4px">Pick the candidates — the circle votes in Event Poll. The winner's ingredients land in Grocery.</p>
+        <div class="field" style="margin-top:14px"><label>Question</label><input id="pollQ" value="What's for dinner?"></div>
+        <div class="section-head"><h2>Candidates</h2><small id="pickCount">${chosen.size} picked · need 2+</small></div>
+        <div class="pickrow">${state.recipes.map(r=>`<button class="chip" data-pick="${r.id}">${r.emoji} ${escapeHtml(r.name)}</button>`).join("")}</div>
+        <div class="actions"><button class="btn full" id="pollGo"><svg viewBox="0 0 24 24"><path d="M6 20V10M12 20V4M18 20v-6"/></svg> Create poll in Event Poll</button></div>
+      </div></div>`;
+      const close=()=>layer.remove();
+      layer.onclick=e=>{if(e.target===layer)close();};
+      document.body.appendChild(layer); paint();
+      layer.querySelectorAll("[data-pick]").forEach(c=>c.onclick=()=>{ const id=c.dataset.pick; chosen.has(id)?chosen.delete(id):chosen.add(id); paint(); });
+      layer.querySelector("#pollGo").onclick=async()=>{
+        const q=layer.querySelector("#pollQ").value.trim()||"What's for dinner?";
+        const options=[...chosen].map(id=>{ const r=state.recipes.find(x=>x.id===id); return {id:uid("opt"),label:r.name,emoji:r.emoji,recipeId:r.id,
+          ingredients:r.ingredients.map(i=>({name:i.name,emoji:i.emoji,aisle:i.aisle,qty:1}))}; });
+        const poll={id:uid("poll"),kind:"dinner",question:q,emoji:"🍽️",options,votes:{},status:"open",closesIngredientsToGrocery:true,
+          createdByPersonId:state.ctx.personId,createdByName:state.ctx.personName,source:"cook-simple",ts:Date.now()};
+        await createRecord(CH.poll.polls,poll,CH.poll.prefix,CH.poll.appId);
+        await recordXP(4,"Started a dinner poll");
+        close(); toast(`🗳️ Poll created · vote in <b>Event Poll</b>`);
+      };
+    }
+
+    /* ===================== COMPOSE NEW RECIPE ==================== */
+    function openCompose(){
+      const layer=document.createElement("div"); layer.className="layer";
+      layer.innerHTML=`<div class="sheet"><div class="sheet-grab"></div><div class="sheet-scroll">
+        <h2>New recipe</h2>
+        <div class="field" style="margin-top:14px"><label>Name</label><input id="cName" placeholder="e.g. Beef Rendang"></div>
+        <div class="field"><label>Emoji & category</label><div style="display:flex;gap:9px"><input id="cEmoji" placeholder="🍲" style="width:64px;text-align:center;font-size:20px"><select id="cCat">${["Mains","Breakfast","Sides","Desserts"].map(c=>`<option>${c}</option>`).join("")}</select></div></div>
+        <div class="field" style="display:flex;gap:9px"><div style="flex:1"><label>Minutes</label><input id="cMin" type="number" value="30" inputmode="numeric"></div><div style="flex:1"><label>Servings</label><input id="cServ" type="number" value="2" inputmode="numeric"></div></div>
+        <div class="field"><label>Ingredients — one per line</label><textarea id="cIng" placeholder="Chicken 500 g&#10;Onion 1&#10;Garlic 3 clove"></textarea><div class="hint">Format: name, then amount + unit. We infer aisle & emoji.</div></div>
+        <div class="field"><label>Steps — one per line</label><textarea id="cSteps" placeholder="Brown the chicken.&#10;Add aromatics and simmer."></textarea></div>
+        <div class="actions"><button class="btn full" id="cSave">Save recipe</button></div>
+      </div></div>`;
+      const close=()=>layer.remove(); layer.onclick=e=>{if(e.target===layer)close();};
+      document.body.appendChild(layer);
+      layer.querySelector("#cName").focus();
+      layer.querySelector("#cSave").onclick=async()=>{
+        const name=layer.querySelector("#cName").value.trim(); if(!name){toast("Give it a name");return;}
+        const ings=layer.querySelector("#cIng").value.split("\n").map(l=>l.trim()).filter(Boolean).map(line=>{
+          const m=line.match(/^(.*?)[\s,]+([\d.]+)\s*([a-zA-Z]*)$/);
+          const nm=(m?m[1]:line).trim(); return {name:nm,qty:m?Number(m[2]):1,unit:m?m[3]:"",emoji:ingEmoji(nm),aisle:aisleFor(nm)};
+        });
+        const steps=layer.querySelector("#cSteps").value.split("\n").map(l=>l.trim()).filter(Boolean).map(t=>({text:t,seconds:null}));
+        const serv=Number(layer.querySelector("#cServ").value)||2;
+        const rec={id:uid("rec"),name,emoji:layer.querySelector("#cEmoji").value.trim()||"🍲",category:layer.querySelector("#cCat").value,
+          minutes:Number(layer.querySelector("#cMin").value)||30,servings:serv,baseServings:serv,ingredients:ings.length?ings:[{name:"Add ingredients",qty:0,unit:"",emoji:"🛒",aisle:"Other"}],
+          steps:steps.length?steps:[{text:"Add your steps.",seconds:null}],byPersonId:state.ctx.personId,byName:state.ctx.personName,ts:Date.now()};
+        const saved=await createRecord(COLLECTIONS.recipes,rec); state.recipes.unshift(saved);
+        await recordXP(2,"Added "+name); close(); refreshAll(); toast(`<b>${escapeHtml(name)}</b> saved`);
+      };
+    }
+
+    /* ===================== COOK MODE ==================== */
+    function startCook(r,serv){
+      state.cook={recipe:r,serv:serv||r.servings,step:0,timer:null,remaining:0,running:false};
+      renderCookMode();
+    }
+    function renderCookMode(){
+      const c=state.cook; if(!c) return;
+      const r=c.recipe, n=r.steps.length;
+      const wrap=document.createElement("div"); wrap.className="cookmode"; wrap.id="cookModeLayer";
+      const step=r.steps[c.step];
+      wrap.innerHTML=`
+        <div class="cm-top"><button class="x" id="cmClose"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div class="cmt"><b>${r.emoji} ${escapeHtml(r.name)}</b><small>Serves ${c.serv} · ${r.minutes} min</small></div></div>
+        <div class="cm-prog">${r.steps.map((_,i)=>`<i class="${i<=c.step?"on":""}"></i>`).join("")}</div>
+        <div class="cm-stage">
+          <div class="cm-step-n">Step ${c.step+1} of ${n}</div>
+          <div class="cm-step-t">${escapeHtml(step.text)}</div>
+          <div class="cm-timer ${step.seconds?"show":""}" id="cmTimer"><span class="tval" id="tVal">${fmtTime(c.remaining||step.seconds||0)}</span><button class="tbtn" id="tBtn">Start timer</button></div>
+        </div>
+        <div class="cm-nav">
+          <button id="cmPrev" ${c.step===0?"disabled":""}>Back</button>
+          <button class="primary" id="cmNext">${c.step===n-1?"Finish ✓":"Next step"}</button>
+        </div>`;
+      const old=document.getElementById("cookModeLayer"); if(old) old.remove();
+      document.body.appendChild(wrap);
+      if(c.timer){clearInterval(c.timer);c.timer=null;c.running=false;}
+      c.remaining=step.seconds||0;
+      $("cmClose").onclick=exitCook;
+      $("cmPrev").onclick=()=>{ if(c.step>0){c.step--;renderCookMode();} };
+      $("cmNext").onclick=()=>{ if(c.step<n-1){c.step++;renderCookMode();} else finishCook(); };
+      if(step.seconds){
+        const tBtn=$("tBtn");
+        tBtn.onclick=()=>{
+          if(c.running){ clearInterval(c.timer); c.running=false; tBtn.textContent="Resume"; tBtn.classList.add("paused"); return; }
+          c.running=true; tBtn.textContent="Pause"; tBtn.classList.remove("paused");
+          c.timer=setInterval(()=>{ c.remaining--; $("tVal").textContent=fmtTime(Math.max(0,c.remaining));
+            if(c.remaining<=0){ clearInterval(c.timer); c.running=false; tBtn.textContent="Done"; tBtn.classList.add("paused"); toast("⏰ Timer done"); } },1000);
+        };
+      }
+    }
+    function fmtTime(s){ s=Math.max(0,Math.round(s)); const m=Math.floor(s/60); return m+":"+String(s%60).padStart(2,"0"); }
+    function exitCook(){ const c=state.cook; if(c&&c.timer)clearInterval(c.timer); const l=document.getElementById("cookModeLayer"); if(l)l.remove(); state.cook=null; }
+    async function finishCook(){
+      const c=state.cook; const name=c.recipe.name;
+      exitCook(); await recordXP(5,"Cooked "+name); refreshAll(); go("you");
+      toast(`🎉 Cooked <b>${escapeHtml(name)}</b> · +5`);
+    }
+
+    /* ===================== PLAN ==================== */
+    const DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    function weekDates(){ const d=new Date(),s=new Date(d); s.setDate(d.getDate()-d.getDay()); return Array.from({length:7},(_,i)=>{ const x=new Date(s); x.setDate(s.getDate()+i); return x; }); }
+    function renderPlan(){
+      const days=weekDates(); const today=new Date().toDateString();
+      $("weekLabel").textContent=days[0].toLocaleDateString(undefined,{month:"short",day:"numeric"})+" – "+days[6].toLocaleDateString(undefined,{month:"short",day:"numeric"});
+      $("planBody").innerHTML=days.map((d,i)=>{
+        const p=state.plan[i]; const r=p&&state.recipes.find(x=>x.id===p.recipeId);
+        return `<div class="day-card ${d.toDateString()===today?"today":""}">
+          <div class="day"><span class="dn">${DOW[d.getDay()]}</span><span class="dd">${d.getDate()}</span></div>
+          <div class="day-meal ${r?"":"empty"}">${r?`<b>${r.emoji} ${escapeHtml(r.name)}</b><small>${r.minutes} min · serves ${r.servings}</small>`:`<b>Tap to plan dinner</b>`}</div>
+          <button class="plan-act" data-plan="${i}">${r?'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>':'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>'}</button>
+        </div>`;
+      }).join("");
+      document.querySelectorAll("[data-plan]").forEach(b=>b.onclick=()=>{
+        const day=Number(b.dataset.plan);
+        if(state.plan[day]) clearPlan(day); else pickForDay(day);
+      });
+    }
+    function pickForDay(day){
+      const layer=document.createElement("div"); layer.className="layer";
+      layer.innerHTML=`<div class="sheet"><div class="sheet-grab"></div><div class="sheet-scroll">
+        <h2>Plan ${DOW[weekDates()[day].getDay()]} dinner</h2>
+        <div class="recipe-grid" style="margin-top:14px">${state.recipes.map(r=>`<button class="recipe-card" data-set="${r.id}"><div class="recipe-hero">${r.emoji}</div><div class="recipe-body"><h3>${escapeHtml(r.name)}</h3><div class="recipe-meta"><span>${r.minutes}m</span><span>serves ${r.servings}</span></div></div></button>`).join("")}</div>
+      </div></div>`;
+      const close=()=>layer.remove(); layer.onclick=e=>{if(e.target===layer)close();};
+      document.body.appendChild(layer);
+      layer.querySelectorAll("[data-set]").forEach(b=>b.onclick=async()=>{
+        const rec={id:uid("plan"),day,recipeId:b.dataset.set,ts:Date.now()};
+        const saved=await createRecord(COLLECTIONS.plan,rec); state.plan[day]=saved;
+        await recordXP(3,"Planned a meal"); close(); refreshAll(); toast("Added to your week");
+      });
+    }
+    async function clearPlan(day){
+      const p=state.plan[day]; if(!p) return; await removeRecord(COLLECTIONS.plan,p); delete state.plan[day]; renderPlan(); renderRecipes(); toast("Cleared");
+    }
+    async function planWeekToGrocery(){
+      const ids=Object.values(state.plan).map(p=>p.recipeId);
+      if(!ids.length){ toast("Plan some dinners first"); return; }
+      const agg={};
+      ids.forEach(id=>{ const r=state.recipes.find(x=>x.id===id); if(!r)return; r.ingredients.forEach(i=>{ const k=i.name.toLowerCase(); agg[k]=agg[k]||{name:i.name,emoji:i.emoji,aisle:i.aisle,qty:0}; agg[k].qty++; }); });
+      const items=Object.values(agg);
+      for(const i of items){ await createRecord(CH.grocery.items,{id:uid("item"),name:i.name,emoji:i.emoji,aisle:i.aisle,qty:i.qty,byPersonId:state.ctx.personId,byName:state.ctx.personName+" · week plan",from:{app:"Cook",recipe:"Week plan"},ts:Date.now()},CH.grocery.prefix,CH.grocery.appId); }
+      await recordXP(2,"Sent week plan to grocery");
+      toast(`🔗 <b>${items.length}</b> ingredients sent to Grocery`);
+    }
+
+    /* ===================== COOK TAB (picker) ==================== */
+    function renderCook(){
+      const body=$("cookBody");
+      if(!state.recipes.length){ body.innerHTML=`<div class="empty"><div class="big">👩‍🍳</div><h3>No recipes yet</h3><p>Add one in Recipes, then cook it step-by-step here.</p></div>`; return; }
+      const planned=weekDates().map((d,i)=>state.plan[i]).filter(Boolean).map(p=>state.recipes.find(r=>r.id===p.recipeId)).filter(Boolean);
+      const list=planned.length?planned:state.recipes.slice(0,6);
+      body.innerHTML=(planned.length?`<div class="section-head" style="margin-top:0"><h2 style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text)">From your week plan</h2></div>`:"")+list.map(r=>`<div class="cook-pick">
+        <div class="ce">${r.emoji}</div>
+        <div><b>${escapeHtml(r.name)}</b><small>${r.steps.length} steps · ${r.minutes} min</small></div>
+        <button class="play" data-cook="${r.id}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+      </div>`).join("");
+      document.querySelectorAll("[data-cook]").forEach(b=>b.onclick=()=>{ const r=state.recipes.find(x=>x.id===b.dataset.cook); if(r) startCook(r,r.servings); });
+    }
+
+    /* ===================== YOU + LEADERBOARD ==================== */
+    const TIERS=[["🥉","Bronze",0],["🥈","Silver",100],["🥇","Gold",250],["💎","Sapphire",500],["❤️","Ruby",900],["💚","Emerald",1500]];
+    async function readAllXP(){
+      // master ledger preferred; also read each app's own XP so nothing is missed
+      const sources=[ [CH.circle.prefix,CH.circle.xp,CH.circle.appId], ["grocery","grocery_xp","grocery-buddy"], ["cook","cook_xp","cook-simple"], ["poll","poll_xp","event-poll"] ];
+      const out={};
+      for(const [prefix,coll,appId] of sources){
+        let rows=[];
+        try{ rows = embedded ? (await Bridge.request("DATA_LIST",{collection:coll,appId})).items.map(fromRecord) : lread(prefix,coll); }catch(e){}
+        rows.forEach(r=>{ if(r&&r.id) out[r.id]=r; });
+      }
+      return Object.values(out);
+    }
+    let _lbCache=[];
+    async function renderYou(){
+      const week=weekKey();
+      const mine=state.xp.filter(e=>e.week===week&&e.personId===state.ctx.personId).reduce((s,e)=>s+(Number(e.points)||0),0);
+      $("xpVal").textContent=mine; $("sWeek").textContent=mine;
+      $("sCooked").textContent=state.xp.filter(e=>/^Cooked/.test(e.reason)).length;
+      $("sPlanned").textContent=Object.keys(state.plan).length;
+      $("sShared").textContent=state.xp.filter(e=>/grocery/i.test(e.reason)).length;
+      // tier from combined points
+      const all=await readAllXP();
+      const by={}; state.ctx.people.forEach(p=>by[p.id]={person:p,pts:0});
+      all.filter(e=>e.week===week).forEach(e=>{ const id=e.personId||e.personName||"unknown"; if(!by[id])by[id]={person:{id,name:e.personName||"Someone",color:personColor(id)},pts:0}; by[id].pts+=Number(e.points)||0; });
+      const rows=Object.values(by).sort((a,b)=>b.pts-a.pts); _lbCache=rows;
+      const myPts=(by[state.ctx.personId]||{}).pts||0;
+      let cur=TIERS[0],nxt=TIERS[1]; for(let i=0;i<TIERS.length;i++){ if(myPts>=TIERS[i][2]){cur=TIERS[i];nxt=TIERS[i+1]||null;} }
+      $("tierGem").textContent=cur[0]; $("tierName").textContent=cur[1];
+      if(nxt){ const span=nxt[2]-cur[2],into=myPts-cur[2]; $("tierBar").style.width=Math.min(100,Math.round(into/span*100))+"%"; $("tierLo").textContent=myPts+" pts"; $("tierHi").textContent=(nxt[2]-myPts)+" to "+nxt[1]; }
+      else { $("tierBar").style.width="100%"; $("tierLo").textContent=myPts+" pts"; $("tierHi").textContent="Top tier 🎉"; }
+      $("miniLb").innerHTML=rows.slice(0,6).map((r,i)=>`<div class="lb-row"><span>${["🥇","🥈","🥉"][i]||i+1}</span><span class="avatar" style="background:${r.person.color||personColor(r.person.id)}">${initials(r.person.name)}</span><span><b>${escapeHtml(r.person.name)}${r.person.id===state.ctx.personId?" (you)":""}</b><small>${i===0&&r.pts>0?"Leading the circle":"Circle points"}</small></span><span class="points">${r.pts}</span></div>`).join("")||`<div class="empty" style="padding:20px"><p>No points yet this week.</p></div>`;
+    }
+
+    /* ===================== NAV / CHROME ==================== */
+    function go(v){
+      document.querySelectorAll(".view").forEach(s=>s.classList.toggle("active",s.id==="v-"+v));
+      document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.v===v));
+      if(v==="recipes")renderRecipes(); if(v==="plan")renderPlan(); if(v==="cook")renderCook(); if(v==="you")renderYou();
+      const m=document.querySelector("main"); if(m)m.scrollTop=0;
+    }
+    document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>go(t.dataset.v));
+    $("themeBtn").onclick=()=>applyTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
+    $("lightToggle").onclick=()=>applyTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
+    $("searchInput").addEventListener("input",e=>{state.query=e.target.value.trim();renderRecipes();});
+    $("newRecipe").onclick=openCompose;
+    $("planToGrocery").onclick=planWeekToGrocery;
+    $("openPoll").onclick=()=>{ toast("Open <b>Event Poll</b> for full standings"); try{window.parent.postMessage({type:"OPEN_APP",app:"event-poll"},"*");}catch(e){} };
+    $("chState").textContent = embedded ? "Channel: cook-simple · synced" : "Channel: cook-simple · local";
+    $("resetRow").onclick=async()=>{ if(await askConfirm("Reset demo data?","Clears recipes, week plan and Cook points on this device.",true)){ ["cook_recipes","cook_plan","cook_xp"].forEach(c=>lwrite(APP_PREFIX,c,[])); lwrite(CH.circle.prefix,CH.circle.xp,lread(CH.circle.prefix,CH.circle.xp).filter(e=>e.source!=="cook")); state.recipes=[];state.plan={};state.xp=[]; await seedRecipes(); refreshAll(); toast("Reset done"); } };
+
+    bootTheme(); applyContext();
+    if(!embedded) loadAll();
   </script>
 </body>
 </html>
