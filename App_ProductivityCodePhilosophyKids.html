@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Code Philosophy Kids - Kinetik</title>
+<script type="application/kinetik-app+json">
+{
+  "appId": "code-philosophy-kids",
+  "name": "Code Philosophy Kids",
+  "shortName": "Code Kids",
+  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#ff5e57'/><path d='M19 24h26v20H19z' rx='8' fill='#fff'/><path d='M25 24v-5h14v5' stroke='#0ea5e9' stroke-width='4' stroke-linecap='round'/><circle cx='27' cy='34' r='3' fill='#0ea5e9'/><circle cx='37' cy='34' r='3' fill='#0ea5e9'/><path d='M27 42h10' stroke='#111827' stroke-width='3' stroke-linecap='round'/></svg>",
+  "gradient": ["#ff5e57", "#0ea5e9"],
+  "category": "learning",
+  "tagline": "Understand how computers think.",
+  "about": "A no-typing coding logic trainer for kids. Practice sequences, loops, conditions, functions, data, and robot-maze reasoning with short CS pioneer cards.",
+  "audience": "kids 8-14",
+  "circleTypes": ["family", "learning"],
+  "worksWith": ["offline", "standalone"],
+  "status": "live",
+  "minMembers": 1
+}
+</script>
+<meta name="theme-color" content="#fff8f6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+:root{--ink:#172033;--muted:#6b7185;--faint:#9aa2b6;--bg:#fff8f6;--bg2:#eff9ff;--panel:rgba(255,255,255,.78);--solid:#fff;--line:rgba(23,32,51,.1);--line2:rgba(23,32,51,.17);--coral:#ff5e57;--sky:#0ea5e9;--mint:#21c87a;--lemon:#ffc857;--red:#ef4444;--shadow:0 20px 50px rgba(15,118,160,.14);--shadow2:0 8px 24px rgba(15,118,160,.1);--font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,"Segoe UI",sans-serif;color-scheme:light}
+[data-theme=dark]{--ink:#f8fbff;--muted:#bac3d8;--faint:#727b90;--bg:#0b111d;--bg2:#101827;--panel:rgba(25,34,52,.76);--solid:#151d2c;--line:rgba(255,255,255,.1);--line2:rgba(255,255,255,.18);--shadow:0 20px 50px rgba(0,0,0,.42);--shadow2:0 8px 24px rgba(0,0,0,.28);color-scheme:dark}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);overflow:hidden}body{font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased;background:radial-gradient(circle at 18% 12%,rgba(255,94,87,.18),transparent 31%),radial-gradient(circle at 88% 20%,rgba(14,165,233,.18),transparent 34%),linear-gradient(180deg,var(--bg),var(--bg2))}button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}h1,h2,h3,p{margin:0}.icon{width:22px;height:22px;display:block;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}.app{height:100dvh;max-width:560px;margin:0 auto;position:relative;display:flex;flex-direction:column;overflow:hidden}.safe{height:max(env(safe-area-inset-top),10px);flex:0 0 auto}.screens{position:relative;flex:1;min-height:0}.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}.screen.on{display:flex;animation:rise .24s cubic-bezier(.2,.8,.2,1) both}@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}.scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 18px 112px;scrollbar-width:none}.scroll::-webkit-scrollbar,.play-body::-webkit-scrollbar,.sheet-panel::-webkit-scrollbar{display:none}
+.top{display:flex;align-items:center;gap:12px;padding:4px 18px 14px}.mark{width:44px;height:44px;border-radius:16px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--coral),var(--sky));box-shadow:var(--shadow2);flex:0 0 auto}.mark svg{width:27px;height:27px}.head{flex:1;min-width:0}.kicker{font-size:11px;font-weight:850;letter-spacing:.13em;text-transform:uppercase;color:var(--faint)}.title{font-size:28px;line-height:1.04;letter-spacing:-.035em;font-weight:880;margin-top:2px}.chip{height:38px;border-radius:999px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow2);font-size:13px;font-weight:850}.chip.hot{background:linear-gradient(135deg,var(--coral),var(--sky));color:#fff;border:0}
+.hero{border-radius:32px;padding:16px;background:linear-gradient(150deg,rgba(255,255,255,.94),rgba(239,249,255,.7));border:1px solid var(--line);box-shadow:var(--shadow);display:grid;grid-template-columns:minmax(0,1fr) 174px;gap:14px;align-items:center}.hero h2{font-size:28px;line-height:1.06;letter-spacing:-.035em;font-weight:880}.hero p{font-size:13.5px;line-height:1.42;color:var(--muted);margin-top:8px}.primary{height:52px;border-radius:18px;display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:0 18px;background:linear-gradient(135deg,var(--coral),var(--sky));color:#fff;font-size:15.5px;font-weight:850;box-shadow:0 16px 34px rgba(255,94,87,.2);transition:transform .12s}.primary:active,.row:active,.lesson:active,.nav button:active,.choice:active,.move:active{transform:scale(.97)}.primary.ghost{background:var(--solid);color:var(--ink);border:1px solid var(--line);box-shadow:none}.hero .primary{margin-top:14px}.maze-card{height:174px;border-radius:28px;padding:12px;background:linear-gradient(160deg,rgba(14,165,233,.16),rgba(255,200,87,.2));border:1px solid var(--line);position:relative;overflow:hidden}.grid{height:100%;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:6px}.cell{border-radius:12px;background:rgba(255,255,255,.68);border:1px solid rgba(23,32,51,.08);position:relative}.cell.wall{background:rgba(23,32,51,.1)}.cell.goal:after{content:"";position:absolute;inset:12px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 5px rgba(33,200,122,.18)}.robot{position:absolute;width:48px;height:48px;left:19px;top:18px;border-radius:17px;background:#fff;border:2px solid rgba(23,32,51,.08);box-shadow:0 10px 24px rgba(14,165,233,.16);display:grid;place-items:center;animation:blink 3s infinite}.robot:before,.robot:after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;top:19px;background:var(--sky)}.robot:before{left:15px}.robot:after{right:15px}.antenna{position:absolute;width:18px;height:5px;border-radius:999px;background:var(--coral);top:-7px}@keyframes blink{0%,88%,100%{transform:translateY(0)}92%{transform:translateY(2px)}}.blocks{position:absolute;left:13px;right:13px;bottom:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.block{height:28px;border-radius:10px;background:#fff;color:var(--ink);display:grid;place-items:center;font-size:10px;font-weight:900;box-shadow:0 6px 14px rgba(23,32,51,.08)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}.stat,.row,.lesson,.panel,.nav,.play-card,.sheet-panel,.segment,.mini-card{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow2);backdrop-filter:blur(24px)}.stat{min-height:74px;border-radius:20px;padding:11px}.stat b{display:block;font-size:21px;letter-spacing:-.03em}.stat span{display:block;font-size:9.8px;color:var(--muted);font-weight:850;letter-spacing:.08em;text-transform:uppercase;margin-top:4px}.section{display:flex;align-items:center;justify-content:space-between;margin:22px 4px 10px;color:var(--faint);font-size:11px;font-weight:850;letter-spacing:.13em;text-transform:uppercase}.section button{color:var(--sky);font-size:12px;font-weight:850;text-transform:none;letter-spacing:0}.path{display:grid;gap:10px}.lesson{width:100%;text-align:left;border-radius:24px;padding:14px;display:flex;align-items:center;gap:13px}.badge{width:48px;height:48px;border-radius:17px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--coral),var(--sky));flex:0 0 auto}.badge svg{width:25px;height:25px}.lesson h3,.row h3{font-size:15.5px}.lesson p,.row p{font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:3px}.crowns{color:var(--lemon);font-size:13px;font-weight:900;white-space:nowrap}.row{width:100%;text-align:left;border-radius:24px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:13px}.chev{margin-left:auto;color:var(--faint)}.mini-card{border-radius:24px;padding:15px;margin-bottom:10px}.mini-card h3{font-size:16px}.mini-card p{font-size:13px;color:var(--muted);line-height:1.42;margin-top:6px}.segment{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:18px;margin-bottom:14px}.segment button{height:38px;border-radius:14px;color:var(--muted);font-size:13px;font-weight:850}.segment button.on{background:var(--solid);color:var(--ink);box-shadow:var(--shadow2)}.panel{border-radius:26px;padding:16px}.meter{margin-bottom:12px}.meta{display:flex;justify-content:space-between;font-size:13px;font-weight:850;margin-bottom:7px}.track{height:11px;border-radius:999px;background:var(--line2);overflow:hidden}.track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--coral),var(--sky))}.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.day{aspect-ratio:1;border-radius:10px;background:var(--line);display:grid;place-items:center;font-size:10px;font-weight:850;color:var(--faint)}.day.on{color:#fff;background:linear-gradient(135deg,var(--coral),var(--sky))}
+.nav{position:absolute;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));height:74px;border-radius:28px;padding:8px;display:grid;grid-template-columns:repeat(4,1fr);z-index:20}.nav button{border-radius:21px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--faint);font-size:10.5px;font-weight:850}.nav button.on{background:var(--solid);color:var(--sky);box-shadow:var(--shadow2)}.nav .icon{width:22px;height:22px}
+.play{position:absolute;inset:0;z-index:50;display:none;flex-direction:column;background:radial-gradient(circle at 18% 12%,rgba(255,94,87,.18),transparent 31%),radial-gradient(circle at 88% 20%,rgba(14,165,233,.18),transparent 34%),linear-gradient(180deg,var(--bg),var(--bg2))}.play.on{display:flex}.play-head{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 18px 10px}.icon-btn{width:42px;height:42px;border-radius:17px;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow2)}.hearts{color:var(--red);font-weight:900;min-width:34px;text-align:right}.bar{height:12px;flex:1;border-radius:999px;background:var(--line2);overflow:hidden}.bar i{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--coral),var(--sky));transition:.25s}.play-body{flex:1;min-height:0;overflow-y:auto;padding:10px 20px 12px;scrollbar-width:none}.play-card{min-height:100%;border-radius:30px;padding:20px;display:flex;flex-direction:column;animation:rise .24s both}.play-card h2{font-size:26px;line-height:1.1;letter-spacing:-.03em}.play-card p{font-size:14.5px;color:var(--muted);line-height:1.45;margin-top:8px}.question-tag{display:inline-flex;align-self:flex-start;height:29px;border-radius:999px;padding:0 10px;align-items:center;background:rgba(14,165,233,.12);color:var(--sky);font-size:11px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;margin-bottom:11px}.logic-box{margin:16px 0 6px;border-radius:22px;background:var(--solid);border:1px solid var(--line);padding:12px;display:grid;gap:8px}.step{height:36px;border-radius:13px;background:rgba(14,165,233,.08);display:flex;align-items:center;gap:9px;padding:0 11px;font-size:13px;font-weight:850}.step i{width:20px;height:20px;border-radius:7px;display:grid;place-items:center;background:var(--sky);color:#fff;font-size:11px;font-style:normal;flex:0 0 auto}.choices{display:grid;gap:10px;margin-top:14px}.choice{text-align:left;border-radius:20px;padding:15px;background:var(--solid);border:2px solid var(--line2);font-weight:800}.choice.good{border-color:var(--mint);background:rgba(33,200,122,.12)}.choice.bad{border-color:var(--red);background:rgba(239,68,68,.1)}.feedback{display:none;margin-top:14px;border-radius:20px;padding:14px;background:var(--panel);border:1px solid var(--line)}.feedback.on{display:block}.feedback b{color:var(--mint);font-size:12px;text-transform:uppercase;letter-spacing:.1em}.feedback.bad b{color:var(--red)}.boss-grid{width:min(300px,100%);aspect-ratio:1;margin:18px auto 12px;display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.boss-cell{border-radius:14px;background:var(--solid);border:1px solid var(--line);position:relative}.boss-cell.wall{background:rgba(23,32,51,.15)}.boss-cell.goal:after{content:"";position:absolute;inset:15px;border-radius:50%;background:var(--mint)}.boss-cell.bot:before{content:"";position:absolute;inset:9px;border-radius:15px;background:linear-gradient(135deg,var(--coral),var(--sky));box-shadow:0 8px 18px rgba(14,165,233,.2)}.moves{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.move{height:44px;border-radius:16px;background:var(--solid);border:1px solid var(--line);font-weight:900}.picked{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}.picked span{height:28px;border-radius:999px;padding:0 10px;background:rgba(255,94,87,.12);color:var(--coral);display:inline-flex;align-items:center;font-size:12px;font-weight:900}.play-foot{padding:10px 18px calc(16px + env(safe-area-inset-bottom))}.play-foot .primary{width:100%}.sheet{position:absolute;inset:0;z-index:60;display:none;background:rgba(23,32,51,.32);backdrop-filter:blur(5px)}.sheet.on{display:flex}.sheet-panel{width:calc(100% - 20px);max-height:86dvh;overflow-y:auto;margin:auto 10px 10px;border-radius:32px;padding:10px 18px calc(18px + env(safe-area-inset-bottom));scrollbar-width:none}.grab{width:42px;height:5px;border-radius:999px;background:var(--line2);margin:0 auto 13px}.sheet h2{font-size:25px}.sheet p{font-size:14.5px;line-height:1.5;color:var(--muted);margin-top:8px}.sheet-actions{display:grid;gap:10px;margin-top:16px}.toast{position:absolute;left:50%;bottom:calc(94px + env(safe-area-inset-bottom));transform:translate(-50%,16px);opacity:0;z-index:80;max-width:86%;pointer-events:none;padding:12px 16px;border-radius:999px;background:rgba(23,32,51,.94);color:#fff;font-size:13.5px;font-weight:850;box-shadow:0 14px 40px rgba(0,0,0,.28);transition:.2s}.toast.on{opacity:1;transform:translate(-50%,0)}
+@media(max-width:430px){.hero{grid-template-columns:1fr}.maze-card{height:190px}.hero h2,.play-card h2{font-size:26px}.stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:360px){.title{font-size:25px}.stat{padding:10px}.moves{grid-template-columns:repeat(2,1fr)}}@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-bot" viewBox="0 0 24 24"><path d="M12 8V4"/><path d="M8 4h8"/><rect x="5" y="8" width="14" height="10" rx="3"/><path d="M9 13h.01M15 13h.01M9 18v2M15 18v2"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+<symbol id="i-map" viewBox="0 0 24 24"><path d="M9 18 3 20V6l6-2 6 2 6-2v14l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/></symbol>
+<symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M8 15h8"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-7"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 1 0 9 7 9 9 0 1 1-9-7Z"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><rect x="4" y="4" width="11" height="11" rx="2"/></symbol>
+</svg>
+<div class="app" id="app">
+  <div class="safe"></div>
+  <header class="top">
+    <div class="mark"><svg class="icon"><use href="#i-bot"/></svg></div>
+    <div class="head"><div class="kicker">Code Philosophy</div><h1 class="title" id="viewTitle">Today</h1></div>
+    <button class="chip" id="themeBtn" aria-label="Toggle theme"><svg class="icon"><use href="#i-moon"/></svg></button>
+  </header>
+  <main class="screens">
+    <section class="screen on" id="s-today">
+      <div class="scroll">
+        <div class="hero">
+          <div>
+            <h2>Think like a computer, play like a puzzle.</h2>
+            <p>Sequence moves, trace loops, test conditions, and guide the robot home without typing code.</p>
+            <button class="primary" id="startBtn"><svg class="icon"><use href="#i-play"/></svg> Start logic run</button>
+          </div>
+          <div class="maze-card" aria-label="Robot maze preview">
+            <div class="grid">
+              <div class="cell"></div><div class="cell"></div><div class="cell wall"></div><div class="cell goal"></div>
+              <div class="cell wall"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+              <div class="cell"></div><div class="cell"></div><div class="cell wall"></div><div class="cell"></div>
+              <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            </div>
+            <div class="robot"><div class="antenna"></div></div>
+            <div class="blocks"><div class="block">move</div><div class="block">repeat</div><div class="block">if</div></div>
+          </div>
+        </div>
+        <div class="stats" id="stats"></div>
+        <div class="section"><span>Daily puzzle</span><button id="dailyBtn">Play</button></div>
+        <div id="dailyCard"></div>
+        <div class="section"><span>Philosophy card</span><button id="cardBtn">New card</button></div>
+        <div class="mini-card" id="quoteCard"></div>
+      </div>
+    </section>
+    <section class="screen" id="s-path">
+      <div class="scroll">
+        <div class="section"><span>Skill path</span><button id="pathBoss">Boss</button></div>
+        <div class="path" id="pathList"></div>
+      </div>
+    </section>
+    <section class="screen" id="s-lab">
+      <div class="scroll">
+        <div class="segment" id="labSegment">
+          <button class="on" data-lab="quick">Quick</button>
+          <button data-lab="logic">Logic</button>
+          <button data-lab="boss">Robot</button>
+        </div>
+        <div id="labList"></div>
+      </div>
+    </section>
+    <section class="screen" id="s-progress">
+      <div class="scroll">
+        <div class="section"><span>Progress</span><button id="copyBtn">Copy summary</button></div>
+        <div class="panel" id="progressPanel"></div>
+        <div class="section"><span>Crowns</span><button id="resetBtn">Reset</button></div>
+        <div class="path" id="badgeList"></div>
+      </div>
+    </section>
+  </main>
+  <nav class="nav" id="nav">
+    <button class="on" data-tab="today"><svg class="icon"><use href="#i-bot"/></svg><span>Today</span></button>
+    <button data-tab="path"><svg class="icon"><use href="#i-map"/></svg><span>Path</span></button>
+    <button data-tab="lab"><svg class="icon"><use href="#i-flask"/></svg><span>Lab</span></button>
+    <button data-tab="progress"><svg class="icon"><use href="#i-chart"/></svg><span>Progress</span></button>
+  </nav>
+  <section class="play" id="play">
+    <div class="play-head">
+      <button class="icon-btn" id="closePlay" aria-label="Close"><svg class="icon"><use href="#i-x"/></svg></button>
+      <div class="bar"><i id="playBar"></i></div>
+      <div class="hearts" id="heartText">5/5</div>
+    </div>
+    <div class="play-body"><div class="play-card" id="playCard"></div></div>
+    <div class="play-foot"><button class="primary" id="nextBtn">Check</button></div>
+  </section>
+  <section class="sheet" id="sheet">
+    <div class="sheet-panel">
+      <div class="grab"></div>
+      <h2>Robot brain online.</h2>
+      <p>Build a tiny mental model first: computers follow exact steps, repeat patterns, branch on conditions, and store values. Each run earns XP and crowns.</p>
+      <div class="sheet-actions">
+        <button class="primary" id="beginBtn">Begin</button>
+        <button class="primary ghost" id="laterBtn">Not now</button>
+      </div>
+    </div>
+  </section>
+  <div class="toast" id="toast"></div>
+</div>
+<script>
+const MANIFEST=JSON.parse(document.querySelector('script[type="application/kinetik-app+json"]').textContent);
+const PREFIX='kinetik_code_philosophy_';
+const DAY=new Date().toISOString().slice(0,10);
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const SKILLS=[
+ {id:'seq',name:'Sequences',blurb:'Put exact instructions in the order a robot can follow.',icon:'i-arrow'},
+ {id:'loop',name:'Loops',blurb:'Predict repeated steps without counting one by one.',icon:'i-bot'},
+ {id:'cond',name:'Conditions',blurb:'Use if and else rules to decide what happens next.',icon:'i-map'},
+ {id:'func',name:'Functions',blurb:'Bundle useful steps and call them again.',icon:'i-flask'},
+ {id:'data',name:'Data and Algorithms',blurb:'Track values, compare plans, and choose efficient routes.',icon:'i-chart'}
+];
+const CARDS=[
+ ['Ada Lovelace','Ada saw that machines could work with symbols, not only numbers.'],
+ ['Alan Turing','Turing asked a brave question: what can a machine compute if the rules are clear?'],
+ ['Grace Hopper','Hopper helped make programming languages closer to human thought.'],
+ ['Edsger Dijkstra','Dijkstra cared about simple ideas written so clearly bugs had nowhere to hide.'],
+ ['Tim Berners-Lee','Berners-Lee connected documents so knowledge could move around the world.']
+];
+const QUESTIONS=[
+ {skill:'seq',type:'Bug Hunt',title:'Spot the wrong step',prompt:'The robot wants to make toast. Which step is the logic bug?',steps:['Put bread in toaster','Eat toast','Push toaster lever','Wait until toasted'],choices:['Put bread in toaster','Eat toast','Push toaster lever','Wait until toasted'],answer:1,explain:'Eating comes after the toast exists. Order is the whole idea of a sequence.'},
+ {skill:'seq',type:'Sequence',title:'Plant helper',prompt:'Which order lets the robot water a plant?',steps:['Walk to tap','Fill can','Walk to plant','Pour water'],choices:['Walk to tap, fill can, walk to plant, pour water','Pour water, fill can, walk to tap, walk to plant','Walk to plant, pour water, fill can, walk to tap'],answer:0,explain:'Each action depends on the previous one being finished.'},
+ {skill:'loop',type:'Trace Loop',title:'Point machine',prompt:'Start with 2 points. Repeat 4 times: add 3 points. What is the final score?',steps:['score = 2','repeat 4 times','score = score + 3'],choices:['9','12','14','16'],answer:2,explain:'Four adds of 3 equals 12, then add the starting 2.'},
+ {skill:'loop',type:'Trace Loop',title:'Robot steps',prompt:'A loop says repeat 3 times: move forward twice. How many forward moves happen?',steps:['repeat 3 times','move forward','move forward'],choices:['3','5','6','9'],answer:2,explain:'Each loop run has 2 moves. Three runs make 6 moves.'},
+ {skill:'cond',type:'Boolean Gate',title:'Battery rule',prompt:'Rule: if battery is below 20, charge. Battery is 18. What happens?',steps:['battery = 18','if battery < 20','charge'],choices:['The robot charges','The robot dances','Nothing happens','The robot shuts down'],answer:0,explain:'18 is below 20, so the condition is true.'},
+ {skill:'cond',type:'If Else',title:'Door choice',prompt:'If the door is locked, knock. Else, enter. The door is open. What does the robot do?',steps:['door = open','if locked: knock','else: enter'],choices:['Knock','Enter','Wait','Unlock it'],answer:1,explain:'The locked condition is false, so the else branch runs.'},
+ {skill:'func',type:'Function',title:'Clean room',prompt:'cleanRoom means pick up toys, wipe desk, return home. Call cleanRoom twice. How many times does the robot wipe the desk?',steps:['define cleanRoom','call cleanRoom','call cleanRoom'],choices:['0','1','2','3'],answer:2,explain:'The function body runs once each time it is called.'},
+ {skill:'func',type:'Function',title:'Useful bundle',prompt:'Why do programmers make functions?',steps:['Name a useful group of steps','Reuse it','Make the idea easier to test'],choices:['To make steps reusable','To hide every bug forever','To make the computer slower','To avoid thinking about order'],answer:0,explain:'Functions give a useful idea a name so it can be reused and checked.'},
+ {skill:'data',type:'Variable',title:'Value vault',prompt:'x starts at 5. Then x = x + 2. Then x = x * 3. What is x?',steps:['x = 5','x = x + 2','x = x * 3'],choices:['7','15','21','30'],answer:2,explain:'5 plus 2 is 7, then 7 times 3 is 21.'},
+ {skill:'data',type:'Algorithm',title:'Fastest plan',prompt:'Which plan reaches the goal with fewer steps?',steps:['Plan A: right, right, down, down','Plan B: right, down, left, right, down','Plan C: down, wait, down, right, right'],choices:['Plan A','Plan B','Plan C','They are equal'],answer:0,explain:'Plan A uses 4 moves. The other plans add extra actions.'},
+ {skill:'data',type:'Pattern',title:'Repeated value',prompt:'List: 3, 7, 3, 9. Which value repeats?',steps:['data = [3, 7, 3, 9]','look for matching items'],choices:['3','7','9','None'],answer:0,explain:'The value 3 appears twice.'}
+];
+const LABS={
+ quick:[['Daily Logic','A balanced mix from every skill.','today'],['Two-minute Loop Lab','Fast loop and variable questions.','loop'],['Bug Hunt Sprint','Find logic errors before they spread.','seq']],
+ logic:[['Condition Gate','Practice true, false, if, and else.','cond'],['Function Builder','Bundle steps and reuse ideas.','func'],['Algorithm Race','Pick the plan with less waste.','data']],
+ boss:[['The Robot Boss','Sequence a robot through a five-step maze.','boss'],['Mixed Crown Run','A longer run that ends with the robot maze.','mixed']]
+};
+const DEFAULT={xp:0,gems:0,streak:0,lastDay:'',hearts:5,wins:0,answered:0,theme:'light',seenIntro:false,crowns:{seq:0,loop:0,cond:0,func:0,data:0,boss:0},history:[],wrong:[]};
+let R=load();
+let currentTab='today',labMode='quick',session=[],stepIndex=0,selected=null,bossMoves=[],answered=false,activeSkill='mixed';
+function load(){try{return {...DEFAULT,...JSON.parse(localStorage.getItem(PREFIX+'state')||'{}')}}catch(e){return {...DEFAULT}}}
+function save(){localStorage.setItem(PREFIX+'state',JSON.stringify(R));emit('DATA_UPDATE',{appId:MANIFEST.appId,xp:R.xp,gems:R.gems,streak:R.streak,answered:R.answered,wins:R.wins,crowns:R.crowns})}
+function emit(type,payload){try{window.parent&&window.parent.postMessage({type,payload},'*')}catch(e){}}
+function earn(n,reason){R.gems+=n;save();emit('EARN_GEMS',{appId:MANIFEST.appId,amount:n,reason});toast('+'+n+' gems')}
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),1600)}
+function icon(id){return '<svg class="icon"><use href="#'+id+'"/></svg>'}
+function pct(a,b){return Math.max(0,Math.min(100,Math.round((a/b)*100)))}
+function sample(arr,n){return [...arr].sort(()=>Math.random()-.5).slice(0,n)}
+function dateSeed(){return new Date(DAY+'T00:00:00').getTime()/86400000}
+function render(){
+ document.documentElement.dataset.theme=R.theme||'light';
+ renderStats();renderDaily();renderCard();renderPath();renderLab();renderProgress();
+}
+function renderStats(){
+ $('#stats').innerHTML=[
+  ['XP',R.xp],['Gems',R.gems],['Streak',R.streak],['Crowns',Object.values(R.crowns).reduce((a,b)=>a+b,0)]
+ ].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('');
+}
+function renderDaily(){
+ const q=QUESTIONS[Math.floor(dateSeed())%QUESTIONS.length];
+ $('#dailyCard').innerHTML='<button class="row" data-run="daily"><div class="badge">'+icon('i-bot')+'</div><div><h3>'+q.title+'</h3><p>'+q.prompt+'</p></div><div class="chev">'+icon('i-arrow')+'</div></button>';
+}
+function renderCard(){
+ const c=CARDS[(R.answered+Math.floor(dateSeed()))%CARDS.length];
+ $('#quoteCard').innerHTML='<h3>'+c[0]+'</h3><p>'+c[1]+'</p>';
+}
+function renderPath(){
+ $('#pathList').innerHTML=SKILLS.map((s,i)=>{
+  const crowns=R.crowns[s.id]||0;
+  return '<button class="lesson" data-skill="'+s.id+'"><div class="badge">'+icon(s.icon)+'</div><div><h3>'+s.name+'</h3><p>'+s.blurb+'</p></div><div class="crowns">'+crowns+'/5 crowns</div></button>';
+ }).join('');
+}
+function renderLab(){
+ $('#labList').innerHTML=LABS[labMode].map(item=>'<button class="row" data-labrun="'+item[2]+'"><div class="badge">'+icon(item[2]=='boss'?'i-bot':'i-flask')+'</div><div><h3>'+item[0]+'</h3><p>'+item[1]+'</p></div><div class="chev">'+icon('i-arrow')+'</div></button>').join('');
+}
+function renderProgress(){
+ const totalCrowns=Object.values(R.crowns).reduce((a,b)=>a+b,0);
+ const days=[...Array(14)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-13+i);const key=d.toISOString().slice(5,10);const on=R.history.some(h=>h.date==d.toISOString().slice(0,10));return '<div class="day '+(on?'on':'')+'">'+key.slice(3)+'</div>'}).join('');
+ $('#progressPanel').innerHTML='<div class="meter"><div class="meta"><span>Logic XP</span><span>'+pct(R.xp,500)+'%</span></div><div class="track"><i style="width:'+pct(R.xp,500)+'%"></i></div></div><div class="meter"><div class="meta"><span>Crown board</span><span>'+totalCrowns+'/30</span></div><div class="track"><i style="width:'+pct(totalCrowns,30)+'%"></i></div></div><div class="calendar">'+days+'</div>';
+ $('#badgeList').innerHTML=[...SKILLS,{id:'boss',name:'Robot Boss',blurb:'Guide the robot through the maze with exact moves.',icon:'i-bot'}].map(s=>'<div class="lesson"><div class="badge">'+icon(s.icon)+'</div><div><h3>'+s.name+'</h3><p>'+s.blurb+'</p></div><div class="crowns">'+(R.crowns[s.id]||0)+'/5</div></div>').join('');
+}
+function switchTab(t){
+ currentTab=t;
+ $$('.screen').forEach(x=>x.classList.remove('on'));
+ $('#s-'+t).classList.add('on');
+ $$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab==t));
+ $('#viewTitle').textContent={today:'Today',path:'Path',lab:'Logic Lab',progress:'Progress'}[t];
+ render();
+}
+function buildSession(mode){
+ activeSkill=mode||'mixed';
+ const pool=mode&&mode!='today'&&mode!='mixed'&&mode!='boss'?QUESTIONS.filter(q=>q.skill==mode):QUESTIONS;
+ let qs=mode=='boss'?[]:sample(pool,mode=='mixed'||mode=='today'?5:4);
+ session=[];
+ qs.forEach((q,i)=>{session.push({...q,kind:'q'});if(i==1||i==3)session.push({kind:'card',card:CARDS[(R.answered+i)%CARDS.length]})});
+ if(mode=='boss'||mode=='mixed'||mode=='today')session.push({kind:'boss'});
+ stepIndex=0;selected=null;answered=false;bossMoves=[];R.hearts=5;
+ $('#play').classList.add('on');
+ renderPlay();
+}
+function renderPlay(){
+ const item=session[stepIndex];
+ $('#playBar').style.width=pct(stepIndex,session.length)+'%';
+ $('#heartText').textContent=R.hearts+'/5';
+ $('#nextBtn').textContent=item&&item.kind=='boss'?'Run sequence':item&&item.kind=='card'?'Continue':'Check';
+ $('#nextBtn').disabled=false;
+ if(!item){finishSession();return}
+ if(item.kind=='card'){renderPhilosophy(item.card);return}
+ if(item.kind=='boss'){renderBoss();return}
+ renderQuestion(item);
+}
+function stepsHtml(steps){return '<div class="logic-box">'+(steps||[]).map((s,i)=>'<div class="step"><i>'+(i+1)+'</i>'+s+'</div>').join('')+'</div>'}
+function renderQuestion(q){
+ answered=false;selected=null;
+ $('#playCard').innerHTML='<div class="question-tag">'+q.type+'</div><h2>'+q.title+'</h2><p>'+q.prompt+'</p>'+stepsHtml(q.steps)+'<div class="choices">'+q.choices.map((c,i)=>'<button class="choice" data-choice="'+i+'">'+c+'</button>').join('')+'</div><div class="feedback" id="feedback"></div>';
+}
+function renderPhilosophy(c){
+ answered=true;
+ $('#playBar').style.width=pct(stepIndex+1,session.length)+'%';
+ $('#playCard').innerHTML='<div class="question-tag">Philosophy card</div><h2>'+c[0]+'</h2><p>'+c[1]+'</p><div class="logic-box"><div class="step"><i>1</i>Big ideas become small rules.</div><div class="step"><i>2</i>Small rules can build huge systems.</div></div>';
+}
+function renderBoss(){
+ answered=false;selected=null;bossMoves=[];
+ const cells=[...Array(25)].map((_,i)=>{
+  const walls=[3,7,8,13,18].includes(i),goal=i==24,bot=i==0;
+  return '<div class="boss-cell '+(walls?'wall ':'')+(goal?'goal ':'')+(bot?'bot':'')+'"></div>';
+ }).join('');
+ $('#playCard').innerHTML='<div class="question-tag">Robot boss</div><h2>Guide the robot home.</h2><p>Choose five moves in order. The clean path is exact.</p><div class="boss-grid" id="bossGrid">'+cells+'</div><div class="picked" id="picked"></div><div class="moves"><button class="move" data-move="Right">Right</button><button class="move" data-move="Down">Down</button><button class="move" data-move="Left">Left</button><button class="move" data-move="Up">Up</button></div><div class="feedback" id="feedback"></div>';
+}
+function choose(i){
+ if(answered)return;
+ selected=Number(i);
+ const q=session[stepIndex];
+ answered=true;R.answered++;
+ const good=selected===q.answer;
+ if(good){R.xp+=12}else{R.hearts=Math.max(0,R.hearts-1);R.wrong.push({date:DAY,title:q.title,skill:q.skill})}
+ $$('.choice').forEach((b,idx)=>{b.classList.toggle('good',idx===q.answer);b.classList.toggle('bad',idx===selected&&idx!==q.answer)});
+ const fb=$('#feedback');fb.className='feedback on '+(good?'':'bad');fb.innerHTML='<b>'+(good?'Correct':'Not quite')+'</b><p>'+q.explain+'</p>';
+ $('#playBar').style.width=pct(stepIndex+1,session.length)+'%';
+ $('#heartText').textContent=R.hearts+'/5';
+ save();
+}
+function addMove(m){
+ if(answered||bossMoves.length>=5)return;
+ bossMoves.push(m);
+ $('#picked').innerHTML=bossMoves.map(x=>'<span>'+x+'</span>').join('');
+}
+function checkBoss(){
+ const path=['Right','Right','Down','Down','Right'];
+ const good=bossMoves.join('|')===path.join('|');
+ answered=true;R.answered++;
+ if(good){R.xp+=25;R.wins++;R.crowns.boss=Math.min(5,(R.crowns.boss||0)+1);earn(5,'robot boss')}else{R.hearts=Math.max(0,R.hearts-1)}
+ const fb=$('#feedback');fb.className='feedback on '+(good?'':'bad');fb.innerHTML='<b>'+(good?'Robot arrived':'Path blocked')+'</b><p>The clean path is Right, Right, Down, Down, Right.</p>';
+ $('#heartText').textContent=R.hearts+'/5';
+ save();
+}
+function next(){
+ const item=session[stepIndex];
+ if(!item)return finishSession();
+ if(item.kind=='card'){stepIndex++;renderPlay();return}
+ if(item.kind=='boss'&&!answered){checkBoss();return}
+ if(!answered){toast('Pick an answer first');return}
+ stepIndex++;
+ if(R.hearts<=0){finishSession(true);return}
+ renderPlay();
+}
+function finishSession(outOfHearts){
+ $('#play').classList.remove('on');
+ const correct=Math.max(0,Math.min(session.length,R.hearts+2));
+ const todayDone=R.history.some(h=>h.date==DAY);
+ if(!todayDone){R.streak=R.lastDay&&daysBetween(R.lastDay,DAY)==1?R.streak+1:1;R.lastDay=DAY}
+ if(activeSkill&&R.crowns[activeSkill]!=null&&!outOfHearts){R.crowns[activeSkill]=Math.min(5,(R.crowns[activeSkill]||0)+1)}
+ R.history.push({date:DAY,skill:activeSkill,xp:R.xp});
+ if(!outOfHearts)earn(3,'logic run');
+ save();render();toast(outOfHearts?'Run ended':'Logic run complete');
+}
+function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000)}
+function copySummary(){
+ const text='Kinetik Code Philosophy Kids summary\\nXP: '+R.xp+'\\nGems: '+R.gems+'\\nStreak: '+R.streak+'\\nQuestions answered: '+R.answered+'\\nRobot wins: '+R.wins;
+ if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>toast('Summary copied')).catch(()=>fallbackCopy(text))}else fallbackCopy(text);
+}
+function fallbackCopy(text){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('Summary copied')}
+document.addEventListener('click',e=>{
+ const nav=e.target.closest('[data-tab]');if(nav){switchTab(nav.dataset.tab);return}
+ const lesson=e.target.closest('[data-skill]');if(lesson){buildSession(lesson.dataset.skill);return}
+ const run=e.target.closest('[data-run]');if(run){buildSession('today');return}
+ const lab=e.target.closest('[data-lab]');if(lab){labMode=lab.dataset.lab;$$('#labSegment button').forEach(b=>b.classList.toggle('on',b.dataset.lab==labMode));renderLab();return}
+ const labrun=e.target.closest('[data-labrun]');if(labrun){buildSession(labrun.dataset.labrun);return}
+ const choice=e.target.closest('[data-choice]');if(choice){choose(choice.dataset.choice);return}
+ const move=e.target.closest('[data-move]');if(move){addMove(move.dataset.move);return}
+});
+$('#startBtn').onclick=()=>buildSession('today');
+$('#dailyBtn').onclick=()=>buildSession('today');
+$('#cardBtn').onclick=()=>{R.answered++;renderCard();save()};
+$('#pathBoss').onclick=()=>buildSession('boss');
+$('#nextBtn').onclick=next;
+$('#closePlay').onclick=()=>{$('#play').classList.remove('on');render()};
+$('#copyBtn').onclick=copySummary;
+$('#resetBtn').onclick=()=>{if(confirm('Reset Code Philosophy progress?')){R={...DEFAULT,seenIntro:true,theme:R.theme};save();render();toast('Progress reset')}};
+$('#themeBtn').onclick=()=>{R.theme=R.theme=='dark'?'light':'dark';save();render()};
+$('#beginBtn').onclick=()=>{R.seenIntro=true;save();$('#sheet').classList.remove('on');buildSession('today')};
+$('#laterBtn').onclick=()=>{R.seenIntro=true;save();$('#sheet').classList.remove('on')};
+$('#closePlay').addEventListener('keydown',e=>{if(e.key==='Escape')$('#play').classList.remove('on')});
+window.addEventListener('message',e=>{if(!e.data)return;if(e.data.type==='KINETIK_OPEN_APP')render();if(e.data.type==='KINETIK_THEME'){R.theme=e.data.theme;save();render()}});
+render();
+if(!R.seenIntro)setTimeout(()=>$('#sheet').classList.add('on'),350);
+</script>
+</body>
+</html>

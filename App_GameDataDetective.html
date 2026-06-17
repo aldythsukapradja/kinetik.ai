@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Data Detective - Kinetik</title>
+<script type="application/kinetik-app+json">
+{
+  "appId": "data-detective",
+  "name": "Data Detective",
+  "shortName": "Detective",
+  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#0f5132'/><circle cx='28' cy='28' r='13' fill='none' stroke='#14b8a6' stroke-width='6'/><path d='M38 38l12 12' stroke='#f5b041' stroke-width='7' stroke-linecap='round'/><path d='M18 41h7l4-8 5 4 7-13' stroke='#fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+  "gradient": ["#0f5132", "#14b8a6"],
+  "category": "games",
+  "tagline": "Read the data. Spot the lie. Make the call.",
+  "about": "A practical BI, analytics, and data science quiz game with charts, KPI cases, A/B testing, statistics, misleading graph detection, and analyst case rounds.",
+  "audience": "teens and adults",
+  "circleTypes": ["learning", "work"],
+  "worksWith": ["offline", "standalone"],
+  "status": "live",
+  "minMembers": 1
+}
+</script>
+<meta name="theme-color" content="#f5fbf8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+:root{--ink:#14211d;--muted:#63746e;--faint:#95a39e;--bg:#f5fbf8;--bg2:#eef7fb;--panel:rgba(255,255,255,.8);--solid:#fff;--line:rgba(20,33,29,.1);--line2:rgba(20,33,29,.18);--forest:#0f5132;--teal:#14b8a6;--amber:#f5b041;--coral:#e76f51;--blue:#2563eb;--green:#22c55e;--red:#ef4444;--shadow:0 20px 50px rgba(15,81,50,.14);--shadow2:0 8px 24px rgba(15,81,50,.1);--font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,"Segoe UI",sans-serif;color-scheme:light}
+[data-theme=dark]{--ink:#f3faf7;--muted:#b9cbc5;--faint:#738780;--bg:#091310;--bg2:#101923;--panel:rgba(22,36,32,.78);--solid:#14211d;--line:rgba(255,255,255,.1);--line2:rgba(255,255,255,.18);--shadow:0 20px 50px rgba(0,0,0,.46);--shadow2:0 8px 24px rgba(0,0,0,.28);color-scheme:dark}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);overflow:hidden}body{font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased;background:radial-gradient(circle at 18% 0,rgba(20,184,166,.17),transparent 32%),radial-gradient(circle at 92% 18%,rgba(245,176,65,.15),transparent 35%),linear-gradient(180deg,var(--bg),var(--bg2))}button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}h1,h2,h3,p{margin:0}.icon{width:22px;height:22px;display:block;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}.app{height:100dvh;max-width:560px;margin:0 auto;position:relative;display:flex;flex-direction:column;overflow:hidden}.safe{height:max(env(safe-area-inset-top),10px);flex:0 0 auto}.screens{position:relative;flex:1;min-height:0}.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}.screen.on{display:flex;animation:rise .24s cubic-bezier(.2,.8,.2,1) both}@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}.scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 18px 112px;scrollbar-width:none}.scroll::-webkit-scrollbar,.play-body::-webkit-scrollbar,.sheet-panel::-webkit-scrollbar{display:none}
+.top{display:flex;align-items:center;gap:12px;padding:4px 18px 14px}.mark{width:44px;height:44px;border-radius:16px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--forest),var(--teal));box-shadow:var(--shadow2);flex:0 0 auto}.mark svg{width:27px;height:27px}.head{flex:1;min-width:0}.kicker{font-size:11px;font-weight:850;letter-spacing:.13em;text-transform:uppercase;color:var(--faint)}.title{font-size:28px;line-height:1.04;letter-spacing:-.035em;font-weight:880;margin-top:2px}.chip{height:38px;border-radius:999px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow2);font-size:13px;font-weight:850}.chip.hot{background:linear-gradient(135deg,var(--forest),var(--teal));color:#fff;border:0}
+.hero{border-radius:32px;padding:16px;background:linear-gradient(150deg,rgba(255,255,255,.94),rgba(238,247,251,.72));border:1px solid var(--line);box-shadow:var(--shadow);display:grid;grid-template-columns:minmax(0,1fr) 184px;gap:14px;align-items:center}.hero h2{font-size:28px;line-height:1.06;letter-spacing:-.035em;font-weight:880}.hero p{font-size:13.5px;line-height:1.42;color:var(--muted);margin-top:8px}.primary{height:52px;border-radius:18px;display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:0 18px;background:linear-gradient(135deg,var(--forest),var(--teal));color:#fff;font-size:15.5px;font-weight:850;box-shadow:0 16px 34px rgba(15,81,50,.2);transition:transform .12s}.primary:active,.row:active,.lesson:active,.nav button:active,.choice:active,.pt:active{transform:scale(.97)}.primary.ghost{background:var(--solid);color:var(--ink);border:1px solid var(--line);box-shadow:none}.hero .primary{margin-top:14px}.dash{height:184px;border-radius:28px;padding:12px;background:linear-gradient(160deg,rgba(15,81,50,.14),rgba(20,184,166,.13));border:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:52px 1fr 1fr;gap:8px}.metric{border-radius:15px;background:var(--solid);border:1px solid var(--line);padding:8px}.metric b{display:block;font-size:19px;letter-spacing:-.04em}.metric span{display:block;font-size:9px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-top:2px}.line-card,.bar-card{border-radius:15px;background:var(--solid);border:1px solid var(--line);padding:8px;position:relative;overflow:hidden}.line-card{grid-column:1/3}.sparkline{width:100%;height:100%}.bars{height:100%;display:flex;align-items:end;gap:6px}.bars i{flex:1;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,var(--teal),var(--forest));animation:barPulse 2.4s ease-in-out infinite}.bars i:nth-child(2){animation-delay:.2s}.bars i:nth-child(3){animation-delay:.45s;background:linear-gradient(180deg,var(--amber),var(--coral))}.bars i:nth-child(4){animation-delay:.7s}@keyframes barPulse{0%,100%{transform:scaleY(.88)}50%{transform:scaleY(1)}}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}.stat,.row,.lesson,.panel,.nav,.play-card,.sheet-panel,.segment,.mini-card{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow2);backdrop-filter:blur(24px)}.stat{min-height:74px;border-radius:20px;padding:11px}.stat b{display:block;font-size:21px;letter-spacing:-.03em}.stat span{display:block;font-size:9.8px;color:var(--muted);font-weight:850;letter-spacing:.08em;text-transform:uppercase;margin-top:4px}.section{display:flex;align-items:center;justify-content:space-between;margin:22px 4px 10px;color:var(--faint);font-size:11px;font-weight:850;letter-spacing:.13em;text-transform:uppercase}.section button{color:var(--teal);font-size:12px;font-weight:850;text-transform:none;letter-spacing:0}.path{display:grid;gap:10px}.lesson{width:100%;text-align:left;border-radius:24px;padding:14px;display:flex;align-items:center;gap:13px}.badge{width:48px;height:48px;border-radius:17px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--forest),var(--teal));flex:0 0 auto}.badge svg{width:25px;height:25px}.lesson h3,.row h3{font-size:15.5px}.lesson p,.row p{font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:3px}.crowns{color:var(--amber);font-size:13px;font-weight:900;white-space:nowrap}.row{width:100%;text-align:left;border-radius:24px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:13px}.chev{margin-left:auto;color:var(--faint)}.mini-card{border-radius:24px;padding:15px;margin-bottom:10px}.mini-card h3{font-size:16px}.mini-card p{font-size:13px;color:var(--muted);line-height:1.42;margin-top:6px}.segment{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:18px;margin-bottom:14px}.segment button{height:38px;border-radius:14px;color:var(--muted);font-size:13px;font-weight:850}.segment button.on{background:var(--solid);color:var(--ink);box-shadow:var(--shadow2)}.panel{border-radius:26px;padding:16px}.meter{margin-bottom:12px}.meta{display:flex;justify-content:space-between;font-size:13px;font-weight:850;margin-bottom:7px}.track{height:11px;border-radius:999px;background:var(--line2);overflow:hidden}.track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--forest),var(--teal))}.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.day{aspect-ratio:1;border-radius:10px;background:var(--line);display:grid;place-items:center;font-size:10px;font-weight:850;color:var(--faint)}.day.on{color:#fff;background:linear-gradient(135deg,var(--forest),var(--teal))}
+.nav{position:absolute;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));height:74px;border-radius:28px;padding:8px;display:grid;grid-template-columns:repeat(4,1fr);z-index:20}.nav button{border-radius:21px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--faint);font-size:10.5px;font-weight:850}.nav button.on{background:var(--solid);color:var(--teal);box-shadow:var(--shadow2)}.nav .icon{width:22px;height:22px}
+.play{position:absolute;inset:0;z-index:50;display:none;flex-direction:column;background:radial-gradient(circle at 18% 0,rgba(20,184,166,.17),transparent 32%),radial-gradient(circle at 92% 18%,rgba(245,176,65,.15),transparent 35%),linear-gradient(180deg,var(--bg),var(--bg2))}.play.on{display:flex}.play-head{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 18px 10px}.icon-btn{width:42px;height:42px;border-radius:17px;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow2)}.hearts{color:var(--red);font-weight:900;min-width:34px;text-align:right}.bar{height:12px;flex:1;border-radius:999px;background:var(--line2);overflow:hidden}.bar i{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--forest),var(--teal));transition:.25s}.play-body{flex:1;min-height:0;overflow-y:auto;padding:10px 20px 12px;scrollbar-width:none}.play-card{min-height:100%;border-radius:30px;padding:20px;display:flex;flex-direction:column;animation:rise .24s both}.play-card h2{font-size:26px;line-height:1.1;letter-spacing:-.03em}.play-card p{font-size:14.5px;color:var(--muted);line-height:1.45;margin-top:8px}.question-tag{display:inline-flex;align-self:flex-start;height:29px;border-radius:999px;padding:0 10px;align-items:center;background:rgba(20,184,166,.12);color:var(--forest);font-size:11px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;margin-bottom:11px}.viz{margin:16px 0 6px;border-radius:22px;background:var(--solid);border:1px solid var(--line);padding:12px;min-height:170px}.viz svg{width:100%;height:auto;display:block}.axis{stroke:var(--line2);stroke-width:2}.gridline{stroke:var(--line);stroke-width:1}.line{fill:none;stroke:var(--teal);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}.pt{cursor:pointer;transition:.12s;transform-origin:center}.pt:hover{filter:brightness(1.08)}.pt.sel{stroke:var(--amber);stroke-width:5}.pt.good{stroke:var(--green);stroke-width:5}.pt.bad{stroke:var(--red);stroke-width:5}.barviz{display:flex;align-items:end;height:150px;gap:12px;padding:10px 6px 0}.barviz div{flex:1;border-radius:10px 10px 4px 4px;background:linear-gradient(180deg,var(--teal),var(--forest));position:relative}.barviz div span{position:absolute;left:50%;bottom:-22px;transform:translateX(-50%);font-size:11px;font-weight:850;color:var(--muted)}.table{display:grid;gap:6px}.trow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}.cell{min-height:34px;border-radius:11px;background:rgba(20,184,166,.08);display:grid;place-items:center;font-size:12px;font-weight:850}.funnel{display:grid;gap:8px;margin-top:8px}.fstep{height:36px;border-radius:12px;background:rgba(20,184,166,.1);overflow:hidden;position:relative}.fstep i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--forest),var(--teal));border-radius:inherit}.fstep span{position:relative;z-index:1;height:100%;display:flex;align-items:center;padding-left:10px;font-size:12px;font-weight:900;color:var(--ink)}.abgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.abcard{border-radius:16px;background:rgba(20,184,166,.08);padding:12px}.abcard b{font-size:22px}.abcard span{display:block;font-size:11px;color:var(--muted);font-weight:850;text-transform:uppercase;margin-top:2px}.choices{display:grid;gap:10px;margin-top:14px}.choice{text-align:left;border-radius:20px;padding:15px;background:var(--solid);border:2px solid var(--line2);font-weight:800}.choice.good{border-color:var(--green);background:rgba(34,197,94,.12)}.choice.bad{border-color:var(--red);background:rgba(239,68,68,.1)}.feedback{display:none;margin-top:14px;border-radius:20px;padding:14px;background:var(--panel);border:1px solid var(--line)}.feedback.on{display:block}.feedback b{color:var(--green);font-size:12px;text-transform:uppercase;letter-spacing:.1em}.feedback.bad b{color:var(--red)}.play-foot{padding:10px 18px calc(16px + env(safe-area-inset-bottom))}.play-foot .primary{width:100%}.sheet{position:absolute;inset:0;z-index:60;display:none;background:rgba(20,33,29,.32);backdrop-filter:blur(5px)}.sheet.on{display:flex}.sheet-panel{width:calc(100% - 20px);max-height:86dvh;overflow-y:auto;margin:auto 10px 10px;border-radius:32px;padding:10px 18px calc(18px + env(safe-area-inset-bottom));scrollbar-width:none}.grab{width:42px;height:5px;border-radius:999px;background:var(--line2);margin:0 auto 13px}.sheet h2{font-size:25px}.sheet p{font-size:14.5px;line-height:1.5;color:var(--muted);margin-top:8px}.sheet-actions{display:grid;gap:10px;margin-top:16px}.toast{position:absolute;left:50%;bottom:calc(94px + env(safe-area-inset-bottom));transform:translate(-50%,16px);opacity:0;z-index:80;max-width:86%;pointer-events:none;padding:12px 16px;border-radius:999px;background:rgba(20,33,29,.94);color:#fff;font-size:13.5px;font-weight:850;box-shadow:0 14px 40px rgba(0,0,0,.28);transition:.2s}.toast.on{opacity:1;transform:translate(-50%,0)}
+@media(max-width:430px){.hero{grid-template-columns:1fr}.dash{height:196px}.hero h2,.play-card h2{font-size:26px}.stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:360px){.title{font-size:25px}.stat{padding:10px}.abgrid{grid-template-columns:1fr}}@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+<symbol id="i-case" viewBox="0 0 24 24"><path d="M10 6h4"/><path d="M4 8h16v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-7"/></symbol>
+<symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M8 15h8"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 1 0 9 7 9 9 0 1 1-9-7Z"/></symbol>
+</svg>
+<div class="app" id="app">
+  <div class="safe"></div>
+  <header class="top">
+    <div class="mark"><svg class="icon"><use href="#i-search"/></svg></div>
+    <div class="head"><div class="kicker">Data Detective</div><h1 class="title" id="viewTitle">Today</h1></div>
+    <button class="chip" id="themeBtn" aria-label="Toggle theme"><svg class="icon"><use href="#i-moon"/></svg></button>
+  </header>
+  <main class="screens">
+    <section class="screen on" id="s-today">
+      <div class="scroll">
+        <div class="hero">
+          <div>
+            <h2>Read the data. Spot the lie. Make the call.</h2>
+            <p>Practice chart reading, statistics, A/B tests, funnels, KPIs, and model intuition through compact case files.</p>
+            <button class="primary" id="startBtn"><svg class="icon"><use href="#i-play"/></svg> Open case file</button>
+          </div>
+          <div class="dash" aria-label="Mini dashboard preview">
+            <div class="metric"><b>12.4k</b><span>Users</span></div>
+            <div class="metric"><b>3.8%</b><span>CVR</span></div>
+            <div class="line-card">
+              <svg class="sparkline" viewBox="0 0 150 54"><path d="M5 42 C25 36 33 28 48 31 S76 44 91 28 S120 16 145 12" fill="none" stroke="#14b8a6" stroke-width="5" stroke-linecap="round"/><path d="M5 48H145" stroke="rgba(20,33,29,.12)" stroke-width="2"/></svg>
+            </div>
+            <div class="bar-card"><div class="bars"><i style="height:44%"></i><i style="height:76%"></i><i style="height:55%"></i><i style="height:88%"></i></div></div>
+            <div class="bar-card"><div class="bars"><i style="height:72%"></i><i style="height:46%"></i><i style="height:64%"></i><i style="height:35%"></i></div></div>
+          </div>
+        </div>
+        <div class="stats" id="stats"></div>
+        <div class="section"><span>Daily clue</span><button id="dailyBtn">Play</button></div>
+        <div id="dailyCard"></div>
+        <div class="section"><span>Analyst briefing</span><button id="briefBtn">Refresh</button></div>
+        <div class="mini-card" id="briefCard"></div>
+      </div>
+    </section>
+    <section class="screen" id="s-cases">
+      <div class="scroll">
+        <div class="section"><span>Case files</span><button id="bossBtn">Boss</button></div>
+        <div class="path" id="caseList"></div>
+      </div>
+    </section>
+    <section class="screen" id="s-practice">
+      <div class="scroll">
+        <div class="segment" id="practiceSegment">
+          <button class="on" data-mode="bi">BI</button>
+          <button data-mode="stats">Stats</button>
+          <button data-mode="ba">BA</button>
+        </div>
+        <div id="practiceList"></div>
+      </div>
+    </section>
+    <section class="screen" id="s-progress">
+      <div class="scroll">
+        <div class="section"><span>Progress</span><button id="copyBtn">Copy summary</button></div>
+        <div class="panel" id="progressPanel"></div>
+        <div class="section"><span>Badges</span><button id="resetBtn">Reset</button></div>
+        <div class="path" id="badgeList"></div>
+      </div>
+    </section>
+  </main>
+  <nav class="nav" id="nav">
+    <button class="on" data-tab="today"><svg class="icon"><use href="#i-search"/></svg><span>Today</span></button>
+    <button data-tab="cases"><svg class="icon"><use href="#i-case"/></svg><span>Cases</span></button>
+    <button data-tab="practice"><svg class="icon"><use href="#i-flask"/></svg><span>Practice</span></button>
+    <button data-tab="progress"><svg class="icon"><use href="#i-chart"/></svg><span>Progress</span></button>
+  </nav>
+  <section class="play" id="play">
+    <div class="play-head">
+      <button class="icon-btn" id="closePlay" aria-label="Close"><svg class="icon"><use href="#i-x"/></svg></button>
+      <div class="bar"><i id="playBar"></i></div>
+      <div class="hearts" id="heartText">5/5</div>
+    </div>
+    <div class="play-body"><div class="play-card" id="playCard"></div></div>
+    <div class="play-foot"><button class="primary" id="nextBtn">Check</button></div>
+  </section>
+  <section class="sheet" id="sheet">
+    <div class="sheet-panel">
+      <div class="grab"></div>
+      <h2>Case desk ready.</h2>
+      <p>Every clue asks for a decision: read the visual, test the assumption, and pick the call you would make as an analyst.</p>
+      <div class="sheet-actions">
+        <button class="primary" id="beginBtn">Begin</button>
+        <button class="primary ghost" id="laterBtn">Not now</button>
+      </div>
+    </div>
+  </section>
+  <div class="toast" id="toast"></div>
+</div>
+<script>
+const MANIFEST=JSON.parse(document.querySelector('script[type="application/kinetik-app+json"]').textContent);
+const PREFIX='kinetik_data_detective_';
+const DAY=new Date().toISOString().slice(0,10);
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const SKILLS=[
+ {id:'chart',name:'Read a Chart',blurb:'Axes, labels, trends, and chart-type judgment.',icon:'i-chart'},
+ {id:'lie',name:'Spot the Lie',blurb:'Misleading visuals, bad baselines, and missing labels.',icon:'i-search'},
+ {id:'stats',name:'Stats Fundamentals',blurb:'Mean, median, mode, outliers, and distributions.',icon:'i-flask'},
+ {id:'ba',name:'Business Analytics',blurb:'A/B tests, funnels, cohorts, attribution, and KPIs.',icon:'i-case'},
+ {id:'ml',name:'Data Science and ML',blurb:'EDA, features, overfitting, and model selection.',icon:'i-user'}
+];
+const BRIEFS=[
+ ['Trust the axis','A chart can be technically true and still framed to mislead. Check the baseline first.'],
+ ['Segment before you celebrate','A metric can improve overall while a key cohort quietly declines.'],
+ ['Correlation is not causation','Two lines moving together can be a clue, not a verdict.'],
+ ['Useful models fail loudly','A model that only works on old examples is memorizing, not generalizing.'],
+ ['KPIs need owners','A dashboard is strongest when every number has a decision attached.']
+];
+const QUESTIONS=[
+ {skill:'stats',type:'Tap Outlier',title:'Which point looks unusual?',prompt:'Tap the one store that is far away from the main cluster.',visual:{type:'scatter',points:[[18,24],[25,28],[32,26],[40,33],[50,36],[58,40],[68,43],[82,88]]},answerPoint:7,explain:'The top-right point sits far from the cluster, so it deserves investigation.'},
+ {skill:'chart',type:'Trend Read',title:'Revenue line',prompt:'What pattern does this line show?',visual:{type:'line',values:[18,22,25,31,38,51,60]},choices:['Increasing trend','Decreasing trend','Flat trend','Random with no direction'],answer:0,explain:'The values mostly rise from left to right.'},
+ {skill:'chart',type:'Chart Choice',title:'Monthly revenue',prompt:'You have revenue by month for one year. Which chart should you use first?',visual:{type:'bars',labels:['Jan','Feb','Mar','Apr'],values:[40,58,64,80]},choices:['Line chart','Pie chart','Scatter plot','Word cloud'],answer:0,explain:'Time-series values are easiest to read as a line.'},
+ {skill:'stats',type:'Median',title:'Typical order value',prompt:'Find the median of 12, 14, 15, 90, 16 after sorting.',visual:{type:'table',headers:['Orders','12','14'],rows:[['More','15','16'],['Outlier','90','']]},choices:['15','16','29.4','90'],answer:0,explain:'Sorted values are 12, 14, 15, 16, 90. The middle value is 15.'},
+ {skill:'lie',type:'Bad Graph',title:'Suspicious bar chart',prompt:'What is wrong with this campaign chart?',visual:{type:'bars',labels:['A','B','C'],values:[82,85,87],tight:true},choices:['The y-axis baseline is cropped','The title is too short','Bars should always be red','It needs more decimal places'],answer:0,explain:'A cropped baseline can exaggerate small differences.'},
+ {skill:'ba',type:'A/B Test',title:'Landing page test',prompt:'Variant A gets 100 conversions from 2,000 visits. Variant B gets 118 from 2,100 visits. Which is stronger by conversion rate?',visual:{type:'ab',a:['A',100,2000],b:['B',118,2100]},choices:['Variant A','Variant B','They are exactly equal','You cannot calculate rate'],answer:1,explain:'A is 5.0 percent. B is about 5.6 percent.'},
+ {skill:'ba',type:'Funnel',title:'Where is the biggest drop?',prompt:'The funnel is Visits 10,000, Signups 2,000, Trials 1,600, Paid 400. Where should the team investigate first?',visual:{type:'funnel',steps:[['Visits',100],['Signups',20],['Trials',16],['Paid',4]]},choices:['Visits to Signups','Signups to Trials','Trials to Paid','There is no drop'],answer:0,explain:'The largest drop is from all visits to signups.'},
+ {skill:'lie',type:'Causation',title:'Ice cream and sunglasses',prompt:'Ice cream sales and sunglasses sales rise together. What is the best conclusion?',visual:{type:'line2',a:[10,18,28,44,55],b:[8,15,26,42,58]},choices:['Ice cream causes sunglasses sales','Both may rise because of warm weather','The data is impossible','Sunglasses cause ice cream sales'],answer:1,explain:'A hidden variable like weather can move both metrics.'},
+ {skill:'ml',type:'Model Intuition',title:'Perfect training score',prompt:'A model is 99 percent accurate on training data and 61 percent accurate on new data. What is likely happening?',visual:{type:'cards',items:[['Train','99%'],['New','61%']]},choices:['Overfitting','A/B testing','Healthy generalization','Missing dashboard label'],answer:0,explain:'The model learned the old examples too closely and does not generalize well.'},
+ {skill:'ba',type:'CEO KPI',title:'Dashboard readout',prompt:'Revenue is up 8 percent, refunds are up 20 percent, and repeat purchase is down. What is the most responsible call?',visual:{type:'cards',items:[['Revenue','+8%'],['Refunds','+20%'],['Repeat','Down']]},choices:['Celebrate only revenue','Investigate quality or expectation mismatch','Delete the refund metric','Assume repeat buyers are irrelevant'],answer:1,explain:'The KPI set says growth may be lower quality.'}
+];
+const CASE=[
+ {skill:'chart',type:'Case 1',title:'SaaS activation trend',prompt:'Activation rose from 31 percent to 39 percent over four weeks. What is the trend?',visual:{type:'line',values:[31,33,34,39]},choices:['Increasing','Flat','Decreasing','Impossible to tell'],answer:0,explain:'The line moves upward across the four weeks.'},
+ {skill:'ba',type:'Case 2',title:'Conversion funnel',prompt:'Where is the biggest proportional leak?',visual:{type:'funnel',steps:[['Visitors',100],['Started trial',32],['Invited team',18],['Paid',9]]},choices:['Visitors to trial','Trial to invite','Invite to paid','No leak'],answer:0,explain:'The biggest drop is from 100 to 32.'},
+ {skill:'stats',type:'Case 3',title:'Support outlier',prompt:'One enterprise customer has 400 tickets while most have 15 to 30. What should you do?',visual:{type:'scatter',points:[[15,20],[22,24],[30,18],[36,25],[44,23],[85,88]]},choices:['Ignore it','Investigate the outlier separately','Average it into every customer story','Delete all high values'],answer:1,explain:'Outliers can be real business signals and deserve context.'},
+ {skill:'lie',type:'Case 4',title:'Board slide',prompt:'A slide claims churn fell dramatically, but the axis starts at 8 percent and ends at 11 percent. What is the issue?',visual:{type:'bars',labels:['Q1','Q2'],values:[10.2,9.6],tight:true},choices:['Cropped axis exaggeration','Wrong chart because all bars are illegal','No business implication','Too many colors'],answer:0,explain:'A narrow axis makes a small change look dramatic.'},
+ {skill:'ml',type:'Case 5',title:'Next best action',prompt:'Which feature is most useful for predicting renewal?',visual:{type:'cards',items:[['Logins','High'],['Seat use','High'],['Logo color','Low']]},choices:['Recent product usage','Logo color','Random customer ID','Month name only'],answer:0,explain:'Behavioral usage usually carries stronger signal than arbitrary labels.'}
+];
+const PRACTICE={
+ bi:[['Chart Room','Axes, labels, chart types, and dashboards.','chart'],['Lie Detector','Find misleading visuals and bad framing.','lie'],['CEO Readout','Turn KPI panels into decisions.','ba']],
+ stats:[['Outlier Tap','Tap unusual points and explain why.','stats'],['Middle Value','Mean, median, mode, and distributions.','stats'],['Correlation Check','Separate clues from causes.','lie']],
+ ba:[['A/B Test Desk','Rates, lift, and careful conclusions.','ba'],['Funnel Clinic','Find the biggest business leak.','ba'],['Model Intuition','Overfitting, features, and ML judgment.','ml']]
+};
+const DEFAULT={xp:0,gems:0,streak:0,lastDay:'',hearts:5,wins:0,answered:0,theme:'light',seenIntro:false,badges:{chart:0,lie:0,stats:0,ba:0,ml:0,case:0},history:[],wrong:[]};
+let R=load();
+let currentTab='today',practiceMode='bi',session=[],stepIndex=0,selected=null,answered=false,activeSkill='mixed',caseMode=false;
+function load(){try{return {...DEFAULT,...JSON.parse(localStorage.getItem(PREFIX+'state')||'{}')}}catch(e){return {...DEFAULT}}}
+function save(){localStorage.setItem(PREFIX+'state',JSON.stringify(R));emit('DATA_UPDATE',{appId:MANIFEST.appId,xp:R.xp,gems:R.gems,streak:R.streak,answered:R.answered,wins:R.wins,badges:R.badges})}
+function emit(type,payload){try{window.parent&&window.parent.postMessage({type,payload},'*')}catch(e){}}
+function earn(n,reason){R.gems+=n;save();emit('EARN_GEMS',{appId:MANIFEST.appId,amount:n,reason});toast('+'+n+' gems')}
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),1600)}
+function icon(id){return '<svg class="icon"><use href="#'+id+'"/></svg>'}
+function pct(a,b){return Math.max(0,Math.min(100,Math.round((a/b)*100)))}
+function sample(arr,n){return [...arr].sort(()=>Math.random()-.5).slice(0,n)}
+function seed(){return new Date(DAY+'T00:00:00').getTime()/86400000}
+function render(){document.documentElement.dataset.theme=R.theme||'light';renderStats();renderDaily();renderBrief();renderCases();renderPractice();renderProgress()}
+function renderStats(){
+ $('#stats').innerHTML=[['XP',R.xp],['Gems',R.gems],['Streak',R.streak],['Solved',R.wins]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('');
+}
+function renderDaily(){
+ const q=QUESTIONS[Math.floor(seed())%QUESTIONS.length];
+ $('#dailyCard').innerHTML='<button class="row" data-run="daily"><div class="badge">'+icon('i-search')+'</div><div><h3>'+q.title+'</h3><p>'+q.prompt+'</p></div><div class="chev">'+icon('i-arrow')+'</div></button>';
+}
+function renderBrief(){
+ const b=BRIEFS[(R.answered+Math.floor(seed()))%BRIEFS.length];
+ $('#briefCard').innerHTML='<h3>'+b[0]+'</h3><p>'+b[1]+'</p>';
+}
+function renderCases(){
+ $('#caseList').innerHTML=SKILLS.map(s=>'<button class="lesson" data-case-skill="'+s.id+'"><div class="badge">'+icon(s.icon)+'</div><div><h3>'+s.name+'</h3><p>'+s.blurb+'</p></div><div class="crowns">'+(R.badges[s.id]||0)+'/5</div></button>').join('')+'<button class="lesson" data-case-skill="case"><div class="badge">'+icon('i-case')+'</div><div><h3>The Case</h3><p>Five linked questions about one business dataset.</p></div><div class="crowns">'+(R.badges.case||0)+'/5</div></button>';
+}
+function renderPractice(){
+ $('#practiceList').innerHTML=PRACTICE[practiceMode].map(item=>'<button class="row" data-practice="'+item[2]+'"><div class="badge">'+icon(item[2]=='ba'?'i-case':'i-flask')+'</div><div><h3>'+item[0]+'</h3><p>'+item[1]+'</p></div><div class="chev">'+icon('i-arrow')+'</div></button>').join('');
+}
+function renderProgress(){
+ const total=Object.values(R.badges).reduce((a,b)=>a+b,0);
+ const days=[...Array(14)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-13+i);const date=d.toISOString().slice(0,10);return '<div class="day '+(R.history.some(h=>h.date==date)?'on':'')+'">'+date.slice(8)+'</div>'}).join('');
+ $('#progressPanel').innerHTML='<div class="meter"><div class="meta"><span>Analyst XP</span><span>'+pct(R.xp,600)+'%</span></div><div class="track"><i style="width:'+pct(R.xp,600)+'%"></i></div></div><div class="meter"><div class="meta"><span>Badge board</span><span>'+total+'/30</span></div><div class="track"><i style="width:'+pct(total,30)+'%"></i></div></div><div class="calendar">'+days+'</div>';
+ $('#badgeList').innerHTML=[...SKILLS,{id:'case',name:'The Case',blurb:'A linked analyst simulation.',icon:'i-case'}].map(s=>'<div class="lesson"><div class="badge">'+icon(s.icon)+'</div><div><h3>'+s.name+'</h3><p>'+s.blurb+'</p></div><div class="crowns">'+(R.badges[s.id]||0)+'/5</div></div>').join('');
+}
+function switchTab(t){
+ currentTab=t;$$('.screen').forEach(x=>x.classList.remove('on'));$('#s-'+t).classList.add('on');$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab==t));$('#viewTitle').textContent={today:'Today',cases:'Cases',practice:'Practice',progress:'Progress'}[t];render();
+}
+function buildSession(mode){
+ activeSkill=mode||'mixed';caseMode=mode=='case';
+ const pool=caseMode?CASE:(mode&&mode!='daily'&&mode!='mixed'?QUESTIONS.filter(q=>q.skill==mode):QUESTIONS);
+ session=caseMode?[...CASE]:sample(pool,mode=='daily'||mode=='mixed'?5:4);
+ stepIndex=0;selected=null;answered=false;R.hearts=5;$('#play').classList.add('on');renderPlay();
+}
+function renderPlay(){
+ const q=session[stepIndex];if(!q){finishSession();return}
+ $('#playBar').style.width=pct(stepIndex,session.length)+'%';$('#heartText').textContent=R.hearts+'/5';$('#nextBtn').textContent='Check';answered=false;selected=null;
+ $('#playCard').innerHTML='<div class="question-tag">'+q.type+'</div><h2>'+q.title+'</h2><p>'+q.prompt+'</p>'+visualHtml(q.visual,q)+'<div class="choices">'+(q.answerPoint==null?q.choices.map((c,i)=>'<button class="choice" data-choice="'+i+'">'+c+'</button>').join(''):'')+'</div><div class="feedback" id="feedback"></div>';
+}
+function visualHtml(v,q){
+ if(!v)return '';
+ if(v.type=='scatter'){
+  const pts=v.points.map((p,i)=>'<circle class="pt" data-point="'+i+'" cx="'+(28+p[0]*2.25)+'" cy="'+(160-p[1]*1.25)+'" r="'+(i==q.answerPoint?7:6)+'" fill="'+(i==q.answerPoint?'#e76f51':'#14b8a6')+'"/>').join('');
+  return '<div class="viz"><svg viewBox="0 0 280 190" aria-label="Scatter plot"><path class="axis" d="M26 10v155h235"/><path class="gridline" d="M26 50h235M26 95h235M26 140h235"/>'+pts+'<text x="28" y="184" font-size="11" fill="currentColor">value x</text><text x="205" y="184" font-size="11" fill="currentColor">value y</text></svg></div>';
+ }
+ if(v.type=='line'||v.type=='line2'){
+  const vals=v.values||v.a;const max=Math.max(...vals,...(v.b||[]));const min=Math.min(...vals,...(v.b||[]));const pts=vals.map((n,i)=>[26+i*(228/(vals.length-1)),150-((n-min)/(max-min||1))*120]).map(p=>p.join(',')).join(' ');
+  const b=v.b?'<polyline points="'+v.b.map((n,i)=>[26+i*(228/(v.b.length-1)),150-((n-min)/(max-min||1))*120].join(',')).join(' ')+'" fill="none" stroke="#f5b041" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>':'';
+  return '<div class="viz"><svg viewBox="0 0 280 180"><path class="axis" d="M26 12v145h235"/><path class="gridline" d="M26 55h235M26 100h235M26 145h235"/><polyline class="line" points="'+pts+'"/>'+b+'</svg></div>';
+ }
+ if(v.type=='bars'){
+  const max=Math.max(...v.values);return '<div class="viz"><div class="barviz">'+v.values.map((n,i)=>'<div style="height:'+(v.tight?60+n/2:n/max*100)+'%"><span>'+v.labels[i]+'</span></div>').join('')+'</div></div>';
+ }
+ if(v.type=='table'){
+  return '<div class="viz"><div class="table">'+[v.headers,...v.rows].map(r=>'<div class="trow">'+r.map(c=>'<div class="cell">'+c+'</div>').join('')+'</div>').join('')+'</div></div>';
+ }
+ if(v.type=='funnel'){
+  return '<div class="viz"><div class="funnel">'+v.steps.map(s=>'<div class="fstep"><i style="width:'+s[1]+'%"></i><span>'+s[0]+' '+s[1]+'%</span></div>').join('')+'</div></div>';
+ }
+ if(v.type=='ab'){
+  const rateA=(v.a[1]/v.a[2]*100).toFixed(1),rateB=(v.b[1]/v.b[2]*100).toFixed(1);
+  return '<div class="viz"><div class="abgrid"><div class="abcard"><b>'+rateA+'%</b><span>Variant '+v.a[0]+'</span></div><div class="abcard"><b>'+rateB+'%</b><span>Variant '+v.b[0]+'</span></div></div></div>';
+ }
+ if(v.type=='cards'){
+  return '<div class="viz"><div class="abgrid">'+v.items.map(x=>'<div class="abcard"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div></div>';
+ }
+ return '';
+}
+function choose(i){
+ if(answered)return;const q=session[stepIndex];selected=Number(i);answered=true;R.answered++;
+ let good=q.answerPoint==null?selected===q.answer:selected===q.answerPoint;
+ if(q.fixAnswer!=null)good=selected===q.fixAnswer;
+ if(good){R.xp+=12;earn(1,'correct clue')}else{R.hearts=Math.max(0,R.hearts-1);R.wrong.push({date:DAY,title:q.title,skill:q.skill})}
+ if(q.answerPoint==null){$$('.choice').forEach((b,idx)=>{const right=q.fixAnswer!=null?q.fixAnswer:q.answer;b.classList.toggle('good',idx===right);b.classList.toggle('bad',idx===selected&&idx!==right)})}
+ else{$$('.pt').forEach((p,idx)=>{p.classList.toggle('good',idx===q.answerPoint);p.classList.toggle('bad',idx===selected&&idx!==q.answerPoint);p.classList.toggle('sel',idx===selected)})}
+ const fb=$('#feedback');fb.className='feedback on '+(good?'':'bad');fb.innerHTML='<b>'+(good?'Evidence fits':'Recheck the clue')+'</b><p>'+q.explain+'</p>';
+ $('#playBar').style.width=pct(stepIndex+1,session.length)+'%';$('#heartText').textContent=R.hearts+'/5';save();
+}
+function next(){
+ const q=session[stepIndex];if(!q)return finishSession();
+ if(!answered){toast(q.answerPoint==null?'Pick an answer first':'Tap a data point first');return}
+ stepIndex++;if(R.hearts<=0){finishSession(true);return}renderPlay();
+}
+function finishSession(outOfHearts){
+ $('#play').classList.remove('on');
+ const todayDone=R.history.some(h=>h.date==DAY);
+ if(!todayDone){R.streak=R.lastDay&&daysBetween(R.lastDay,DAY)==1?R.streak+1:1;R.lastDay=DAY}
+ if(!outOfHearts){R.wins++;if(R.badges[activeSkill]!=null&&activeSkill!='case')R.badges[activeSkill]=Math.min(5,(R.badges[activeSkill]||0)+1);if(caseMode){R.badges.case=Math.min(5,(R.badges.case||0)+1);earn(6,'case solved')}else earn(3,'detective run')}
+ R.history.push({date:DAY,skill:activeSkill,xp:R.xp});save();render();toast(outOfHearts?'Case closed early':'Case solved');
+}
+function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000)}
+function copySummary(){
+ const text='Kinetik Data Detective summary\\nXP: '+R.xp+'\\nGems: '+R.gems+'\\nStreak: '+R.streak+'\\nClues answered: '+R.answered+'\\nCases solved: '+R.wins;
+ if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>toast('Summary copied')).catch(()=>fallbackCopy(text))}else fallbackCopy(text);
+}
+function fallbackCopy(text){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('Summary copied')}
+document.addEventListener('click',e=>{
+ const nav=e.target.closest('[data-tab]');if(nav){switchTab(nav.dataset.tab);return}
+ const run=e.target.closest('[data-run]');if(run){buildSession('daily');return}
+ const skill=e.target.closest('[data-case-skill]');if(skill){buildSession(skill.dataset.caseSkill);return}
+ const mode=e.target.closest('[data-mode]');if(mode){practiceMode=mode.dataset.mode;$$('#practiceSegment button').forEach(b=>b.classList.toggle('on',b.dataset.mode==practiceMode));renderPractice();return}
+ const practice=e.target.closest('[data-practice]');if(practice){buildSession(practice.dataset.practice);return}
+ const choice=e.target.closest('[data-choice]');if(choice){choose(choice.dataset.choice);return}
+ const point=e.target.closest('[data-point]');if(point){choose(point.dataset.point);return}
+});
+$('#startBtn').onclick=()=>buildSession('daily');
+$('#dailyBtn').onclick=()=>buildSession('daily');
+$('#briefBtn').onclick=()=>{R.answered++;renderBrief();save()};
+$('#bossBtn').onclick=()=>buildSession('case');
+$('#nextBtn').onclick=next;
+$('#closePlay').onclick=()=>{$('#play').classList.remove('on');render()};
+$('#copyBtn').onclick=copySummary;
+$('#resetBtn').onclick=()=>{if(confirm('Reset Data Detective progress?')){R={...DEFAULT,seenIntro:true,theme:R.theme};save();render();toast('Progress reset')}};
+$('#themeBtn').onclick=()=>{R.theme=R.theme=='dark'?'light':'dark';save();render()};
+$('#beginBtn').onclick=()=>{R.seenIntro=true;save();$('#sheet').classList.remove('on');buildSession('daily')};
+$('#laterBtn').onclick=()=>{R.seenIntro=true;save();$('#sheet').classList.remove('on')};
+window.addEventListener('message',e=>{if(!e.data)return;if(e.data.type==='KINETIK_OPEN_APP')render();if(e.data.type==='KINETIK_THEME'){R.theme=e.data.theme;save();render()}});
+render();
+if(!R.seenIntro)setTimeout(()=>$('#sheet').classList.add('on'),350);
+</script>
+</body>
+</html>
