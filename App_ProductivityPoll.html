@@ -1,184 +1,569 @@
 <!doctype html>
-<!--
-KINETIK APP STANDARD v1.0 — App_EventPoll.html
-
-Modular single-file app inside the Kinetik ecosystem.
-Works A) embedded in Kinetik.html via iframe + AppBridge, B) standalone with localStorage.
-Data: AppRecords collection "polls" payload {question,options[],votes{personId/name:option},open,createdBy}.
-Share invite text (§72.4). Circle-scoped: circleId/personId only.
-
-APP BRIDGE: receives INIT_APP {circleId,circleType,personId,theme,appId,people[]}.
-Sends DATA_LIST/CREATE/UPDATE, ADD_TO_CALENDAR (winning option), SHOW_TOAST.
-
-React/TS scale-up: becomes a feature module; keep AppBridge/DataAPI contracts.
--->
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Event Poll</title>
-<script type="application/kinetik-app+json">
-{"appId":"event-poll","name":"Event Poll","shortName":"Poll","icon":"🗳️","gradient":["#8b5cf6","#d946ef"],"category":"productivity","tagline":"Find the best time, fast.","about":"Propose dates, let everyone in the circle vote with one tap, and watch the bars race. Close the poll and the winning time lands on the shared calendar automatically.","audience":"all","circleTypes":["family","friends"],"worksWith":["calendar"],"status":"live","minMembers":2}
-</script>
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<title>Kinetik Buddy World — Polished</title>
+<meta name="theme-color" content="#f6fbff" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>
-:root{--r:16px;--font:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--acc:#8b5cf6;--acc2:#d946ef}
-html[data-theme="dark"]{--bg:#0a0716;--bg2:#160f2e;--text:#f2eeff;--dim:rgba(235,228,255,.6);--glass:rgba(28,19,58,.66);--brd:rgba(255,255,255,.1);--chip:rgba(255,255,255,.07);color-scheme:dark}
-html[data-theme="light"]{--bg:#f1edfb;--bg2:#e7e0fa;--text:#171029;--dim:rgba(30,20,52,.6);--glass:rgba(255,255,255,.72);--brd:rgba(255,255,255,.8);--chip:rgba(40,20,90,.06);color-scheme:light}
-*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
-body{font-family:var(--font);color:var(--text);min-height:100vh;font-size:15px;line-height:1.5;
-background:radial-gradient(110% 80% at 85% -5%,color-mix(in srgb,var(--acc) 18%,transparent),transparent 55%),linear-gradient(165deg,var(--bg2),var(--bg));-webkit-font-smoothing:antialiased}
-#app{max-width:560px;margin:0 auto;padding:18px 18px 60px}
-h1{font-size:23px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
-h1 small{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--acc2);text-transform:uppercase}
-.card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--brd);border-radius:var(--r);padding:16px;margin:13px 0;box-shadow:0 18px 50px rgba(0,0,0,.25)}
-.lbl{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:9px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:14px;font-family:var(--font);color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 8px 24px color-mix(in srgb,var(--acc) 35%,transparent);transition:transform .15s}
-.btn:active{transform:scale(.96)}.btn.ghost{background:var(--chip);color:var(--text);box-shadow:none;border:1px solid var(--brd)}
-.btn.sm{padding:8px 15px;font-size:12.5px}.btn[disabled]{opacity:.4;pointer-events:none}
-input.fld{width:100%;background:var(--chip);border:1px solid var(--brd);border-radius:12px;padding:12px 14px;color:var(--text);font-family:var(--font);font-size:15px;outline:none;margin-bottom:9px}
-input.fld:focus{border-color:var(--acc)}
-.opt{width:100%;text-align:left;border:1.5px solid var(--brd);background:var(--chip);border-radius:13px;padding:12px 14px;margin-bottom:9px;cursor:pointer;font-family:var(--font);color:var(--text);position:relative;overflow:hidden;transition:.15s}
-.opt .fill{position:absolute;inset:0;background:color-mix(in srgb,var(--acc) 16%,transparent);transform-origin:left;z-index:0}
-.opt .in{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14.5px;font-weight:600}
-.opt .ct{font-size:12px;color:var(--dim);font-weight:700}
-.opt.mine{border-color:var(--acc)}
-.opt.win{border-color:#fbbf24}
-.opt small{display:block;font-weight:500;font-size:11.5px;color:var(--dim)}
-.who{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-.tag{font-size:10.5px;font-weight:700;background:var(--chip);border-radius:99px;padding:3px 9px;color:var(--dim)}
-.status{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:99px}
-.status.open{background:color-mix(in srgb,#34d399 16%,transparent);color:#34d399}
-.status.closed{background:var(--chip);color:var(--dim)}
-.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:9px;margin-bottom:10px}
-.phead b{font-size:16.5px;letter-spacing:-.01em}
-.note{font-size:12px;color:var(--dim)}
-.wrap{display:flex;flex-wrap:wrap;gap:8px}
+:root{
+  --bg:#f6fbff; --bg2:#eef5ff; --paper:#ffffff; --panel:rgba(255,255,255,.78);
+  --ink:#132235; --muted:#6a7a8f; --faint:#96a6b7; --line:rgba(19,34,53,.10); --line2:rgba(19,34,53,.16);
+  --blue:#55c7ff; --violet:#7b63ff; --pink:#ff79c8; --gold:#ffbf3f; --green:#2cca8a; --red:#ff6f86;
+  --shadow:0 24px 60px rgba(36,73,118,.16); --soft:0 12px 30px rgba(36,73,118,.10);
+  --font:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  --buddyA:#63d7ff; --buddyB:#7d6dff; --buddyC:#fca5ff;
+}
+[data-theme="dark"]{
+  --bg:#07101d; --bg2:#111b2f; --paper:#101b2d; --panel:rgba(16,27,45,.80);
+  --ink:#f4fbff; --muted:#b8c5d1; --faint:#7b8ea1; --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
+  --shadow:0 28px 70px rgba(0,0,0,.45); --soft:0 12px 30px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{
+  font-family:var(--font); color:var(--ink); -webkit-font-smoothing:antialiased;
+  background:
+  radial-gradient(110% 65% at 8% -10%, color-mix(in srgb,var(--blue) 24%, transparent), transparent 46%),
+  radial-gradient(95% 58% at 100% 0%, color-mix(in srgb,var(--violet) 20%, transparent), transparent 44%),
+  radial-gradient(100% 66% at 50% 112%, color-mix(in srgb,var(--gold) 12%, transparent), transparent 46%),
+  linear-gradient(180deg,var(--bg),var(--bg2));
+}
+button,input{font:inherit;color:inherit}button{border:0;background:none;cursor:pointer}
+.app{height:100dvh;max-width:430px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.safe{height:max(env(safe-area-inset-top,0px),10px);flex:0 0 auto}
+.screens{flex:1;position:relative;min-height:0}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+.screen.on{display:flex;animation:screenIn .26s ease both}
+@keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.scroll{flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:0 16px 22px}.scroll::-webkit-scrollbar{display:none}
+.top{display:flex;align-items:center;gap:10px;padding:10px 16px 12px}.hi{flex:1;min-width:0}.eyebrow{font-size:10.5px;font-weight:950;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}.hi h1{font-size:26px;line-height:1.02;letter-spacing:-.04em;margin-top:3px}
+.chip{height:34px;padding:0 11px;border-radius:999px;background:var(--panel);border:1px solid var(--line);display:inline-flex;align-items:center;gap:6px;box-shadow:var(--soft);font-size:12px;font-weight:950;white-space:nowrap}.chip.gold{background:linear-gradient(135deg,#fff2bf,var(--gold));border:0;color:#433000}.chip.hot{background:linear-gradient(135deg,var(--blue),var(--violet));border:0;color:#fff}
+.label{display:flex;align-items:center;justify-content:space-between;margin:18px 4px 10px;font-size:11px;font-weight:950;letter-spacing:.15em;text-transform:uppercase;color:var(--faint)}.label .link{letter-spacing:0;text-transform:none;font-size:12px;color:var(--violet)}
+.nav{display:flex;background:var(--panel);border-top:1px solid var(--line);backdrop-filter:blur(20px);padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px));flex:0 0 auto;z-index:20}.nav button{flex:1;display:flex;flex-direction:column;gap:4px;align-items:center;color:var(--faint);font-size:10px;font-weight:900;padding:4px 0}.nav button.on{color:var(--violet)}.nav svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.nav .dot{width:5px;height:5px;border-radius:50%;background:var(--violet);opacity:0}.nav button.on .dot{opacity:1}
+.card{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:28px}
+.smallCard{background:var(--panel);border:1px solid var(--line);box-shadow:var(--soft);border-radius:22px}
+.hero{padding:14px;overflow:hidden;position:relative;background:
+  radial-gradient(80% 50% at 50% 0%, rgba(255,255,255,.88), transparent 60%),
+  radial-gradient(60% 46% at 75% 20%, color-mix(in srgb,var(--buddyA) 28%, transparent), transparent 64%),
+  radial-gradient(80% 56% at 28% 75%, color-mix(in srgb,var(--buddyB) 18%, transparent), transparent 62%),
+  linear-gradient(180deg,rgba(255,255,255,.56),rgba(255,255,255,.26));
+}
+.heroTop{display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative;z-index:3}.heroTop .name{font-size:12px;font-weight:950;color:var(--muted)}
+.mood{padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.56);font-size:11px;font-weight:950;box-shadow:var(--soft)}
+.stageWrap{position:relative;height:288px;margin-top:2px;perspective:1100px;transform-style:preserve-3d}
+.orbit, .orbit2{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(255,255,255,.38)}
+.orbit{width:250px;height:250px;background:conic-gradient(from 40deg,rgba(255,255,255,0),color-mix(in srgb,var(--buddyA) 35%, transparent),rgba(255,255,255,0),color-mix(in srgb,var(--buddyB) 28%, transparent),rgba(255,255,255,0));filter:blur(.2px)}
+.orbit2{width:190px;height:190px;background:conic-gradient(from 120deg,rgba(255,255,255,0),color-mix(in srgb,var(--buddyB) 28%, transparent),rgba(255,255,255,0),color-mix(in srgb,var(--buddyC) 26%, transparent),rgba(255,255,255,0));opacity:.8}
+.floorShadow{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:230px;height:56px;border-radius:50%;background:radial-gradient(ellipse,rgba(11,28,49,.28),rgba(11,28,49,.06) 62%,transparent 70%);filter:blur(5px)}
+.miniPortal{position:absolute;width:48px;height:48px;border-radius:18px;background:rgba(255,255,255,.72);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.6);display:grid;place-items:center;box-shadow:0 16px 26px rgba(32,64,100,.12);font-size:22px}
+.miniPortal span{filter:drop-shadow(0 3px 4px rgba(0,0,0,.12))}
+.p1{left:12px;top:52px}.p2{right:18px;top:62px}.p3{left:32px;bottom:70px}.p4{right:34px;bottom:62px}
+#petStage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:250px;height:220px;pointer-events:none}
+.petWrap{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:182px;height:182px;transform-style:preserve-3d;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 30px 34px rgba(31,58,90,.18))}
+.petHalo{position:absolute;inset:-8px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--buddyA) 24%, transparent), transparent 66%);opacity:.9}
+.petSvg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.petAccessory{position:absolute;left:50%;top:8px;transform:translateX(-50%) rotate(-8deg);font-size:34px;filter:drop-shadow(0 7px 7px rgba(0,0,0,.12))}
+.petCompanion{position:absolute;right:18px;top:48px;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%, rgba(255,255,255,.95), rgba(255,255,255,.36) 30%, transparent 31%),linear-gradient(135deg,#b8f3dd,#6ea7ff);box-shadow:0 12px 24px rgba(29,64,100,.16), inset -8px -9px 12px rgba(36,52,100,.12), inset 8px 8px 12px rgba(255,255,255,.36)}
+.petCompanion::before,.petCompanion::after{content:"";position:absolute;width:8px;height:12px;background:#142236;border-radius:10px;top:16px}.petCompanion::before{left:14px}.petCompanion::after{right:14px}.petCompanion i{position:absolute;left:17px;bottom:10px;width:14px;height:8px;border-bottom:3px solid #142236;border-radius:0 0 12px 12px}
+.spark{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold)}
+.spark.s1{left:6px;top:86px}.spark.s2{right:4px;top:22px}.spark.s3{right:24px;bottom:44px}
+.speech{position:relative;z-index:3;background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.58);backdrop-filter:blur(10px);border-radius:20px;padding:14px;margin-top:-2px;box-shadow:var(--soft)}
+.speech b{display:block;font-size:15px;letter-spacing:-.02em}.speech p{font-size:12.5px;line-height:1.42;color:var(--muted);margin-top:4px}
+.heroBtns{display:flex;gap:10px;margin-top:12px}.btn{height:50px;border-radius:18px;font-size:14px;font-weight:950;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px}.btn.primary{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;box-shadow:0 18px 34px rgba(85,104,255,.24)}.btn.ghost{background:rgba(255,255,255,.60);border:1px solid rgba(255,255,255,.64);box-shadow:var(--soft)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.stat{padding:13px 8px;text-align:center}.stat b{display:block;font-size:22px;letter-spacing:-.04em}.stat span{display:block;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:3px}
+.quest{padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px}.questIcon{width:48px;height:48px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 14%, var(--paper)),color-mix(in srgb,var(--violet) 14%, var(--paper)));font-size:24px;box-shadow:var(--soft)}.questInfo{flex:1;min-width:0}.questInfo b{font-size:14.5px}.questInfo p{font-size:12px;color:var(--muted);line-height:1.38;margin-top:3px}.quest .reward{font-size:11px;font-weight:950;color:#5c4600;background:linear-gradient(135deg,#fff2bc,var(--gold));padding:6px 8px;border-radius:999px;white-space:nowrap}.quest.done{opacity:.68}.quest.done .questIcon{background:linear-gradient(135deg,var(--green),#89ebc0);color:#fff}
+.energyGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.energy{padding:13px}.energyTop{display:flex;justify-content:space-between;font-size:12px;font-weight:950;margin-bottom:8px}.track{height:11px;border-radius:999px;background:var(--line2);overflow:hidden}.track i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--violet))}
+.mapStage{position:relative;height:360px;padding:14px;overflow:hidden;background:
+  radial-gradient(80% 50% at 50% 0%, rgba(255,255,255,.9), transparent 60%),
+  linear-gradient(180deg,#ebf7ff,#edf0ff)}
+.mapBlob{position:absolute;border-radius:50%;filter:blur(0px)}.blob1{left:-34px;top:36px;width:150px;height:84px;background:linear-gradient(135deg,#c3f3f0,#b6dcff)}.blob2{right:-28px;top:84px;width:120px;height:72px;background:linear-gradient(135deg,#ffc9ef,#d5c5ff)}.blob3{left:28px;bottom:18px;width:128px;height:76px;background:linear-gradient(135deg,#ffe8b4,#ffdd85)}
+.path{position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,transparent 0 12px,transparent 13px),linear-gradient(transparent,transparent), none}
+.pathSvg{position:absolute;inset:0;width:100%;height:100%}
+.mapBuddy{position:absolute;left:44%;top:56%;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:26px;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%, rgba(255,255,255,.94), rgba(255,255,255,.34) 30%, transparent 31%),linear-gradient(135deg,var(--buddyA),var(--buddyB));box-shadow:0 18px 28px rgba(31,58,90,.16), inset 8px 8px 14px rgba(255,255,255,.3), inset -12px -12px 16px rgba(31,58,90,.14);font-size:28px;z-index:3}
+.portal{position:absolute;width:78px;height:78px;border-radius:26px;background:rgba(255,255,255,.76);border:1px solid rgba(255,255,255,.68);backdrop-filter:blur(14px);box-shadow:0 18px 28px rgba(33,63,100,.12);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;font-size:11px;font-weight:950;color:var(--ink)}.portal .e{font-size:24px}.portal small{font-size:10px;color:var(--muted)}.portal.hot::after{content:"";position:absolute;inset:-5px;border-radius:30px;border:2px solid color-mix(in srgb,var(--gold) 72%, transparent);opacity:.9;animation:pulse 1.8s ease-in-out infinite}
+.p-cal{left:18px;top:38px}.p-mom{right:26px;top:58px}.p-gro{left:18px;top:178px}.p-pad{right:28px;top:186px}.p-learn{left:140px;top:16px}.p-game{left:148px;top:248px}
+.portalCard{padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px}.portalThumb{width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 16%,var(--paper)),color-mix(in srgb,var(--violet) 14%,var(--paper)));display:grid;place-items:center;font-size:24px}.portalCard .meta{flex:1;min-width:0}.portalCard b{font-size:14.5px}.portalCard p{font-size:12px;color:var(--muted);line-height:1.38;margin-top:3px}.pill{padding:6px 8px;border-radius:999px;background:color-mix(in srgb,var(--violet) 12%, var(--paper));color:var(--violet);font-size:11px;font-weight:950;white-space:nowrap}
+.board{padding:14px;margin-bottom:10px}.board h3{font-size:16px;letter-spacing:-.02em}.board p{font-size:12px;color:var(--muted);margin-top:4px}.boardRow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.boardRow:last-child{border-bottom:0;padding-bottom:0}.rank{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#fff1c0,#ffc14e);font-size:12px;font-weight:950;color:#4a3300;flex:0 0 auto}.who{flex:1;min-width:0}.who b{font-size:13.5px}.who p{font-size:11.5px;color:var(--muted);margin-top:2px}.score{font-size:12px;font-weight:950;color:var(--violet)}
+.segment{display:flex;background:var(--line2);padding:4px;border-radius:16px;gap:4px;margin-bottom:12px}.segment button{flex:1;height:36px;border-radius:12px;font-size:13px;font-weight:950;color:var(--muted)}.segment button.on{background:var(--paper);color:var(--ink);box-shadow:var(--soft)}
+.previewCard{padding:14px;overflow:hidden}.closetTop{display:flex;gap:14px;align-items:center}.miniStage{width:120px;height:120px;border-radius:28px;background:radial-gradient(80% 50% at 50% 0%, rgba(255,255,255,.92), transparent 60%),linear-gradient(180deg,#eef9ff,#edf0ff);border:1px solid var(--line);display:grid;place-items:center;position:relative;overflow:hidden}.miniPet{position:absolute;transform:scale(.62)}.closetMeta h3{font-size:20px;letter-spacing:-.03em}.closetMeta p{font-size:12.5px;color:var(--muted);line-height:1.44;margin-top:5px}
+.tabs{display:flex;gap:8px;overflow:auto;scrollbar-width:none;margin:12px 0 10px}.tabs::-webkit-scrollbar{display:none}.tabs button{height:34px;padding:0 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:12px;font-weight:950;color:var(--muted);white-space:nowrap}.tabs button.on{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;border:0}
+.items{display:grid;grid-template-columns:1fr 1fr;gap:10px}.item{padding:12px;min-height:150px;position:relative;overflow:hidden}.itemIcon{height:58px;border-radius:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 16%, var(--paper)),color-mix(in srgb,var(--violet) 16%, var(--paper)));display:grid;place-items:center;font-size:32px;margin-bottom:10px}.item b{font-size:14px}.item p{font-size:11.5px;color:var(--muted);line-height:1.34;margin-top:4px}.priceTag{position:absolute;right:10px;top:10px;padding:5px 7px;border-radius:999px;background:linear-gradient(135deg,#fff2bc,var(--gold));font-size:10px;font-weight:950;color:#503800}.item.owned .priceTag{background:linear-gradient(135deg,var(--green),#95efc9);color:#fff}
+.circleHero{padding:16px;text-align:center;background:
+  radial-gradient(80% 52% at 50% 0%, rgba(255,255,255,.9), transparent 60%),
+  radial-gradient(80% 50% at 18% 100%, color-mix(in srgb,var(--pink) 16%, transparent), transparent 60%),
+  linear-gradient(180deg,rgba(255,255,255,.52),rgba(255,255,255,.22))}
+.cluster{height:144px;position:relative;display:flex;align-items:center;justify-content:center;gap:8px}.cluster .pet{width:72px;height:72px;border-radius:30px;background:linear-gradient(135deg,var(--buddyA),var(--buddyB));box-shadow:0 18px 26px rgba(31,58,90,.14), inset 8px 8px 12px rgba(255,255,255,.28);display:grid;place-items:center;font-size:32px}.cluster .pet.main{width:96px;height:96px;font-size:42px}.circleHero h2{font-size:22px;letter-spacing:-.04em}.circleHero p{font-size:12.5px;color:var(--muted);margin-top:4px}
+.member{padding:13px;display:flex;align-items:center;gap:12px;margin-bottom:10px}.memberAv{width:44px;height:44px;border-radius:17px;background:linear-gradient(135deg,var(--buddyA),var(--buddyB));display:grid;place-items:center;font-size:22px;box-shadow:var(--soft)}.memberInfo{flex:1;min-width:0}.memberInfo b{font-size:14.5px}.memberInfo p{font-size:11.8px;color:var(--muted);margin-top:3px}.tag{padding:6px 8px;border-radius:999px;background:color-mix(in srgb,var(--violet) 12%, var(--paper));color:var(--violet);font-size:11px;font-weight:950}
+.goal{padding:14px;margin-bottom:10px;background:linear-gradient(135deg,color-mix(in srgb,var(--gold) 18%, var(--paper)), var(--panel))}.goalTop{display:flex;gap:12px}.goalIcon{width:50px;height:50px;border-radius:18px;background:rgba(255,255,255,.7);display:grid;place-items:center;font-size:28px}.goal b{font-size:15px}.goal p{font-size:12px;color:var(--muted);line-height:1.4;margin-top:4px}.goalBar{height:12px;border-radius:999px;background:rgba(80,58,0,.12);overflow:hidden;margin-top:10px}.goalBar i{display:block;height:100%;width:72%;background:linear-gradient(90deg,#ffcc58,#ff9d2e)}
+.sheet{position:absolute;inset:0;background:rgba(7,17,29,.45);backdrop-filter:blur(5px);display:none;flex-direction:column;z-index:60}.sheet.on{display:flex}.sheetBody{margin-top:auto;background:var(--bg);border-radius:30px 30px 0 0;max-height:88%;box-shadow:0 -30px 70px rgba(0,0,0,.28);animation:sheetIn .28s ease both}.grab{width:42px;height:5px;border-radius:999px;background:var(--line2);margin:11px auto 6px}.sheetInner{padding:10px 20px calc(24px + env(safe-area-inset-bottom,0px));overflow:auto;max-height:calc(88vh - 22px)}.sheetInner h2{font-size:24px;letter-spacing:-.04em}.sheetInner p{font-size:14px;color:var(--muted);line-height:1.5;margin-top:8px}.sheetActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+@keyframes sheetIn{from{transform:translateY(100%)}to{transform:none}}
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);opacity:0;background:rgba(13,22,36,.96);color:#fff;font-size:13px;font-weight:950;padding:11px 15px;border-radius:999px;box-shadow:0 18px 36px rgba(0,0,0,.34);transition:.24s;pointer-events:none;z-index:90}.toast.on{opacity:1;transform:translate(-50%,0)}
+.gem{position:absolute;z-index:80;font-size:18px;pointer-events:none}
+@keyframes pulse{50%{transform:scale(1.04);opacity:.58}}
+@keyframes blink{0%,44%,48%,100%{transform:scaleY(1)}46%{transform:scaleY(.08)}}
+@keyframes pulseAura{50%{transform:scale(1.04);opacity:.65}}
+@media (max-width:360px){.hi h1{font-size:22px}.stageWrap{height:272px}.portal{width:72px;height:72px}.scroll{padding-left:14px;padding-right:14px}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
-<div id="app"></div>
+<div class="app" id="app">
+  <div class="safe"></div>
+  <main class="screens">
+    <section class="screen on" id="s-buddy">
+      <header class="top">
+        <div class="hi"><div class="eyebrow">Kinetik Buddy</div><h1>Your circle, alive</h1></div>
+        <button class="chip gold">💎 <b class="walletInline">245</b></button>
+        <button class="chip hot">Lv <b id="levelTop">7</b></button>
+      </header>
+      <div class="scroll">
+        <section class="hero card" id="heroCard">
+          <div class="heroTop"><div class="name" id="buddyTitle">Bento · Care Buddy</div><button class="mood" id="moodChip">✨ Cozy</button></div>
+          <div class="stageWrap" id="tiltStage">
+            <div class="orbit"></div><div class="orbit2"></div><div class="floorShadow"></div>
+            <div class="miniPortal p1"><span>📅</span></div>
+            <div class="miniPortal p2"><span>🧠</span></div>
+            <div class="miniPortal p3"><span>🛒</span></div>
+            <div class="miniPortal p4"><span>🎾</span></div>
+            <div id="petStage"></div>
+          </div>
+          <div class="speech" id="speechBox"><b>Nova is close to evolving.</b><p>Finish one learning session to earn 12 diamonds and unlock more energy.</p></div>
+          <div class="heroBtns"><button class="btn primary" id="bestMoveBtn">▶ Start best move</button><button class="btn ghost" id="petActionBtn">Pet actions</button></div>
+        </section>
+
+        <div class="grid3">
+          <div class="stat smallCard"><b id="streakValue">6</b><span>Streak</span></div>
+          <div class="stat smallCard"><b id="xpValue">540</b><span>XP</span></div>
+          <div class="stat smallCard"><b id="rankValue">#1</b><span>Family</span></div>
+        </div>
+
+        <div class="label">Today’s buddy quests <span class="link" id="resetQuests">Reset</span></div>
+        <div id="questList"></div>
+
+        <div class="label">Evolution energy <span class="link" id="energyHelp">Details</span></div>
+        <div class="energyGrid" id="energyGrid"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="s-map">
+      <header class="top">
+        <div class="hi"><div class="eyebrow">Map</div><h1>Enter app worlds</h1></div>
+        <span class="chip gold">💎 <b class="walletInline">245</b></span>
+      </header>
+      <div class="scroll">
+        <div class="mapStage card" id="mapCard">
+          <div class="mapBlob blob1"></div><div class="mapBlob blob2"></div><div class="mapBlob blob3"></div>
+          <svg class="pathSvg" viewBox="0 0 360 360" preserveAspectRatio="none"><path d="M70 76 C135 90 94 192 176 183 C258 174 228 79 299 103 C330 114 311 178 263 211 C230 232 172 221 152 266 C140 292 174 318 210 308" fill="none" stroke="rgba(120,138,170,.28)" stroke-width="10" stroke-linecap="round" stroke-dasharray="1 18"/></svg>
+          <button class="portal p-cal hot" data-app="calendar"><span class="e">📅</span>Calendar<small>+5 💎</small></button>
+          <button class="portal p-mom" data-app="moments"><span class="e">🖼️</span>Moments<small>+8 💎</small></button>
+          <button class="portal p-gro hot" data-app="groceries"><span class="e">🛒</span>Kitchen<small>+8 💎</small></button>
+          <button class="portal p-pad" data-app="padel"><span class="e">🎾</span>Padel<small>+15 💎</small></button>
+          <button class="portal p-learn hot" data-app="clock"><span class="e">🕒</span>Learning<small>+12 💎</small></button>
+          <button class="portal p-game" data-app="chess"><span class="e">♟️</span>Strategy<small>+10 💎</small></button>
+          <div class="mapBuddy" id="mapBuddy">🐣</div>
+        </div>
+
+        <div class="label">Recommended portals</div>
+        <div id="portalList"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="s-boards">
+      <header class="top"><div class="hi"><div class="eyebrow">Boards</div><h1>One-stop leaderboards</h1></div><span class="chip hot">🔥 Weekly</span></header>
+      <div class="scroll">
+        <div class="segment" id="boardSeg">
+          <button class="on" data-mode="overall">Overall</button>
+          <button data-mode="apps">Apps</button>
+          <button data-mode="showcases">Showcases</button>
+        </div>
+        <div id="boardsList"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="s-closet">
+      <header class="top"><div class="hi"><div class="eyebrow">Closet</div><h1>Style your buddy</h1></div><span class="chip gold">💎 <b class="walletInline">245</b></span></header>
+      <div class="scroll">
+        <div class="previewCard card">
+          <div class="closetTop">
+            <div class="miniStage"><div class="miniPet" id="miniStage"></div></div>
+            <div class="closetMeta"><h3 id="closetName">Nova</h3><p id="closetDesc">A polished Pixar-like learning buddy with soft 3D shading, premium accessories, and expressive moods.</p></div>
+          </div>
+          <div class="tabs" id="closetTabs">
+            <button class="on" data-tab="species">Species</button>
+            <button data-tab="hat">Hat</button>
+            <button data-tab="aura">Aura</button>
+            <button data-tab="room">Room</button>
+          </div>
+          <div class="items" id="itemsGrid"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="s-circle">
+      <header class="top"><div class="hi"><div class="eyebrow">Circle</div><h1>Family buddy league</h1></div><span class="chip hot">🏆 #1</span></header>
+      <div class="scroll">
+        <div class="circleHero card">
+          <div class="cluster"><div class="pet">🐣</div><div class="pet main">✨</div><div class="pet">🌟</div></div>
+          <h2>Family Circle</h2>
+          <p>The house feels playful today. Shared actions power the Circle Dragon Egg.</p>
+        </div>
+        <div class="label">Shared goal</div>
+        <div class="goal smallCard">
+          <div class="goalTop"><div class="goalIcon">🐉</div><div><b>Family Dragon Egg</b><p>Unlock a rare shared buddy, new room animation, and a family badge at 1,000 circle diamonds.</p></div></div>
+          <div class="goalBar"><i></i></div>
+        </div>
+        <div class="label">Members</div>
+        <div id="memberList"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="nav" id="nav">
+    <button class="on" data-tab="buddy"><svg viewBox="0 0 24 24"><path d="M12 6c3 0 6 2.5 6 6.2S15.6 19 12 19s-6-2.6-6-6.8S9 6 12 6Z"/><path d="M9 7 7.5 4.5"/><path d="M15 7l1.5-2.5"/><path d="M9 13h0"/><path d="M15 13h0"/></svg><span>Buddy</span><i class="dot"></i></button>
+    <button data-tab="map"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14"/><path d="M15 6v14"/></svg><span>Map</span><i class="dot"></i></button>
+    <button data-tab="boards"><svg viewBox="0 0 24 24"><path d="M4 19V8"/><path d="M10 19V4"/><path d="M16 19v-7"/><path d="M22 19H2"/></svg><span>Boards</span><i class="dot"></i></button>
+    <button data-tab="closet"><svg viewBox="0 0 24 24"><path d="M7 4h10l2 4v12H5V8z"/><path d="M9 4v4"/><path d="M15 4v4"/></svg><span>Closet</span><i class="dot"></i></button>
+    <button data-tab="circle"><svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="8" r="2.5"/><path d="M2.5 20c0-3.2 3.1-5 5.5-5s5.5 1.8 5.5 5"/><path d="M12 20c.4-2.3 2.5-3.8 4.6-3.8 2 0 4 .9 4.9 2.8"/></svg><span>Circle</span><i class="dot"></i></button>
+  </nav>
+
+  <section class="sheet" id="sheet"><div class="sheetBody"><div class="grab"></div><div class="sheetInner" id="sheetInner"></div></div></section>
+  <div class="toast" id="toast"></div>
+</div>
+
 <script>
-"use strict";
-const $=s=>document.querySelector(s);
-const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const APP_ID="event-poll";
-let CTX=null,embedded=false,polls=[],creating=false;
+(()=>{
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const STORE = 'kinetik_buddy_world_polished_v1';
 
-/* ---- Bridge / storage ---- */
-const pend={};let rq=0;
-function bridge(msg){return new Promise(res=>{const id=++rq;pend[id]=res;msg.reqId=id;msg.appId=APP_ID;parent.postMessage(msg,"*");setTimeout(()=>{if(pend[id]){delete pend[id];res(null);}},2500);});}
-addEventListener("message",e=>{
-  const m=e.data||{};
-  if(m.type==="INIT_APP"){CTX=m.payload;embedded=true;document.documentElement.dataset.theme=CTX.theme||"dark";load().then(render);}
-  if(m.type==="DATA_RESULT"&&pend[m.reqId]){pend[m.reqId](m.items);delete pend[m.reqId];}
-});
-const LS={get k(){return "poll_local_"+(CTX?CTX.circleId:"solo");},
-  load(){try{return JSON.parse(localStorage.getItem(this.k))||[]}catch(e){return[]}},
-  save(a){localStorage.setItem(this.k,JSON.stringify(a));}};
-async function load(){
-  if(embedded){const items=await bridge({type:"DATA_LIST",collection:"polls"});if(items){polls=items.map(r=>({recId:r.id,...r.payload}));return;}}
-  polls=LS.load();
-}
-async function persist(p){
-  if(embedded){
-    if(p.recId)await bridge({type:"DATA_UPDATE",collection:"polls",id:p.recId,payload:stripped(p)});
-    else{const r=await bridge({type:"DATA_CREATE",collection:"polls",payload:stripped(p)});if(r&&r[0])p.recId=r[0].id;}
-    return;
+  const species = {
+    bento:{name:'Bento', role:'Care Buddy', colors:['#5fd8b2','#54b8ff','#b9f3d4'], emoji:'🧺', mood:'✨ Cozy', speech:['Bento is hungry for progress.','Complete one grocery action or home task to earn +8 diamonds.'], accessory:'🧑‍🍳', desc:'A home-care buddy with chef energy, cozy cheeks, and helpful routines.'},
+    nova:{name:'Nova', role:'Learning Buddy', colors:['#69d4ff','#7a6bff','#f4b4ff'], emoji:'🌟', mood:'🚀 Curious', speech:['Nova is close to evolving.','Finish one learning session to earn +12 diamonds and unlock more energy.'], accessory:'🪄', desc:'A bright learning buddy with cosmic sparkles and a premium galaxy glow.'},
+    bolt:{name:'Bolt', role:'Play Buddy', colors:['#ffd45f','#ff8a61','#ff66bb'], emoji:'⚡', mood:'🎉 Playful', speech:['Bolt wants action today.','Play any game or padel challenge to earn +15 diamonds.'], accessory:'🏅', desc:'A sporty little champion with punchy energy and playful competitive flair.'}
+  };
+
+  const energyKeys = [
+    ['Joy',70],['Care',62],['Rhythm',54],['Play',48],['Learning',78],['Calm',44]
+  ];
+
+  const appMeta = {
+    groceries:{icon:'🛒',name:'Kitchen',reward:8,copy:'Complete one grocery or home-care action.'},
+    clock:{icon:'🕒',name:'Learning',reward:12,copy:'Finish one Clock Trainer or Times Table round.'},
+    padel:{icon:'🎾',name:'Padel',reward:15,copy:'Log a sporty session and boost Play energy.'},
+    calendar:{icon:'📅',name:'Calendar',reward:5,copy:'Check one plan or add a family action.'},
+    moments:{icon:'🖼️',name:'Moments',reward:8,copy:'Share a memory to boost Joy energy.'},
+    chess:{icon:'♟️',name:'Strategy',reward:10,copy:'Play Chess or Code Clash to boost Focus.'}
+  };
+
+  const closetData = {
+    species:[
+      {id:'bento', icon:'🧺', title:'Bento', sub:'Home-care specialist', cost:'Owned', owned:true},
+      {id:'nova', icon:'🌟', title:'Nova', sub:'Learning buddy', cost:'Free', owned:true},
+      {id:'bolt', icon:'⚡', title:'Bolt', sub:'Play champion', cost:'120 💎'}
+    ],
+    hat:[
+      {id:'chef', icon:'🧑‍🍳', title:'Chef Hat', sub:'Home helper glow', cost:'Owned', owned:true},
+      {id:'wizard', icon:'🪄', title:'Orbit Wand', sub:'Cosmic sparkle look', cost:'120 💎'},
+      {id:'crown', icon:'👑', title:'Family Crown', sub:'Unlocked by #1 weekly board', cost:'300 💎'}
+    ],
+    aura:[
+      {id:'soft', icon:'✨', title:'Spark Aura', sub:'Soft premium shine', cost:'Owned', owned:true},
+      {id:'orbit', icon:'🪐', title:'Orbit Aura', sub:'Strava-meets-cosmic energy', cost:'200 💎'},
+      {id:'rainbow', icon:'🌈', title:'Rainbow Ring', sub:'Celebration halo', cost:'260 💎'}
+    ],
+    room:[
+      {id:'cloud', icon:'☁️', title:'Cloud Room', sub:'Light calm background', cost:'Owned', owned:true},
+      {id:'padel', icon:'🎾', title:'Padel Court', sub:'Sport-themed room skin', cost:'180 💎'},
+      {id:'kitchen', icon:'🍳', title:'Kitchen Room', sub:'Warm family care vibe', cost:'150 💎'}
+    ]
+  };
+
+  const defaultState = {wallet:245,xp:540,level:7,streak:6,buddy:'nova',hat:'wizard',aura:'soft',room:'cloud',boardMode:'overall',closetTab:'species',quests:[
+    {id:'q1', icon:'🕒', title:'Finish one learning round', body:'Clock Trainer or Times Table · evolves Nova', reward:12, app:'clock', done:false},
+    {id:'q2', icon:'🛒', title:'Complete one home task', body:'Groceries or home care · boosts Bento', reward:8, app:'groceries', done:false},
+    {id:'q3', icon:'🎾', title:'Play one mini-game', body:'Padel or game challenge · boosts Bolt', reward:15, app:'padel', done:false}
+  ], energies:{Joy:70,Care:62,Rhythm:54,Play:48,Learning:78,Calm:44} };
+  let state = load();
+
+  function load(){ try{return {...defaultState,...JSON.parse(localStorage.getItem(STORE)||'{}')};}catch(e){return structuredClone(defaultState);} }
+  function save(){ localStorage.setItem(STORE, JSON.stringify(state)); }
+  function setVar(k,v){ document.documentElement.style.setProperty(k,v); }
+  function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast._); toast._=setTimeout(()=>t.classList.remove('on'),1800); }
+  function openSheet(html){ $('#sheetInner').innerHTML=html; $('#sheet').classList.add('on'); }
+  function closeSheet(){ $('#sheet').classList.remove('on'); }
+
+  function renderPet(targetId){
+    const b = species[state.buddy];
+    setVar('--buddyA', b.colors[0]); setVar('--buddyB', b.colors[1]); setVar('--buddyC', b.colors[2]);
+    const target = document.getElementById(targetId);
+    target.innerHTML = `
+      <div class="petWrap" id="petWrap">
+        <div class="petHalo"></div>
+        <div class="petAccessory">${b.accessory}</div>
+        <svg class="petSvg" viewBox="0 0 200 200" aria-hidden="true">
+          <defs>
+            <linearGradient id="gradBody" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="${b.colors[0]}"/>
+              <stop offset="65%" stop-color="${b.colors[1]}"/>
+              <stop offset="100%" stop-color="${b.colors[2]}"/>
+            </linearGradient>
+            <radialGradient id="shine" cx="36%" cy="24%" r="44%">
+              <stop offset="0%" stop-color="rgba(255,255,255,.96)"/>
+              <stop offset="38%" stop-color="rgba(255,255,255,.36)"/>
+              <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+            </radialGradient>
+            <radialGradient id="belly" cx="50%" cy="20%" r="75%">
+              <stop offset="0%" stop-color="rgba(255,255,255,.58)"/>
+              <stop offset="100%" stop-color="rgba(255,255,255,.10)"/>
+            </radialGradient>
+          </defs>
+          <g id="earL" transform="translate(40 36) rotate(-19)">
+            <path d="M0 56 C8 12 29 -2 51 0 C46 23 40 49 30 67 C22 81 9 79 0 56 Z" fill="url(#gradBody)"/>
+            <path d="M17 48 C20 24 31 14 42 14 C39 27 34 45 28 56 C24 63 19 60 17 48 Z" fill="rgba(255,255,255,.26)"/>
+          </g>
+          <g id="earR" transform="translate(108 35) scale(-1 1) rotate(-18)">
+            <path d="M0 56 C8 12 29 -2 51 0 C46 23 40 49 30 67 C22 81 9 79 0 56 Z" fill="url(#gradBody)"/>
+            <path d="M17 48 C20 24 31 14 42 14 C39 27 34 45 28 56 C24 63 19 60 17 48 Z" fill="rgba(255,255,255,.26)"/>
+          </g>
+          <g id="bodyG">
+            <path d="M100 172 C62 172 34 146 34 110 C34 75 59 48 100 46 C141 48 166 75 166 110 C166 146 138 172 100 172 Z" fill="url(#gradBody)"/>
+            <ellipse cx="100" cy="112" rx="47" ry="40" fill="url(#belly)" opacity=".92"/>
+            <ellipse cx="82" cy="78" rx="42" ry="28" fill="url(#shine)" opacity=".94"/>
+            <ellipse cx="104" cy="178" rx="24" ry="8" fill="rgba(255,255,255,.22)"/>
+          </g>
+          <g id="faceG">
+            <ellipse id="eyeL" cx="72" cy="104" rx="12" ry="15" fill="#15253a" style="transform-origin:72px 104px; animation:blink 5.2s infinite;"/>
+            <ellipse id="eyeR" cx="128" cy="104" rx="12" ry="15" fill="#15253a" style="transform-origin:128px 104px; animation:blink 5.2s infinite .1s;"/>
+            <ellipse cx="67" cy="98" rx="4.5" ry="5.5" fill="#fff" opacity=".95"/>
+            <ellipse cx="123" cy="98" rx="4.5" ry="5.5" fill="#fff" opacity=".95"/>
+            <ellipse cx="54" cy="126" rx="12" ry="7" fill="rgba(255,121,200,.34)"/>
+            <ellipse cx="146" cy="126" rx="12" ry="7" fill="rgba(255,121,200,.34)"/>
+            <path d="M94 121 Q100 127 106 121" fill="none" stroke="#15253a" stroke-width="3.2" stroke-linecap="round"/>
+            <path d="M90 130 Q100 138 110 130" fill="none" stroke="#15253a" stroke-width="3.2" stroke-linecap="round"/>
+          </g>
+          <g id="feetG">
+            <ellipse cx="77" cy="165" rx="17" ry="11" fill="rgba(60,84,140,.36)"/>
+            <ellipse cx="123" cy="165" rx="17" ry="11" fill="rgba(60,84,140,.36)"/>
+          </g>
+        </svg>
+        <div class="petCompanion" id="petCompanion"><i></i></div>
+        <div class="spark s1"></div><div class="spark s2"></div><div class="spark s3"></div>
+      </div>`;
+
+    if(targetId==='miniStage'){ target.firstElementChild?.classList.add('miniPet'); }
+    bindPetInteractions();
+    animatePet();
   }
-  LS.save(polls);
-}
-const stripped=p=>({question:p.question,options:p.options,votes:p.votes,open:p.open,createdBy:p.createdBy});
-function toast(m){if(embedded)parent.postMessage({type:"SHOW_TOAST",message:m},"*");else{const t=document.createElement("div");t.textContent=m;t.style.cssText="position:fixed;left:50%;transform:translateX(-50%);bottom:30px;background:var(--glass);border:1px solid var(--brd);backdrop-filter:blur(14px);padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;z-index:99";document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}}
-const myId=()=>CTX?CTX.personId:"me";
-const nameOf=id=>{if(CTX&&CTX.people){const p=CTX.people.find(p=>p.id===id);if(p)return p.name;}return id==="me"?"Me":id;};
 
-/* ---- UI ---- */
-function render(){
-  const A=$("#app");
-  A.innerHTML=`<h1>🗳️ Event Poll <small>Kinetik</small></h1>
-  ${!embedded?'<p class="note" style="margin:3px 0 6px">Standalone mode · data stays on this device</p>':""}
-  <div id="body"></div>`;
-  const B=$("#body");
-  if(creating){renderCreate(B);return;}
-  B.innerHTML=`<button class="btn" id="newP" style="margin:6px 0 4px">+ New poll</button>
-  ${polls.length?polls.map((p,i)=>pollCard(p,i)).join(""):'<div class="card" style="text-align:center;color:var(--dim)">No polls yet.<br>Create one to find the best time 🗳️</div>'}`;
-  $("#newP").onclick=()=>{creating=true;render();};
-  polls.forEach((p,i)=>wireCard(p,i));
-}
-function counts(p){
-  const c={};p.options.forEach(o=>c[o]=[]);
-  Object.entries(p.votes||{}).forEach(([who,opt])=>{if(c[opt])c[opt].push(who);});
-  return c;
-}
-function pollCard(p,i){
-  const c=counts(p),tot=Object.keys(p.votes||{}).length;
-  const max=Math.max(1,...Object.values(c).map(a=>a.length));
-  const winner=p.options.reduce((w,o)=>c[o].length>((c[w]||[]).length)?o:w,p.options[0]);
-  return `<div class="card" id="poll${i}">
-    <div class="phead"><b>${esc(p.question)}</b><span class="status ${p.open?"open":"closed"}">${p.open?"Open":"Closed"}</span></div>
-    ${p.options.map(o=>{
-      const vs=c[o],mine=(p.votes||{})[myId()]===o,isWin=!p.open&&o===winner&&vs.length>0;
-      return `<button class="opt ${mine?"mine":""} ${isWin?"win":""}" data-i="${i}" data-o="${esc(o)}" ${p.open?"":"disabled"}>
-        <span class="fill" style="transform:scaleX(${vs.length/max})"></span>
-        <span class="in"><span>${isWin?"🏆 ":""}${esc(o)}${mine?" · your vote":""}</span><span class="ct">${vs.length}</span></span>
-        ${vs.length?`<span class="who">${vs.map(v=>`<span class="tag">${esc(nameOf(v))}</span>`).join("")}</span>`:""}
-      </button>`;}).join("")}
-    <div class="wrap" style="margin-top:7px">
-      <button class="btn sm ghost" data-share="${i}">Share invite</button>
-      ${p.open?`<button class="btn sm ghost" data-close="${i}">Close poll</button>`
-        :embedded?`<button class="btn sm" data-cal="${i}">Add "${esc(winner)}" to Calendar</button>`:""}
-    </div>
-    <p class="note" style="margin-top:8px">${tot} vote${tot!==1?"s":""}${p.open?" · tap an option to vote":" · winner: "+esc(winner)}</p>
-  </div>`;
-}
-function wireCard(p,i){
-  const el=$("#poll"+i);if(!el)return;
-  el.querySelectorAll(".opt").forEach(b=>b.onclick=async()=>{
-    if(!p.open)return;
-    p.votes=p.votes||{};p.votes[myId()]=b.dataset.o;
-    await persist(p);render();toast("Vote saved ✓");
-  });
-  const cl=el.querySelector("[data-close]");if(cl)cl.onclick=async()=>{p.open=false;await persist(p);render();toast("Poll closed");};
-  const sh=el.querySelector("[data-share]");if(sh)sh.onclick=async()=>{
-    const c=counts(p);
-    const txt=`🗳️ ${p.question}\n${p.options.map(o=>`· ${o} (${c[o].length})`).join("\n")}\n\nVote in Kinetik — Plans. People. Play.`;
-    if(navigator.share){try{await navigator.share({text:txt});return;}catch(e){}}
-    try{await navigator.clipboard.writeText(txt);toast("Invite copied ✓");}catch(e){toast("Copy failed");}
-  };
-  const ca=el.querySelector("[data-cal]");if(ca)ca.onclick=()=>{
-    const c=counts(p);const winner=p.options.reduce((w,o)=>c[o].length>((c[w]||[]).length)?o:w,p.options[0]);
-    const d=new Date();d.setDate(d.getDate()+((5-d.getDay()+7)%7||7)); /* next Friday default */
-    parent.postMessage({type:"ADD_TO_CALENDAR",payload:{title:p.question+" — "+winner,date:d.toISOString().slice(0,10),startTime:"19:00",endTime:"21:00"}},"*");
-  };
-}
-function renderCreate(B){
-  let opts=["",""];
-  const draw=()=>{
-    B.innerHTML=`<div class="card"><div class="lbl">New poll</div>
-    <input class="fld" id="q" placeholder="Question — e.g. Padel this Friday?">
-    <div class="lbl" style="margin-top:6px">Options</div>
-    <div id="opts">${opts.map((o,i)=>`<input class="fld" data-i="${i}" placeholder="Option ${i+1} — e.g. Fri 8pm" value="${esc(o)}">`).join("")}</div>
-    <button class="btn sm ghost" id="addO">+ Option</button>
-    <div class="wrap" style="margin-top:13px"><button class="btn" id="mk">Create poll</button><button class="btn ghost" id="cx">Cancel</button></div></div>`;
-    B.querySelectorAll("#opts .fld").forEach(f=>f.oninput=()=>{opts[+f.dataset.i]=f.value;});
-    $("#addO").onclick=()=>{opts=B.q?opts:opts;opts.push("");const q=$("#q").value;draw();$("#q").value=q;};
-    $("#cx").onclick=()=>{creating=false;render();};
-    $("#mk").onclick=async()=>{
-      const q=$("#q").value.trim(),os=opts.map(o=>o.trim()).filter(Boolean);
-      if(!q||os.length<2)return toast("Need a question + 2 options");
-      const p={question:q,options:os,votes:{},open:true,createdBy:myId()};
-      polls.unshift(p);await persist(p);creating=false;render();toast("Poll created ✓");
+  function bindPetInteractions(){
+    const pet = $('#petWrap'); if(!pet) return;
+    pet.onclick = ()=>{
+      bouncePet();
+      openSheet(`<h2>${species[state.buddy].name}</h2><p>${species[state.buddy].desc}</p><p><b>Best move today:</b> ${species[state.buddy].speech[1]}</p><div class="sheetActions"><button class="btn primary" onclick="window._buddyReward()">Give reward</button><button class="btn ghost" onclick="window._switchBuddy()">Switch buddy</button></div>`);
     };
-  };
-  draw();
-}
+  }
 
-/* ---- boot ---- */
-setTimeout(()=>{if(!embedded){
-  if(matchMedia("(prefers-color-scheme: light)").matches)document.documentElement.dataset.theme="light";
-  load().then(render);
-}},650);
+  function animatePet(){
+    const pet = $('#petWrap'); if(!pet) return;
+    if(window.gsap){
+      gsap.killTweensOf(pet);
+      gsap.to(pet,{y:-8,rotation:1.2,duration:2.4,repeat:-1,yoyo:true,ease:'sine.inOut'});
+      gsap.to('.orbit',{rotation:360,duration:18,repeat:-1,ease:'none'});
+      gsap.to('.orbit2',{rotation:-360,duration:12,repeat:-1,ease:'none'});
+      gsap.to('.miniPortal',{y:-6,duration:2.5,stagger:.18,repeat:-1,yoyo:true,ease:'sine.inOut'});
+      gsap.to('.spark',{scale:.55,opacity:.45,duration:1.3,stagger:.2,repeat:-1,yoyo:true,ease:'sine.inOut'});
+      gsap.to('#petCompanion',{x:10,y:-8,duration:2.8,repeat:-1,yoyo:true,ease:'sine.inOut'});
+      gsap.to('#earL',{rotation:-25,transformOrigin:'48px 72px',duration:2.7,repeat:-1,yoyo:true,ease:'sine.inOut'});
+      gsap.to('#earR',{rotation:25,transformOrigin:'152px 72px',duration:2.5,repeat:-1,yoyo:true,ease:'sine.inOut'});
+    }
+  }
+
+  function bouncePet(){
+    const pet = $('#petWrap'); if(!pet) return;
+    if(window.gsap){ gsap.fromTo(pet,{scale:1},{scale:1.08,duration:.16,yoyo:true,repeat:1,ease:'power2.out'}); }
+  }
+
+  function updateTop(){
+    $$('.walletInline').forEach(el=>el.textContent=state.wallet);
+    $('#levelTop').textContent = state.level;
+    $('#xpValue').textContent = state.xp;
+    $('#streakValue').textContent = state.streak;
+  }
+
+  function renderHero(){
+    const b = species[state.buddy];
+    $('#buddyTitle').textContent = `${b.name} · ${b.role}`;
+    $('#moodChip').textContent = b.mood;
+    $('#speechBox').innerHTML = `<b>${b.speech[0]}</b><p>${b.speech[1]}</p>`;
+    renderPet('petStage');
+    renderPet('miniStage');
+    $('#closetName').textContent = b.name;
+    $('#closetDesc').textContent = b.desc;
+    $('#mapBuddy').textContent = b.emoji;
+  }
+
+  function renderQuests(){
+    $('#questList').innerHTML = state.quests.map(q=>`
+      <div class="quest smallCard ${q.done?'done':''}" data-id="${q.id}">
+        <div class="questIcon">${q.done?'✓':q.icon}</div>
+        <div class="questInfo"><b>${q.title}</b><p>${q.body}</p></div>
+        <div class="reward">+${q.reward} 💎</div>
+      </div>`).join('');
+    $$('#questList .quest').forEach(el=>el.onclick=()=>completeQuest(el.dataset.id));
+  }
+
+  function renderEnergy(){
+    $('#energyGrid').innerHTML = Object.entries(state.energies).map(([k,v])=>`
+      <div class="energy smallCard"><div class="energyTop"><span>${k}</span><b>${v}</b></div><div class="track"><i style="width:${v}%"></i></div></div>
+    `).join('');
+  }
+
+  function renderPortals(){
+    const cards = [appMeta.clock, appMeta.groceries, appMeta.padel].map(a=>`
+      <div class="portalCard smallCard" data-app="${Object.keys(appMeta).find(k=>appMeta[k]===a)}">
+        <div class="portalThumb">${a.icon}</div>
+        <div class="meta"><b>${a.name}</b><p>${a.copy}</p></div>
+        <div class="pill">+${a.reward} 💎</div>
+      </div>`).join('');
+    $('#portalList').innerHTML = cards;
+    $$('#portalList .portalCard, .portal').forEach(el=>el.onclick=(e)=>{ e.stopPropagation(); rewardFromApp(el.dataset.app); });
+  }
+
+  function renderBoards(){
+    const mode = state.boardMode;
+    $$('#boardSeg button').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
+    let html='';
+    if(mode==='overall'){
+      html += `<div class="board smallCard"><h3>Overall Family League</h3><p>All app points in one Strava-like hub.</p>
+        ${[
+          ['1','Aldyth + Nova','840 pts · #1 Padel, #2 Chess'],['2','Kinara + Sora','710 pts · #1 Groceries'],['3','Baginda + Nova','660 pts · #1 Clock Trainer'],['4','Keyla + Lumi','520 pts · #1 Moments']
+        ].map(r=>`<div class="boardRow"><div class="rank">${r[0]}</div><div class="who"><b>${r[1]}</b><p>${r[2]}</p></div><div class="score">🔥</div></div>`).join('')}
+      </div>`;
+      html += `<div class="board smallCard"><h3>Family Contribution Board</h3><p>Who helped the circle most this week.</p>
+        ${[['1','Aldyth','4 plans, 2 games'],['2','Kinara','18 grocery items'],['3','Baginda','4 learning rounds']].map(r=>`<div class="boardRow"><div class="rank">${r[0]}</div><div class="who"><b>${r[1]}</b><p>${r[2]}</p></div><div class="score">+${r[0]==='1'?120:r[0]==='2'?95:74} 💎</div></div>`).join('')}
+      </div>`;
+    } else if(mode==='apps'){
+      html += `<div class="board smallCard"><h3>Clock Trainer Board</h3><p>Fastest improvers this week.</p>
+        ${[['1','Baginda + Nova','92% accuracy'],['2','Keyla + Nova','85% accuracy'],['3','Aldyth + Nova','74% accuracy']].map(r=>`<div class="boardRow"><div class="rank">${r[0]}</div><div class="who"><b>${r[1]}</b><p>${r[2]}</p></div><div class="score">🕒</div></div>`).join('')}
+      </div>`;
+      html += `<div class="board smallCard"><h3>Padel Americano Board</h3><p>Top sporty buddies this week.</p>
+        ${[['1','Aldyth + Bolt','4 wins'],['2','Kinara + Bolt','3 wins'],['3','Baginda + Bolt','2 wins']].map(r=>`<div class="boardRow"><div class="rank">${r[0]}</div><div class="who"><b>${r[1]}</b><p>${r[2]}</p></div><div class="score">🎾</div></div>`).join('')}
+      </div>`;
+    } else {
+      html += `<div class="board smallCard"><h3>Active Showcases</h3><p>Pokémon GO-style timed competitions adapted for Kinetik.</p>
+        ${[['Clock Trainer Showcase','Ends in 2 days','Baginda is #1 at 92%'],['Moments Memory Showcase','Ends tomorrow','Keyla is #1 with 6 memories'],['Padel Weekend Showcase','Ends tonight','Aldyth is #1 with 4 wins']].map((r,i)=>`<div class="boardRow"><div class="rank">${i+1}</div><div class="who"><b>${r[0]}</b><p>${r[2]}</p></div><div class="score">${r[1]}</div></div>`).join('')}
+      </div>`;
+    }
+    $('#boardsList').innerHTML = html;
+  }
+
+  function renderCloset(){
+    const tab = state.closetTab;
+    $$('#closetTabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+    const items = closetData[tab] || [];
+    $('#itemsGrid').innerHTML = items.map(it=>`
+      <div class="item smallCard ${it.owned?'owned':''}" data-tab="${tab}" data-id="${it.id}">
+        <div class="priceTag">${it.cost}</div>
+        <div class="itemIcon">${it.icon}</div>
+        <b>${it.title}</b><p>${it.sub}</p>
+      </div>`).join('');
+    $$('#itemsGrid .item').forEach(el=>el.onclick=()=>chooseItem(el.dataset.tab, el.dataset.id));
+  }
+
+  function renderMembers(){
+    const members = [
+      ['Aldyth','🌟','Level 7 · Overall #1 this week'],
+      ['Kinara','✨','Top groceries contributor'],
+      ['Baginda','🚀','Clock Trainer champion'],
+      ['Keyla','💖','Moments memory leader']
+    ];
+    $('#memberList').innerHTML = members.map((m,i)=>`
+      <div class="member smallCard"><div class="memberAv">${m[1]}</div><div class="memberInfo"><b>${m[0]}</b><p>${m[2]}</p></div><div class="tag">#${i+1}</div></div>
+    `).join('');
+  }
+
+  function completeQuest(id){
+    const q = state.quests.find(x=>x.id===id); if(!q || q.done) return;
+    q.done=true;
+    reward(q.reward, q.app);
+    state.streak = Math.max(state.streak, 6);
+    save(); render();
+  }
+
+  function reward(amount, appKey='clock'){
+    state.wallet += amount; state.xp += amount*3; state.level = Math.floor(state.xp/80)+1;
+    const incMap = {clock:'Learning', groceries:'Care', padel:'Play', calendar:'Rhythm', moments:'Joy', chess:'Calm'};
+    const k = incMap[appKey] || 'Learning'; state.energies[k] = Math.min(100, (state.energies[k]||0)+6);
+    gemBurst(); toast(`+${amount} diamonds · ${appMeta[appKey]?.name||'Action'} complete`);
+    bouncePet(); save(); render();
+  }
+
+  function rewardFromApp(appKey){
+    const app = appMeta[appKey];
+    if(!app) return;
+    reward(app.reward, appKey);
+    openSheet(`<h2>${app.name}</h2><p>${app.copy}</p><p><b>Leaderboard impact:</b> your buddy just gained points in the one-stop Kinetik Boards hub.</p><div class="sheetActions"><button class="btn primary" onclick="document.querySelector('[data-tab=boards]').click(); window._closeSheet()">View Boards</button><button class="btn ghost" onclick="window._closeSheet()">Close</button></div>`);
+  }
+
+  function gemBurst(){
+    const anchor = $('#heroCard'); if(!anchor) return;
+    const rect = anchor.getBoundingClientRect();
+    for(let i=0;i<6;i++){
+      const gem = document.createElement('div'); gem.className='gem'; gem.textContent='💎';
+      gem.style.left = (rect.left + rect.width*0.48 + (Math.random()*30-15))+'px';
+      gem.style.top = (rect.top + rect.height*0.58 + (Math.random()*24-12))+'px';
+      document.body.appendChild(gem);
+      if(window.gsap){
+        gsap.to(gem,{x:130 + Math.random()*24,y:-280 + Math.random()*20,scale:.35,rotation:220+Math.random()*180,opacity:0,duration:.95,ease:'power2.out',onComplete:()=>gem.remove()});
+      } else { setTimeout(()=>gem.remove(),900); }
+    }
+  }
+
+  function chooseItem(tab,id){
+    if(tab==='species' && species[id]){ state.buddy=id; save(); render(); toast(`${species[id].name} equipped`); return; }
+    if(tab==='hat'){ const map={chef:'🧑‍🍳',wizard:'🪄',crown:'👑'}; state.hat=id; species[state.buddy].accessory = map[id] || species[state.buddy].accessory; toast('Accessory preview updated'); }
+    if(tab==='aura'){ toast('Aura preview updated'); }
+    if(tab==='room'){ toast('Room skin preview updated'); }
+  }
+
+  function setTab(tab){
+    $$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+    $$('.screen').forEach(s=>s.classList.remove('on'));
+    $('#s-'+tab).classList.add('on');
+  }
+
+  function tiltHero(){
+    const stage = $('#tiltStage');
+    stage.addEventListener('pointermove', e=>{
+      const r = stage.getBoundingClientRect(); const x=(e.clientX-r.left)/r.width-.5, y=(e.clientY-r.top)/r.height-.5;
+      if(window.gsap){ gsap.to('#petWrap',{rotationY:x*18,rotationX:-y*12,duration:.35,ease:'power2.out'}); }
+    });
+    stage.addEventListener('pointerleave', ()=>{ if(window.gsap) gsap.to('#petWrap',{rotationY:0,rotationX:0,duration:.45,ease:'power2.out'}); });
+  }
+
+  function bind(){
+    $('#nav').onclick=e=>{ const b=e.target.closest('button[data-tab]'); if(b) setTab(b.dataset.tab); };
+    $('#sheet').onclick=e=>{ if(e.target.id==='sheet') closeSheet(); };
+    $('#bestMoveBtn').onclick = ()=>rewardFromApp('clock');
+    $('#petActionBtn').onclick = ()=>openSheet(`<h2>Pet actions</h2><p>Make the buddy feel premium and alive with little rituals. Try one of these now.</p><div class="sheetActions"><button class="btn primary" onclick="window._buddyReward()">Give Treat</button><button class="btn ghost" onclick="window._switchBuddy()">Switch Species</button></div>`);
+    $('#resetQuests').onclick = ()=>{ state.quests = structuredClone(defaultState.quests); save(); render(); toast('Quests reset'); };
+    $('#energyHelp').onclick = ()=>openSheet(`<h2>Evolution energy</h2><p>Every Kinetik app pushes a different energy type: <b>Joy</b> from Moments, <b>Care</b> from Groceries, <b>Rhythm</b> from Calendar, <b>Play</b> from Games, <b>Learning</b> from kids apps, and <b>Calm</b> from wellbeing tools. Balanced energy creates the rarest buddy evolutions.</p>`);
+    $('#boardSeg').onclick = e=>{ const b=e.target.closest('button[data-mode]'); if(!b) return; state.boardMode=b.dataset.mode; save(); renderBoards(); };
+    $('#closetTabs').onclick = e=>{ const b=e.target.closest('button[data-tab]'); if(!b) return; state.closetTab=b.dataset.tab; save(); renderCloset(); };
+    tiltHero();
+  }
+
+  function render(){ updateTop(); renderHero(); renderQuests(); renderEnergy(); renderPortals(); renderBoards(); renderCloset(); renderMembers(); save(); }
+
+  window._closeSheet = closeSheet;
+  window._buddyReward = ()=>{ closeSheet(); reward(10,'moments'); };
+  window._switchBuddy = ()=>{ const order=['nova','bento','bolt']; const next=order[(order.indexOf(state.buddy)+1)%order.length]; state.buddy=next; closeSheet(); render(); toast(`${species[next].name} is now active`); };
+
+  bind(); render();
+})();
 </script>
 </body>
 </html>

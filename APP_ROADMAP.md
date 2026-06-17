@@ -3,8 +3,10 @@
 Goal: make Kinetik the **one-stop shop for circle-themed apps** (Family + Friends), with
 every app at **production grade** — ready for real-life use, not a concept tile.
 
-Companion to `KINETIK_HANDOFF.md` (shell/architecture) and `APP_BUILD_STANDARD.md`
-(per-app authoring spec). Current count: **27 apps** in the folder.
+Companion to `KINETIK_HANDOFF.md` (shell/architecture) · `APP_BUILD_STANDARD.md`
+(per-app authoring spec) · **`KINETIK_CONTENT_SOURCES.md`** (per-app science sources,
+analog apps, Spark avatar system, and active batch build strategy).
+Current count: **27 apps** in the folder.
 
 ---
 
@@ -46,11 +48,19 @@ Poll/coordination: Event Poll 🗳️ (wire to the `@kin` agent + Calendar).
 ## 3. Build batches (sequenced for leverage)
 
 - **Batch 0 — DONE (2026-06-15):** real icons (all 27), single-line app names, iPhone
-  swipe-paging on the Apps home.
-- **Batch 1 — Quiz/Drill engine** → unlocks 6 apps + Cambridge assessments. *Highest
-  leverage (most apps per engine).* Deliver engine + 5 content packs.
-- **Batch 2 — Coaching Deck engine** → 6 apps. Deliver engine + 6 packs (+ voice record
-  for the speaking trio: Articulation, Charisma, Presenter).
+  swipe-paging on the Apps home, upload bug fixes, caption min 1 char.
+- **Batch 1 — Quiz/Drill engine — IN PROGRESS:**
+  - ✅ Times Table Quest (flagship, 2026-06-15) — Duolingo-style, 6 question types, 5 crowns, league.
+  - 🔴 Clock Trainer · Data Detective · Code Philosophy Kids (content swaps + 1 new mechanic each).
+  - ❌ Ladder Rush — removed from this batch (full game engine, separate effort).
+- **Batch 2 — Coaching Deck engine — IN PROGRESS:**
+  - ✅ Charisma Coach (flagship, 2026-06-17) — 5-tab shell, Warmth×Competence Signature, 8 scenarios.
+  - 🔴 Behaviour Coach · Articulation Coach · Presenter Coach · Wisdom Coach · **Agentic AI** (5 apps, each built from scratch with unique landing design + palette).
+  - All 5 stubs deleted 2026-06-17 — every app is a fresh build.
+  - Cook Simple (**do not touch** — separate utility app, already built).
+- **Spark Avatar System — NEW, queued after Deck batch:**
+  - Cross-app companion in `index.html`; gem wallet fed by all apps; wardrobe shop; 5 evolution forms.
+  - See `KINETIK_CONTENT_SOURCES.md` for full spec.
 - **Batch 3 — Skill-Coach engine** → 4 apps; also lifts Padel Academy to flagship UI.
 - **Batch 4 — Shared-List/Tracker engine** → upgrades Grocery + builds the gap apps
   (Chore Board, Gifts & Occasions, Allowance/Split).
@@ -77,18 +87,18 @@ Tiers: 🟢 production-ready · 🟡 strong content, polish UI · 🟠 working M
 | Emoji Party | Game | 🟡 | game shell | 😄 | Timed rounds, team score, packs | Heads Up! |
 | Event Poll | Productivity | 🟠 | poll | 🗳️ | Calendar/@kin integration, RSVP | Doodle |
 | Grocery Buddy | Productivity | 🟠 | ④ List | 🛒 | Real-time sync, aisles, recipe→list | AnyList |
-| Times Table Quest | Learning | 🔴 | ① Quiz | ✖️ | Pack on quiz engine | TT Rock Stars |
-| Clock Trainer | Kids | 🔴 | ① Quiz | 🕐 | Pack on quiz engine | Khan Kids |
-| Data Detective | Game | 🔴 | ① Quiz | 🕵️ | Pack on quiz engine | deduction games |
-| Code Philosophy Kids | Learning | 🔴 | ① Quiz | 🧩 | Pack on quiz engine | code.org |
-| Ladder Rush | Game | 🔴 | ① Quiz + board | 🪜 | Board layer + quiz pack | Snakes&Ladders+Kahoot |
-| Agentic AI Tutorial | Learning | 🔴 | ① Quiz | 🤖 | Pack + diagrams | Brilliant |
-| Founder Wisdom | Productivity | 🔴 | ② Deck | 🦉 | Pack on deck engine | Blinkist |
-| Behaviour Builder | Productivity | 🔴 | ② Deck + tracker | 🎯 | Pack + streaks | Habitica |
-| Charisma Coach | Productivity | 🔴 | ② Deck + voice | ✨ | Pack + record | Poised |
-| Articulation Coach | Productivity | 🔴 | ② Deck + voice | 🗣️ | Pack + record | Orai |
-| Presenter Studio | Productivity | 🔴 | ② Deck + voice | 🎤 | Pack + timing/filler | PPT Speaker Coach |
-| Cook Simple | Life | 🔴 | ② Deck | 🍳 | Recipe pack + step timers → Grocery | Mealime |
+| Times Table Quest | Learning | 🟢 | ① Quiz | ✖️ | ✅ Done — flagship engine | TT Rock Stars |
+| Clock Trainer | Kids | 🔴 | ① Quiz | 🕐 | Content swap + SVG drag clock | "I Can Tell Time" iOS |
+| Data Detective | Game | 🔴 | ① Quiz+ | 🕵️ | Build from scratch — BI/DS/BA scope, Chart.js embedded | DataLemur, Kaggle, Tableau |
+| Code Philosophy Kids | Learning | 🔴 | ① Quiz | 🧩 | Content swap + robot maze boss | Scratch, Code.org |
+| Ladder Rush | Game | ⚪ | bespoke game | 🪜 | Deferred — full game engine build | Snakes&Ladders King |
+| Agentic AI | Productivity | 🔴 | ② Deck | 🤖 | Build from scratch — Batch 1 #5 | Brilliant, Mollick |
+| Charisma Coach | Productivity | 🟢 | ② Deck | ✨ | ✅ Done — flagship engine | Speeko, Poised |
+| Behaviour Coach | Productivity | 🔴 | ② Deck | 🧠 | Build from scratch — Batch 1 #1 | Fabulous, Streaks |
+| Articulation Coach | Productivity | 🔴 | ② Deck | 🗣️ | Build from scratch — Batch 1 #2 | Speeko, Orai |
+| Presenter Coach | Productivity | 🔴 | ② Deck | 🎤 | Build from scratch — Batch 1 #3 | VirtualSpeech |
+| Wisdom Coach | Productivity | 🔴 | ② Deck | 🧭 | Build from scratch — Batch 1 #4 | Headway, Blinkist |
+| Cook Simple | Life | 🟠 | bespoke | 🍳 | Done — do not touch | Mealime |
 | Basketball Technique | Sport | 🔴 | ③ Skill-Coach | 🏀 | Drill pack | HomeCourt |
 | Tennis Coach | Sport | 🔴 | ③ Skill-Coach | 🎾 | Drill pack | SwingVision |
 | Guitar Basics | Sport/Music | 🔴 | ③ Skill-Coach | 🎸 | Lesson pack + audio | Fender Play |
@@ -117,7 +127,34 @@ most via the Shared-List/Tracker engine (Batch 4).
 ---
 
 ## 6. Open decisions / next
-- Confirm engine #1 (Quiz/Drill) as the first batch build.
-- Voice features (record + analysis) for the deck "speaking" trio — in-scope or later?
+
+**Resolved:**
+- ✅ Engine #1 (Quiz/Drill) flagship built — Times Table Quest.
+- ✅ Engine #2 (Coaching Deck) flagship built — Charisma Coach.
+- ✅ Voice features deferred — no mic for any Deck app in this batch; scenario/drill/reflection only.
+- ✅ Ladder Rush deferred out of current batch — full bespoke game engine, separate effort.
+- ✅ Cook Simple — do not touch, already built as a separate utility app.
+- ✅ Spark Avatar System — approved concept, queued after Deck batch.
+
+**Still open:**
 - Guardians of Al Shaheen: keep as a pro/Cosmo crossover demo, or productize for circles?
 - Which gap apps to prioritize (Chore Board + Allowance recommended first).
+- Spark circle sync (Code.gs `personId` column) — deferred until next backend redeploy.
+- Backend redeploy still needed: `Code.gs` with `MEMORY_MIN_CAPTION=1` + kind/payload columns for @kin cards.
+
+**Active build queue (in order):**
+
+**Batch #1 — Productivity (Coaching Deck engine, each built from scratch, unique design):**
+1. Behaviour Coach — violet × teal, habit loop ring hero
+2. Articulation Coach — burnt orange × amber, waveform hero
+3. Presenter Coach — electric blue, stage spotlight hero
+4. Wisdom Coach — deep amber, constellation hero
+5. Agentic AI — electric teal × violet, agent loop diagram hero
+★ Spark Avatar System — master wallet + wardrobe in `index.html`
+
+**Batch #2 — Quiz & Drill (engine logic from TTQ, built fresh):**
+6. Clock Trainer — drag-hands SVG clock, kids 5–10
+7. Code Philosophy Kids — robot maze boss, kids 8–14
+8. Data Detective — Chart.js embedded questions, BI/DS/BA scope, adults
+
+See `KINETIK_CONTENT_SOURCES.md` for sources, analogs, effort estimates, and engine reuse pattern.
