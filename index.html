@@ -327,6 +327,10 @@ input.fld:focus,select.fld:focus{border-color:var(--acc)}
 .getbtn{margin-left:auto;flex:0 0 auto;border-radius:999px;padding:7px 19px;font-size:13px;font-weight:700;letter-spacing:.01em;background:color-mix(in srgb,#0a84ff 13%,var(--chip));color:#0a84ff;transition:transform var(--dur1),background var(--dur1),color var(--dur1)}
 .getbtn:active{transform:scale(.94);background:#0a84ff;color:#fff}
 .getbtn.soon{opacity:.5;pointer-events:none}
+/* Manifest icons can be emoji, lettermarks, or inline SVGs. Keep SVG marks contained. */
+.appico .ic svg,.strow .ic svg,.ascard .art svg,.ascard .ic svg,.ashero .glyph svg,.ashero .ic svg,.adhero .ic svg,.shot svg{width:72%;height:72%;display:block}
+.ashero .glyph svg{width:58px;height:58px}
+.shot svg{width:42%;height:42%}
 /* lettermark monogram (used when an app icon is 1-3 initials, not an emoji/svg) */
 .mono{color:#fff;font-weight:800;letter-spacing:-.02em;line-height:1;display:block}
 .mono[data-n="2"]{font-size:.74em}
@@ -849,39 +853,806 @@ const SHEET_COLLECTIONS={
   routines:"Calendar_Routines",events:"Calendar_Events",exceptions:"Calendar_Exceptions",
   appCatalog:"AppCatalog",circleApps:"CircleApps",appRecords:"AppRecords"
 };
-/* ===== APP CATALOG — last-resort fallback only =====
-   On a served folder the autoloader reads each App_*.html manifest live (real icons +
-   metadata). On file:// (which blocks reading sibling files) it falls back to SEED_FILES
-   + this curated list. Keep the file names here matching real files for offline use. */
+/* ===== APP CATALOG — baked manifest catalog =====
+   Raw file:// pages cannot read sibling App_*.html files, so direct launch uses this
+   generated catalog. Run `node build_app_catalog.mjs` after adding/renaming apps.
+   Served http(s) can still refresh from live embedded manifests as an enhancement. */
 /*KINETIK_APPS_START*/
 const BUILTIN_APP_CATALOG=[
-  {"id":"times-table-quest","name":"Times Table Quest","shortName":"Times Tables","file":"App_ProductivityTimesTableQuest_Wow.html","glyph":"✖️","gradient":["#ffb545","#ff5d8f"],"tagline":"Fast multiplication quests.","status":"live","allowed":["family","friends"],"active":true,"category":"productivity","audience":"kids","worksWith":["offline","standalone"],"minMembers":1,"desc":"A playful multiplication drill with hearts, XP, streaks, crowns, avatar rewards, timing, syllabus progress, and Circle League support."},
-  {"id":"productivity-poll","name":"Event Poll","shortName":"Poll","file":"App_ProductivityPoll.html","glyph":"🗳️","gradient":["#8b5cf6","#d946ef"],"tagline":"Find the best time, fast.","status":"live","allowed":["family","friends"],"active":true,"category":"productivity","audience":"all","worksWith":["calendar"],"minMembers":2,"desc":"Propose dates, let everyone in the circle vote with one tap, and watch the bars race. Close the poll and the winning time lands on the shared calendar automatically."},
-  {"id":"game-circle-chess","name":"Circle Chess","shortName":"Chess","file":"App_GameCircleChess.html","glyph":"♟️","gradient":["#4f7cff","#63d6b5"],"tagline":"Quiet strategy for your circle.","status":"live","allowed":["family","friends"],"active":true,"category":"games","audience":"all","worksWith":["offline","standalone"],"minMembers":1,"desc":"A polished chess match for family and friends. Play pass-and-play or challenge a simple local Kinetik AI with circle-ready leaderboard support."},
-  {"id":"game-code-clash","name":"Code Clash","shortName":"CodeClash","file":"App_GameCodeClash.html","glyph":"⚡","gradient":["#ff6fae","#6f8cff"],"tagline":"Crack the color code.","status":"live","allowed":["family","friends"],"active":true,"category":"games","audience":"all","worksWith":["offline","standalone"],"minMembers":1,"desc":"A fast logic duel for family and friends. Guess the hidden color code with unlimited attempts, tactile marbles, hints, and a circle-ready leaderboard."},
-  {"id":"game-emoji-party","name":"Emoji Party","shortName":"EmojiParty","file":"App_GameEmojiParty.html","glyph":"😄","gradient":["#ffcf5a","#ff6fae"],"tagline":"Guess the clue, beat the room.","status":"live","allowed":["family","friends"],"active":true,"category":"games","audience":"all","worksWith":["offline","standalone"],"minMembers":1,"desc":"A funny emoji guessing game for family and friends. Play hundreds of local clues across music, cartoons, jokes, places, family life, holidays, and more."},
-  {"id":"sport-padel","name":"Padel Americano","shortName":"Padel","file":"App_SportPadel.html","glyph":"🎾","gradient":["#2f6bff","#54c7ec"],"tagline":"Fair rounds. Real leaderboards.","status":"live","allowed":["family","friends"],"active":true,"category":"sports","audience":"all","worksWith":["calendar"],"minMembers":4,"desc":"Run a fair Americano in seconds: automatic partner rotation, live scoring per round, and a leaderboard that updates as you play. Export a result card and push the next session to the circle calendar."}
+  {
+    "id": "entertainment-cinema",
+    "appId": "guardians-al-shaheen",
+    "name": "Cinema",
+    "shortName": "Cinema",
+    "file": "App_EntertainmentCinema.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#070b18'/><rect x='13' y='18' width='38' height='28' rx='8' fill='#fff' opacity='.18'/><path d='M28 25l15 8-15 8z' fill='#fff'/><path d='M14 17l6-7M30 17l6-7M46 17l6-7' stroke='#38bdf8' stroke-width='4' stroke-linecap='round'/><\/svg>",
+    "gradient": [
+      "#070b18",
+      "#2563eb"
+    ],
+    "category": "entertainment",
+    "tagline": "Your circle video world.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A private circle video and cinematic media space for Kinetik. Today it hosts curated story experiences; later it becomes the YouTube-style home for family, friends, learning clips, and creator channels."
+  },
+  {
+    "id": "game-chore-quest",
+    "appId": "chore-quest",
+    "name": "Home Quest",
+    "shortName": "Home Quest",
+    "file": "App_GameChoreQuest.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#0f766e'/><circle cx='49' cy='15' r='15' fill='#f59e0b' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>HQ<\/text><\/svg>",
+    "gradient": [
+      "#0f766e",
+      "#f59e0b"
+    ],
+    "category": "games",
+    "tagline": "Turn home jobs into gems.",
+    "status": "live",
+    "allowed": [
+      "family"
+    ],
+    "active": true,
+    "audience": "kids",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A family chore quest where kids complete home missions, adults approve rewards, and every useful contribution helps the Kinetik Buddy grow."
+  },
+  {
+    "id": "game-circle-chess",
+    "appId": "mindcastle-chess",
+    "name": "Circle Chess",
+    "shortName": "Chess",
+    "file": "App_GameCircleChess.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#0e9f6e'/><circle cx='49' cy='15' r='15' fill='#e8a53c' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>CH<\/text><\/svg>",
+    "gradient": [
+      "#0e9f6e",
+      "#e8a53c"
+    ],
+    "category": "games",
+    "tagline": "Train sharper chess instincts.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A friendly chess-thinking app for tactics, pattern recognition, lessons, and circle challenges. Built for calm practice before competitive play."
+  },
+  {
+    "id": "game-clock-trainer",
+    "appId": "clock-trainer",
+    "name": "Clock Quest",
+    "shortName": "Clock",
+    "file": "App_GameClockTrainer.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#4f46e5'/><circle cx='49' cy='15' r='15' fill='#f59e0b' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>CQ<\/text><\/svg>",
+    "gradient": [
+      "#4f46e5",
+      "#f59e0b"
+    ],
+    "category": "games",
+    "tagline": "Master time, step by step.",
+    "status": "live",
+    "allowed": [
+      "family"
+    ],
+    "active": true,
+    "audience": "kids",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A kids time-reading quest for analog clocks, elapsed time, and world-clock confidence, with crowns, hearts, streaks, and clear parent-visible progress."
+  },
+  {
+    "id": "game-code-clash",
+    "appId": "game-code-clash",
+    "name": "Code Clash",
+    "shortName": "Clash",
+    "file": "App_GameCodeClash.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#ec4899'/><circle cx='49' cy='15' r='15' fill='#6366f1' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>CC<\/text><\/svg>",
+    "gradient": [
+      "#ec4899",
+      "#6366f1"
+    ],
+    "category": "games",
+    "tagline": "Crack the hidden code.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A fast pass-and-play logic duel. Guess the hidden color code, use hints carefully, build streaks, and compare clean round scores with the circle."
+  },
+  {
+    "id": "game-data-detective",
+    "appId": "data-detective",
+    "name": "Data Detective",
+    "shortName": "Detective",
+    "file": "App_GameDataDetective.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#0f5132'/><circle cx='49' cy='15' r='15' fill='#14b8a6' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>DD<\/text><\/svg>",
+    "gradient": [
+      "#0f5132",
+      "#14b8a6"
+    ],
+    "category": "games",
+    "tagline": "Read the data. Spot the lie.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "adults",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A practical analytics game for charts, KPIs, funnels, A/B tests, statistics, misleading visuals, and analyst case decisions."
+  },
+  {
+    "id": "game-emoji-party",
+    "appId": "game-emoji-party",
+    "name": "Emoji Party",
+    "shortName": "Emoji",
+    "file": "App_GameEmojiParty.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#f59e0b'/><circle cx='49' cy='15' r='15' fill='#ec4899' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>EP<\/text><\/svg>",
+    "gradient": [
+      "#f59e0b",
+      "#ec4899"
+    ],
+    "category": "games",
+    "tagline": "Guess fast, laugh faster.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A light party guessing game for family and friends. Tap multiple-choice emoji clues, run party-card rounds, build streaks, and share scores."
+  },
+  {
+    "id": "game-ladder-rush",
+    "appId": "wisdom-trail",
+    "name": "Choice Trail",
+    "shortName": "Trail",
+    "file": "App_GameLadderRush.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#6c5ce7'/><circle cx='49' cy='15' r='15' fill='#18b981' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>CT<\/text><\/svg>",
+    "gradient": [
+      "#6c5ce7",
+      "#18b981"
+    ],
+    "category": "games",
+    "tagline": "Climb better choices.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A progression game for judgment, reflection, and everyday decisions. Short prompts turn better thinking into a playful circle trail."
+  },
+  {
+    "id": "game-lucky-spin",
+    "appId": "lucky-spin",
+    "name": "Circle Spinner",
+    "shortName": "Spinner",
+    "file": "App_GameLuckySpin.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#ff4d9d'/><circle cx='49' cy='15' r='15' fill='#6c5ce7' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>SP<\/text><\/svg>",
+    "gradient": [
+      "#ff4d9d",
+      "#6c5ce7"
+    ],
+    "category": "games",
+    "tagline": "Let the circle decide.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A playful wheel for chores, dares, prizes, dinner choices, and party prompts. Great for quick shared moments, with rewards kept intentionally small."
+  },
+  {
+    "id": "game-strata",
+    "appId": "strata-zafar-basin",
+    "name": "Strata",
+    "shortName": "Strata",
+    "file": "App_GameStrata.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#7c4a21'/><circle cx='49' cy='15' r='15' fill='#e0a458' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>ST<\/text><\/svg>",
+    "gradient": [
+      "#7c4a21",
+      "#e0a458"
+    ],
+    "category": "games",
+    "tagline": "Read the layers.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A specialized stratigraphy and exploration strategy game. Learn to reason through layers, placement, risk, and field decisions."
+  },
+  {
+    "id": "productivity-agentic-ai",
+    "appId": "agentic-ai-coach",
+    "name": "Agent Lab",
+    "shortName": "Agent Lab",
+    "file": "App_ProductivityAgenticAI.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#06d6a0'/><circle cx='49' cy='15' r='15' fill='#7209b7' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>AI<\/text><\/svg>",
+    "gradient": [
+      "#06d6a0",
+      "#7209b7"
+    ],
+    "category": "productivity",
+    "tagline": "Understand AI agents.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "adults",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A concept-first coach for agentic AI: goals, tools, memory, planning, reflection, evaluation, and human oversight through short practical missions."
+  },
+  {
+    "id": "productivity-articulation",
+    "appId": "articulation-coach",
+    "name": "Voice Coach",
+    "shortName": "Voice",
+    "file": "App_ProductivityArticulation.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#ea580c'/><circle cx='49' cy='15' r='15' fill='#f59e0b' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>VC<\/text><\/svg>",
+    "gradient": [
+      "#ea580c",
+      "#f59e0b"
+    ],
+    "category": "productivity",
+    "tagline": "Make every word land.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "adults",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A warm speaking coach for pacing, pauses, clean articulation, vocal variety, and clearer stories. Practice in short no-microphone sessions."
+  },
+  {
+    "id": "productivity-behaviour",
+    "appId": "behaviour-coach",
+    "name": "Loop Coach",
+    "shortName": "Loops",
+    "file": "App_ProductivityBehaviour.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#7c3aed'/><circle cx='49' cy='15' r='15' fill='#06b6d4' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>LC<\/text><\/svg>",
+    "gradient": [
+      "#7c3aed",
+      "#06b6d4"
+    ],
+    "category": "productivity",
+    "tagline": "Build better loops.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "adults",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A behavior-design coach for habits, cues, routines, rewards, friction, and tiny wins. Daily reps feed streaks and future Buddy quests."
+  },
+  {
+    "id": "productivity-cambridge-primary",
+    "appId": "cambridge-primary",
+    "name": "Primary Quest",
+    "shortName": "Primary",
+    "file": "App_ProductivityCambridgePrimary.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#34d399'/><circle cx='49' cy='15' r='15' fill='#4f46e5' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>PQ<\/text><\/svg>",
+    "gradient": [
+      "#34d399",
+      "#4f46e5"
+    ],
+    "category": "productivity",
+    "tagline": "Primary learning, mapped.",
+    "status": "live",
+    "allowed": [
+      "family"
+    ],
+    "active": true,
+    "audience": "kids",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A local-first primary learning engine for English, math, science, and languages. Track objectives, mistakes, mastery, and parent-reviewed content."
+  },
+  {
+    "id": "productivity-charisma",
+    "appId": "charisma-coach",
+    "name": "Presence Coach",
+    "shortName": "Presence",
+    "file": "App_ProductivityCharisma.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#f7b733'/><circle cx='49' cy='15' r='15' fill='#fc5c7d' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>PC<\/text><\/svg>",
+    "gradient": [
+      "#f7b733",
+      "#fc5c7d"
+    ],
+    "category": "productivity",
+    "tagline": "Train real-world presence.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "adults",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A daily social-skill coach for presence, warmth, confidence, listening, and real-world scenarios. Practice small moves that make interactions feel better."
+  },
+  {
+    "id": "productivity-code-philosophy-kids",
+    "appId": "code-philosophy-kids",
+    "name": "Code Quest Kids",
+    "shortName": "Code Quest",
+    "file": "App_ProductivityCodePhilosophyKids.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#ff5e57'/><circle cx='49' cy='15' r='15' fill='#0ea5e9' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>CK<\/text><\/svg>",
+    "gradient": [
+      "#ff5e57",
+      "#0ea5e9"
+    ],
+    "category": "productivity",
+    "tagline": "Learn how computers think.",
+    "status": "live",
+    "allowed": [
+      "family"
+    ],
+    "active": true,
+    "audience": "kids",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A no-typing logic quest for kids. Practice sequences, loops, conditions, functions, data, and robot-maze reasoning through short interactive puzzles."
+  },
+  {
+    "id": "productivity-cook",
+    "appId": "cook-simple",
+    "name": "Kitchen Buddy",
+    "shortName": "Kitchen",
+    "file": "App_ProductivityCook.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#ec5c3b'/><circle cx='49' cy='15' r='15' fill='#f59e0b' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>KB<\/text><\/svg>",
+    "gradient": [
+      "#ec5c3b",
+      "#f59e0b"
+    ],
+    "category": "productivity",
+    "tagline": "Plan, cook, shop together.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "offline",
+      "standalone",
+      "calendar"
+    ],
+    "minMembers": 1,
+    "desc": "A recipe and meal-planning app for Kinetik circles. Cook step-by-step, plan dinners, send ingredients to Grocery Run, and turn meals into shared progress."
+  },
+  {
+    "id": "productivity-grocery",
+    "appId": "grocery-buddy",
+    "name": "Grocery Run",
+    "shortName": "Grocery",
+    "file": "App_ProductivityGrocery.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#23b993'/><circle cx='49' cy='15' r='15' fill='#4d8dff' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>GR<\/text><\/svg>",
+    "gradient": [
+      "#23b993",
+      "#4d8dff"
+    ],
+    "category": "productivity",
+    "tagline": "Finish the shop together.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A shared grocery run app for lists, favorites, reusable baskets, shopping history, and circle helper points."
+  },
+  {
+    "id": "productivity-poll",
+    "appId": "kinetik-buddy",
+    "name": "Kinetik Buddy",
+    "shortName": "Buddy",
+    "file": "App_ProductivityPoll.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#4f46e5'/><ellipse cx='32' cy='35' rx='18' ry='20' fill='#dbeafe'/><circle cx='25' cy='32' r='3' fill='#111827'/><circle cx='39' cy='32' r='3' fill='#111827'/><path d='M27 42c3 3 7 3 10 0' stroke='#111827' stroke-width='3' stroke-linecap='round'/><path d='M22 18l-5-7M42 18l5-7' stroke='#60a5fa' stroke-width='5' stroke-linecap='round'/><circle cx='48' cy='17' r='5' fill='#facc15'/><\/svg>",
+    "gradient": [
+      "#55c7ff",
+      "#7b63ff"
+    ],
+    "category": "productivity",
+    "tagline": "Your circle, alive.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "standalone",
+      "offline"
+    ],
+    "minMembers": 1,
+    "desc": "The emotional center of Kinetik: a Tamagotchi-style buddy that turns circle actions, diamonds, quests, leaderboards, and app progress into one living companion."
+  },
+  {
+    "id": "productivity-presenter",
+    "appId": "presenter-coach",
+    "name": "Presenter Coach",
+    "shortName": "Presenter",
+    "file": "App_ProductivityPresenter.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#2563eb'/><circle cx='49' cy='15' r='15' fill='#0ea5e9' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>PR<\/text><\/svg>",
+    "gradient": [
+      "#2563eb",
+      "#0ea5e9"
+    ],
+    "category": "productivity",
+    "tagline": "Own the room.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "adults",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A presentation coach for structure, openings, slide clarity, delivery, nerves, and Q&A control. Run short stage-ready practice decks."
+  },
+  {
+    "id": "productivity-times-table-quest",
+    "appId": "times-table-quest",
+    "name": "Times Quest",
+    "shortName": "Times",
+    "file": "App_ProductivityTimesTableQuest.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#ffb545'/><circle cx='49' cy='15' r='15' fill='#ff5d8f' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>TQ<\/text><\/svg>",
+    "gradient": [
+      "#ffb545",
+      "#ff5d8f"
+    ],
+    "category": "productivity",
+    "tagline": "Fast multiplication quests.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "kids",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A playful multiplication quest with hearts, XP, streaks, crowns, boss rounds, and weak-fact practice that repeats until it sticks."
+  },
+  {
+    "id": "productivity-wisdom",
+    "appId": "wisdom-coach",
+    "name": "Decision Coach",
+    "shortName": "Decision",
+    "file": "App_ProductivityWisdom.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#d97706'/><circle cx='49' cy='15' r='15' fill='#92400e' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>DC<\/text><\/svg>",
+    "gradient": [
+      "#d97706",
+      "#92400e"
+    ],
+    "category": "productivity",
+    "tagline": "Think in models.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "adults",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A daily mental-model coach for clearer decisions, inversion, second-order thinking, builder wisdom, money psychology, and private reflection notes."
+  },
+  {
+    "id": "social-world-cup26",
+    "appId": "rmo-world-cup-26",
+    "name": "World Cup Arena",
+    "shortName": "World Cup",
+    "file": "App_SocialWorldCup26.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#0a7d3c'/><circle cx='49' cy='15' r='15' fill='#ffd34d' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>WC<\/text><\/svg>",
+    "gradient": [
+      "#0a7d3c",
+      "#ffd34d"
+    ],
+    "category": "social",
+    "tagline": "Forecast the tournament.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A World Cup prediction arena for your circle. Forecast matches, compare standings, and make the tournament feel social from kickoff to final."
+  },
+  {
+    "id": "sport-basketball",
+    "appId": "learn-basketball",
+    "name": "Basketball Coach",
+    "shortName": "Basket",
+    "file": "App_SportBasketball.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#ff7a1a'/><circle cx='49' cy='15' r='15' fill='#f43f5e' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>BB<\/text><\/svg>",
+    "gradient": [
+      "#ff7a1a",
+      "#f43f5e"
+    ],
+    "category": "sports",
+    "tagline": "Train cleaner reps.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A basketball technique coach for shot path, handle rhythm, footwork, defense, quick self-checks, streaks, and practice progress."
+  },
+  {
+    "id": "sport-learn-guitar",
+    "appId": "learn-guitar",
+    "name": "Guitar Coach",
+    "shortName": "Guitar",
+    "file": "App_SportLearnGuitar.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#8b5cf6'/><circle cx='49' cy='15' r='15' fill='#f59e0b' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>GT<\/text><\/svg>",
+    "gradient": [
+      "#8b5cf6",
+      "#f59e0b"
+    ],
+    "category": "sports",
+    "tagline": "Build clean chords.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A step-by-step guitar practice coach for chord shapes, switches, strums, rhythm loops, confidence checks, and streaks."
+  },
+  {
+    "id": "sport-learn-tennis",
+    "appId": "learn-tennis",
+    "name": "Tennis Coach",
+    "shortName": "Tennis",
+    "file": "App_SportLearnTennis.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#84cc16'/><circle cx='49' cy='15' r='15' fill='#14b8a6' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>TN<\/text><\/svg>",
+    "gradient": [
+      "#84cc16",
+      "#14b8a6"
+    ],
+    "category": "sports",
+    "tagline": "Better contact, faster.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A tennis practice coach for contact point, split-step timing, serve toss, footwork, volleys, and match-ready cues."
+  },
+  {
+    "id": "sport-padel",
+    "appId": "padel-americano",
+    "name": "Padel Matchday",
+    "shortName": "Matchday",
+    "file": "App_SportPadel.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#2f6bff'/><circle cx='49' cy='15' r='15' fill='#54c7ec' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>PM<\/text><\/svg>",
+    "gradient": [
+      "#2f6bff",
+      "#54c7ec"
+    ],
+    "category": "sports",
+    "tagline": "Fair rounds. Real scores.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "calendar"
+    ],
+    "minMembers": 4,
+    "desc": "Run Americano or Mexicano padel sessions in seconds: fair rotations, live scoring, leaderboards, result cards, and calendar-ready sessions."
+  },
+  {
+    "id": "sport-padel-academy",
+    "appId": "padel-academy",
+    "name": "Padel Academy",
+    "shortName": "Academy",
+    "file": "App_SportPadelAcademy.html",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><rect width='64' height='64' rx='18' fill='#13b981'/><circle cx='49' cy='15' r='15' fill='#2563eb' opacity='.34'/><circle cx='16' cy='50' r='18' fill='#fff' opacity='.12'/><path d='M16 39c8-11 22-18 34-22' stroke='#fff' stroke-width='5' stroke-linecap='round' opacity='.22'/><text x='32' y='39' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-size='19' font-weight='900' fill='#fff'>PA<\/text><\/svg>",
+    "gradient": [
+      "#13b981",
+      "#2563eb"
+    ],
+    "category": "sports",
+    "tagline": "Padel skills, match by match.",
+    "status": "live",
+    "allowed": [
+      "family",
+      "friends"
+    ],
+    "active": true,
+    "audience": "all",
+    "worksWith": [
+      "offline",
+      "standalone"
+    ],
+    "minMembers": 1,
+    "desc": "A local-first padel training path for technique, tactics, movement, rules, and match IQ, ready to connect later with Matchday results."
+  }
 ];
 /*KINETIK_APPS_END*/
 const EMPTY_DATA=()=>({
   users:[],people:[],circles:[],circleMembers:[],routines:[],events:[],exceptions:[],
   appCatalog:[],circleApps:[],appRecords:[],prepState:{},settings:{...DEFAULT_SETTINGS}
 });
-/* ---------------- AppRegistry — runtime autoloader (ported from KinetikStoreViewer) ----------------
-   Drop any App_*.html in the folder and it loads automatically:
-   1) read the folder's directory listing (works on a served folder),
-   2) if no listing, fall back to SEED_FILES (filenames only),
-   3) fetch each file and read its embedded kinetik-app+json manifest (live),
+/* ---------------- AppRegistry ----------------
+   Direct launch (file://): use the baked catalog above, no server/helper required.
+   Served launch (http/https):
+   1) read the folder's directory listing when available,
+   2) if no listing, fall back to SEED_FILES,
+   3) fetch each file and read its embedded kinetik-app+json manifest live,
    4) if a file has no/unreadable manifest, fallbackApp() infers it from <title> + filename.
    requestText() uses fetch OR XHR with a 700ms timeout so file:// never hangs.
    Category is DERIVED FROM THE FILENAME (App_<Category><Name>) and overrides the
    manifest, so renaming reclassifies. If everything fails -> BUILTIN_APP_CATALOG. */
-/* The app list lives HERE in index.html (no separate apps.json to maintain). A browser
-   can't list a folder when index.html is present, so this seed is the source of truth.
-   Serve_Kinetik.bat REGENERATES this single line on launch from the App_*.html files in
-   the folder — so dropping a new app in + relaunching the server makes it appear. Keep it
-   on ONE line so the .bat's regex can replace it. Live manifests fill in real metadata. */
-const SEED_FILES=["App_EntertainmentCinema.html","App_GameCircleChess.html","App_GameCodeClash.html","App_GameEmojiParty.html","App_GameLadderRush.html","App_GameLuckySpin.html","App_GameStrata.html","App_ProductivityAgenticAI.html","App_ProductivityArticulation.html","App_ProductivityBehaviour.html","App_ProductivityCambridgePrimary.html","App_ProductivityCharisma.html","App_ProductivityCook.html","App_ProductivityGrocery.html","App_ProductivityPoll.html","App_ProductivityPresenter.html","App_ProductivityTimesTableQuest.html","App_ProductivityWisdom.html","App_SocialWorldCup26.html","App_SportBasketball.html","App_SportLearnGuitar.html","App_SportLearnTennis.html","App_SportPadel.html","App_SportPadelAcademy.html"];
+/* The app list lives HERE in index.html (no separate apps.json to maintain). Keep this
+   generated by build_app_catalog.mjs so file:// and deployed static hosting match. */
+const SEED_FILES=[
+  "App_EntertainmentCinema.html",
+  "App_GameChoreQuest.html",
+  "App_GameCircleChess.html",
+  "App_GameClockTrainer.html",
+  "App_GameCodeClash.html",
+  "App_GameDataDetective.html",
+  "App_GameEmojiParty.html",
+  "App_GameLadderRush.html",
+  "App_GameLuckySpin.html",
+  "App_GameStrata.html",
+  "App_ProductivityAgenticAI.html",
+  "App_ProductivityArticulation.html",
+  "App_ProductivityBehaviour.html",
+  "App_ProductivityCambridgePrimary.html",
+  "App_ProductivityCharisma.html",
+  "App_ProductivityCodePhilosophyKids.html",
+  "App_ProductivityCook.html",
+  "App_ProductivityGrocery.html",
+  "App_ProductivityPoll.html",
+  "App_ProductivityPresenter.html",
+  "App_ProductivityTimesTableQuest.html",
+  "App_ProductivityWisdom.html",
+  "App_SocialWorldCup26.html",
+  "App_SportBasketball.html",
+  "App_SportLearnGuitar.html",
+  "App_SportLearnTennis.html",
+  "App_SportPadel.html",
+  "App_SportPadelAcademy.html"
+];
 /* Categories are ONLY these five. Filename first-word sets it (App_Game…→games). */
 const CAT_PREFIX={game:"games",games:"games",sport:"sports",sports:"sports",productivity:"productivity",pro:"productivity",work:"productivity",social:"social",entertainment:"entertainment",ent:"entertainment",fun:"entertainment"};
 const CAT_KEYWORD=[[/(padel|tennis|basket|football|soccer|golf|swim|box|run|volley|pickle|americano|sport)/i,"sports"],
@@ -889,6 +1660,8 @@ const CAT_KEYWORD=[[/(padel|tennis|basket|football|soccer|golf|swim|box|run|voll
   [/(poll|movie night|restaurant|weekend|gift|vote|party|circle|invite|social)/i,"social"],
   [/(video|music|watch|stream|player|show|movie|media)/i,"entertainment"]];
 const ALLOWED_CATS=["games","sports","productivity","social","entertainment"];
+const ALLOWED_CIRCLE_TYPES=["family","friends"];
+const ALLOWED_WORKS_WITH=["calendar","moments","media","offline","standalone"];
 function appWords(file){
   return String(file).replace(/^App[_-]?/,"").replace(/\.html?$/i,"")
     .replace(/[_-]+/g," ").replace(/([a-z0-9])([A-Z])/g,"$1 $2").replace(/([A-Z]+)([A-Z][a-z])/g,"$1 $2")
@@ -900,7 +1673,7 @@ function parseAppFile(file){
   let category=CAT_PREFIX[first]||null,rest=words;
   if(category)rest=words.slice(1);
   if(!category){const joined=words.join(" ");const hit=CAT_KEYWORD.find(([re])=>re.test(joined));category=hit?hit[1]:"productivity";}
-  if(!ALLOWED_CATS.includes(category))category="productivity";   /* only the 4 categories */
+  if(!ALLOWED_CATS.includes(category))category="productivity";   /* five store categories */
   const name=(rest.join(" ")||words.join(" ")||"App").trim();
   return {category,name};
 }
@@ -916,14 +1689,19 @@ function iconInner(glyph){
   const g=String(glyph==null?"✦":glyph).trim();
   return isMono(g)?`<span class="mono" data-n="${g.length}">${esc(g.toUpperCase())}</span>`:g;
 }
+function cleanManifestList(values,allowed,fallback){
+  if(!Array.isArray(values))return fallback;
+  const kept=[...new Set(values.filter(v=>allowed.includes(v)))];
+  return kept.length?kept:fallback;
+}
 function manifestToCatalog(j,file){
   const pf=parseAppFile(file),icon=String(j.icon||"✦");
   return {id:fileId(file),appId:j.appId||fileId(file),name:j.name||pf.name,shortName:j.shortName||j.name||pf.name,file,
     glyph:icon,  /* emoji or inline <svg> embedded in the app's own manifest — never external */
     gradient:Array.isArray(j.gradient)&&j.gradient.length?j.gradient:["#6366f1","#22d3ee"],
     category:pf.category||j.category||"lifestyle",tagline:j.tagline||"",desc:j.about||j.tagline||"",
-    audience:j.audience||"all",allowed:Array.isArray(j.circleTypes)&&j.circleTypes.length?j.circleTypes:["family","friends"],
-    worksWith:Array.isArray(j.worksWith)?j.worksWith:["standalone"],status:j.status==="soon"?"soon":"live",
+    audience:j.audience||"all",allowed:cleanManifestList(j.circleTypes,ALLOWED_CIRCLE_TYPES,["family","friends"]),
+    worksWith:cleanManifestList(j.worksWith,ALLOWED_WORKS_WITH,["standalone"]),status:j.status==="soon"?"soon":"live",
     minMembers:j.minMembers||1,active:true};
 }
 function fallbackApp(file,html){
@@ -956,17 +1734,21 @@ const AppRegistry={
     try{const html=await this.requestText("./?_="+Date.now());
       names=[...html.matchAll(/href="[^"]*?(App_[^"\/?#]+\.html)"/gi)].map(m=>decodeURIComponent(m[1]));}catch(e){}
     names=[...new Set(names)].filter(f=>/^App_.*\.html$/i.test(f));
-    /* otherwise use SEED_FILES (maintained in this file; the .bat keeps it fresh) */
+    /* otherwise use SEED_FILES generated into this file */
     return names.length?names:SEED_FILES.slice();
   },
   byFile(file){return BUILTIN_APP_CATALOG.find(a=>a.file===file);},
   async load(){
+    const served=location.protocol==="http:"||location.protocol==="https:";
+    if(!served){
+      DB.d.appCatalog=BUILTIN_APP_CATALOG.map(a=>({...a,gradient:[...a.gradient],allowed:[...(a.allowed||["family","friends"])]}));
+      return;
+    }
     const files=await this.listFiles(),cat=[];
     /* On a served folder the seed is only a hint: if a listed file fails to fetch
        (404 — removed/renamed) we SKIP it instead of fabricating a ghost entry, so the
        catalog is self-healing and never 404-spams. On file:// (CORS blocks reading
        siblings) we keep the offline fallback so apps still appear. */
-    const served=location.protocol==="http:"||location.protocol==="https:";
     await Promise.all(files.map(async f=>{
       try{const html=await this.requestText(f+"?_="+Date.now());
         const j=this.manifestOf(html);
@@ -2593,7 +3375,11 @@ $("#askSend").onclick=()=>Ask.send(askIn.value);
 function renderApps(){
   const c=circle();if(!c)return;
   const B=$("#appsBody");
-  const installed=DB.d.circleApps.filter(a=>a.circleId===S.circleId&&a.installed).map(a=>DataAPI.get("appCatalog",a.appId)).filter(Boolean);
+  const seenApps=new Set(),installed=[];
+  DB.d.circleApps.filter(a=>a.circleId===S.circleId&&a.installed).forEach(row=>{
+    const app=appByAnyId(row.appId);
+    if(app&&!seenApps.has(app.id)){seenApps.add(app.id);installed.push(app);}
+  });
   const icons=[
     `<button class="appico" onclick="Store.open()"><span class="ic" style="background:linear-gradient(135deg,#1b2540,#39435e);color:#fff;font-size:27px">◎</span><span>Kinetik Store</span></button>`,
     ...installed.map(a=>`<button class="appico" onclick="AppHost.open('${a.id}')"><span class="ic" style="background:linear-gradient(135deg,${a.gradient[0]},${a.gradient[1]})">${iconInner(a.glyph)}</span><span>${esc(a.name)}</span></button>`)
@@ -2615,6 +3401,47 @@ function renderApps(){
 }
 const CAT_LABEL={games:"Games",sports:"Sports",cooking:"Cooking",lifestyle:"Lifestyle",habits:"Self-Improvement",kids:"Kids & Education",entertainment:"Entertainment",health:"Health",finance:"Money",productivity:"Productivity",travel:"Travel",faith:"Faith",memories:"Memories",music:"Music",social:"Social",learning:"Learning",engineering:"Engineering"};
 const catLabel=c=>CAT_LABEL[c]||(c?c[0].toUpperCase()+c.slice(1):"Apps");
+const APP_ID_ALIASES={
+  "entertainment-cinema":["guardians-al-shaheen","cinema"],
+  "game-chore-quest":["chore-quest"],
+  "game-circle-chess":["mindcastle-chess","chess"],
+  "game-clock-trainer":["clock-trainer"],
+  "game-code-clash":["code-clash"],
+  "game-data-detective":["data-detective"],
+  "game-ladder-rush":["wisdom-trail"],
+  "game-lucky-spin":["lucky-spin"],
+  "game-strata":["strata-zafar-basin"],
+  "productivity-agentic-ai":["agentic-ai-coach"],
+  "productivity-articulation":["articulation-coach","productivity-articulationv2"],
+  "productivity-behaviour":["behaviour-coach"],
+  "productivity-cambridge-primary":["cambridge-primary"],
+  "productivity-charisma":["charisma-coach"],
+  "productivity-code-philosophy-kids":["code-philosophy-kids"],
+  "productivity-cook":["cook-simple"],
+  "productivity-grocery":["grocery-buddy"],
+  "productivity-poll":["kinetik-buddy","event-poll"],
+  "productivity-times-table-quest":["times-table-quest"],
+  "social-world-cup26":["rmo-world-cup-26"],
+  "sport-basketball":["learn-basketball"],
+  "sport-learn-guitar":["learn-guitar"],
+  "sport-learn-tennis":["learn-tennis"],
+  "sport-padel":["padel-americano"]
+};
+function appByAnyId(id){
+  const s=String(id||"");
+  return DataAPI.get("appCatalog",s)||DB.d.appCatalog.find(a=>appKeys(a).includes(s));
+}
+function appKeys(appOrId){
+  const app=typeof appOrId==="string"?DataAPI.get("appCatalog",appOrId):appOrId;
+  const keys=new Set();
+  if(app){[app.id,app.appId,app.file&&fileId(app.file),...(APP_ID_ALIASES[app.id]||[])].filter(Boolean).forEach(k=>keys.add(String(k)));}
+  else if(appOrId)keys.add(String(appOrId));
+  return [...keys];
+}
+function circleAppRowsFor(appOrId){
+  const keys=appKeys(appOrId);
+  return DB.d.circleApps.filter(x=>x.circleId===S.circleId&&keys.includes(String(x.appId)));
+}
 const Store={view:"list",detailId:null,query:"",cat:"all",
   open(){
     this.view="list";this.detailId=null;this.query="";this.cat="all";
@@ -2625,23 +3452,24 @@ const Store={view:"list",detailId:null,query:"",cat:"all",
   },
   close(){$("#storeScreen").classList.remove("on");renderApps();},
   back(){if(this.view==="detail"){this.view="list";this.detailId=null;this.render();}else this.close();},
-  isInst(id){return !!DB.d.circleApps.find(x=>x.circleId===S.circleId&&x.appId===id&&x.installed);},
+  isInst(appOrId){return circleAppRowsFor(appOrId).some(x=>x.installed);},
   getBtn(a,light){
-    const inst=this.isInst(a.id),soon=a.status==="soon";
+    const inst=this.isInst(a),soon=a.status==="soon";
     const style=light?'style="background:rgba(255,255,255,.94);color:#0d1426"':"";
-    return `<button class="getbtn ${soon?"soon":""}" ${style} onclick="event.stopPropagation();${inst?`storeOpen('${a.id}')`:`storeGet('${a.id}')`}">${soon?"SOON":inst?"OPEN":"GET"}</button>`;
+    const action=inst?"open":"get";
+    return `<button class="getbtn ${soon?"soon":""}" ${style} data-store-action="${action}" data-app-id="${esc(a.id)}">${soon?"SOON":inst?"OPEN":"GET"}</button>`;
   },
   grad(a){return `linear-gradient(135deg,${a.gradient[0]},${a.gradient[1]})`;},
   card(a){
-    return `<div class="ascard" onclick="Store.detail('${a.id}')">
+    return `<div class="ascard" data-store-detail="${esc(a.id)}">
       <div class="art" style="background:${this.grad(a)}">${iconInner(a.glyph)}</div>
       <div class="rw"><div style="min-width:0;flex:1"><b>${esc(a.name)}</b><small>${esc(catLabel(a.category))}</small></div>${this.getBtn(a)}</div>
     </div>`;
   },
   listRow(a){
-    const inst=this.isInst(a.id),soon=a.status==="soon";
-    return `<div class="strow" style="cursor:pointer" onclick="Store.detail('${a.id}')"><span class="ic" style="background:${this.grad(a)}">${iconInner(a.glyph)}</span>
-      <div style="min-width:0"><b>${esc(a.name)}</b><p>${esc(a.tagline)}</p>${inst&&!soon?`<button class="rm" onclick="event.stopPropagation();storeRm('${a.id}')"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><path d="M5 12h14"/></svg>Remove</button>`:`<p style="font-size:10.5px;color:var(--faint);font-weight:700">${esc(catLabel(a.category))}</p>`}</div>
+    const inst=this.isInst(a),soon=a.status==="soon";
+    return `<div class="strow" style="cursor:pointer" data-store-detail="${esc(a.id)}"><span class="ic" style="background:${this.grad(a)}">${iconInner(a.glyph)}</span>
+      <div style="min-width:0"><b>${esc(a.name)}</b><p>${esc(a.tagline)}</p>${inst&&!soon?`<button class="rm" data-store-action="remove" data-app-id="${esc(a.id)}"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><path d="M5 12h14"/></svg>Remove</button>`:`<p style="font-size:10.5px;color:var(--faint);font-weight:700">${esc(catLabel(a.category))}</p>`}</div>
       ${this.getBtn(a)}</div>`;
   },
   render(){
@@ -2662,9 +3490,9 @@ const Store={view:"list",detailId:null,query:"",cat:"all",
       this.wire();return;
     }
     /* home: featured hero + per-category rows */
-    const featured=avail.find(a=>a.status==="live"&&!this.isInst(a.id))||avail.find(a=>a.status==="live")||avail[0];
+    const featured=avail.find(a=>a.status==="live"&&!this.isInst(a))||avail.find(a=>a.status==="live")||avail[0];
     let html=searchOpen+chips;
-    if(featured)html+=`<div class="ashero" style="background:${this.grad(featured)}" onclick="Store.detail('${featured.id}')">
+    if(featured)html+=`<div class="ashero" style="background:${this.grad(featured)}" data-store-detail="${esc(featured.id)}">
       <span class="glyph">${iconInner(featured.glyph)}</span><span class="tag">Featured</span><h3>${esc(featured.name)}</h3><p>${esc(featured.tagline)}</p>
       <div class="row"><span class="ic">${iconInner(featured.glyph)}</span><div style="flex:1;min-width:0"><b style="font-size:14px">${esc(featured.name)}</b><div style="font-size:11px;opacity:.85">${esc(catLabel(featured.category))}</div></div>${this.getBtn(featured,true)}</div></div>`;
     cats.forEach(cat=>{
@@ -2678,11 +3506,28 @@ const Store={view:"list",detailId:null,query:"",cat:"all",
   },
   wire(){
     const q=$("#asQ");if(q)q.oninput=e=>{this.query=e.target.value;clearTimeout(this._t);this._t=setTimeout(()=>{const p=q.selectionStart;this.render();const n=$("#asQ");if(n){n.focus();try{n.setSelectionRange(p,p);}catch(e){}}},160);};
+    const B=$("#storeInner");
+    B.onclick=e=>{
+      const btn=e.target.closest("[data-store-action]");
+      if(btn&&B.contains(btn)){
+        e.preventDefault();
+        e.stopPropagation();
+        const id=btn.dataset.appId;
+        const action=btn.dataset.storeAction;
+        if(!id)return;
+        if(action==="get")storeGet(id);
+        else if(action==="open")storeOpen(id);
+        else if(action==="remove")storeRm(id);
+        return;
+      }
+      const detail=e.target.closest("[data-store-detail]");
+      if(detail&&B.contains(detail))this.detail(detail.dataset.storeDetail);
+    };
   },
   setCat(cat){this.cat=cat;this.render();$("#storeBody").scrollTop=0;},
   detail(id){this.view="detail";this.detailId=id;this.renderDetail();$("#storeBody").scrollTop=0;},
   renderDetail(){
-    const a=DataAPI.get("appCatalog",this.detailId);if(!a)return this.back();
+    const a=appByAnyId(this.detailId);if(!a)return this.back();
     const B=$("#storeInner"),soon=a.status==="soon";
     $("#storeSub").textContent=esc(a.name);
     const madeFor=(a.allowed||[]).map(t=>t[0].toUpperCase()+t.slice(1)).join(" · ")||"Circles";
@@ -2710,21 +3555,27 @@ const Store={view:"list",detailId:null,query:"",cat:"all",
     <div class="adchips">${works.map(w=>`<span class="adchip">${esc(w)}</span>`).join("")}${a.audience&&a.audience!=="all"?`<span class="adchip">${esc(a.audience[0].toUpperCase()+a.audience.slice(1))}</span>`:""}${a.minMembers>1?`<span class="adchip">${a.minMembers}+ players</span>`:""}</div>
     <div class="sdsec">Privacy</div>
     <p class="sdp">All data stays inside <b>${esc(circle().name)}</b>. Members of other circles never see it.</p>
-    ${this.isInst(a.id)&&!soon?`<button class="rm" style="font-size:12.5px" onclick="storeRm('${a.id}')">Remove from circle</button>`:""}`;
+    ${this.isInst(a)&&!soon?`<button class="rm" style="font-size:12.5px" data-store-action="remove" data-app-id="${esc(a.id)}">Remove from circle</button>`:""}`;
+    this.wire();
     Motion.reveal("#storeInner");
   }
 };
 $("#storeBack").onclick=()=>Store.back();
 window.storeGet=appId=>{
-  let ca=DB.d.circleApps.find(a=>a.circleId===S.circleId&&a.appId===appId);
-  if(ca){ca.installed=true;DB.save();SyncEngine.queue("circleApps","update",ca);}
-  else DataAPI.create("circleApps",{circleId:S.circleId,appId,installed:true});
+  const app=appByAnyId(appId);if(!app)return Toast.show("App not found");
+  const rows=circleAppRowsFor(app);
+  let ca=rows.find(a=>a.appId===app.id)||rows[0];
+  if(ca){
+    ca.appId=app.id;ca.installed=true;DB.save();SyncEngine.queue("circleApps","update",ca);
+    rows.filter(r=>r!==ca&&r.installed).forEach(r=>{r.installed=false;DB.save();SyncEngine.queue("circleApps","update",r);});
+  }
+  else DataAPI.create("circleApps",{circleId:S.circleId,appId:app.id,installed:true});
   Toast.show("Installed ✓");EventBus.emit("app:installed");Store.render();
 };
-window.storeOpen=appId=>AppHost.open(appId);
+window.storeOpen=appId=>{const app=appByAnyId(appId);AppHost.open(app?app.id:appId);};
 window.storeRm=appId=>{
-  const ca=DB.d.circleApps.find(a=>a.circleId===S.circleId&&a.appId===appId);
-  if(ca){ca.installed=false;DB.save();SyncEngine.queue("circleApps","update",ca);}
+  const app=appByAnyId(appId),rows=app?circleAppRowsFor(app):DB.d.circleApps.filter(a=>a.circleId===S.circleId&&a.appId===appId);
+  rows.forEach(ca=>{ca.installed=false;DB.save();SyncEngine.queue("circleApps","update",ca);});
   Toast.show("Removed — app data kept");EventBus.emit("app:uninstalled");Store.render();
 };
 window.Store=Store;
@@ -2732,7 +3583,7 @@ window.Store=Store;
 /* ---------------- App Host + Bridge ---------------- */
 const AppHost={cur:null,
   open(appId){
-    const app=DataAPI.get("appCatalog",appId);
+    const app=appByAnyId(appId);
     if(!app||!app.file)return Toast.show("Coming soon");
     this.cur=app;
     $("#appHostTitle").textContent=app.name;

@@ -1,10 +1,10 @@
 # KINETIK — BUILD HANDOFF (context reset)
 
-Single source of truth to resume work in a fresh session. Detailed change history lives
-in `build.md` (sections §72.0–§72.35); the app-author spec lives in `APP_BUILD_STANDARD.md`.
+Single source of truth to resume work in a fresh session. The app-author spec lives in
+`APP_BUILD_STANDARD.md`; the current product/app inventory lives in `KINETIK_APP_AUDIT.md`.
 
-> **▶ NEXT STEP IS A LEAN-OUT + DOC MERGE — see §11 (strategy locked 2026-06-15, not yet
-> executed).** Do that before the React/Supabase port.
+> **▶ NEXT STEP:** wire the shared Buddy/diamond event contract into the shell and apps,
+> then port the stabilized model to React + Supabase.
 
 ---
 
@@ -23,12 +23,12 @@ Per-circle **Chat** opens full-screen from each circle card in Me.
 |------|------|
 | `index.html` | The whole shell (~2.3k lines): UI, state, CalendarEngine, MomentsService, Chat, AppRegistry, App Store. |
 | `Code.gs` | Google Apps Script backend (Sheets + Drive). Generic CRUD + Moments media + comments + chat + calendar. |
-| `App_*.html` | Standalone mini-apps (one file each, manifest in `<head>`). Currently: GameCircleChess, GameCodeClash, GameEmojiParty, GameHaha*, GameNewApp*, ProductivityPoll, SportPadel. (*GameHaha/GameNewApp are copies with duplicate appId/name — need fixing.) |
+| `App_*.html` | Standalone mini-apps (one file each, manifest in `<head>`). Every `App_*.html` with a valid manifest is picked up by `build_app_catalog.mjs`, including `App_GameChoreQuest.html`. |
 | `APP_BUILD_STANDARD.md` | The mandatory spec/prompt for any LLM building a Kinetik app (manifest, DNA families, design rules). |
-| `Serve_Kinetik.bat` | Double-click → rewrites the `SEED_FILES` line inside `index.html` from the `App_*.html` files in the folder, then local server on :5500 (needed so the Store can read app manifests + icons; file:// blocks that). |
-| `build.md` | Full chronological build log (§72.x). |
-| `APP_ROADMAP.md` | **App roadmap + batch build plan** — production-grade bar, the 4 reusable engines (Quiz/Deck/Skill-Coach/Shared-List) that batch-produce ~20 apps, full 27-app inventory (tier·engine·icon·analog), superapp coverage map + gap apps. |
-| `PWA_SW.js`, `manifest_*.webmanifest`, `icon_*.svg` | PWA assets. |
+| `build_app_catalog.mjs` | Validates all app manifests and refreshes the baked Store catalog inside `index.html`. No local server required. |
+| `package.json` | Provides `npm run build`, `npm run catalog`, and `npm run check`. Use `npm.cmd` on Windows PowerShell if script execution blocks `npm`. |
+| `.github/workflows/kinetik-catalog.yml` | CI check that fails when manifests are invalid or `index.html` catalog is stale. |
+| `KINETIK_APP_AUDIT.md` | Current app inventory, features, gaps, rename suggestions, and Buddy/diamond strategy. |
 
 ## 3. Architecture (maps 1:1 to future React/TS modules)
 - **State**: `S` (session/tab state), `DB` (localStorage cache `kinetik_live_cache_v1`),
@@ -38,8 +38,8 @@ Per-circle **Chat** opens full-screen from each circle card in Me.
 - **CalendarEngine** (`Cal`) — routines (weekly) + events (one-off, now multi-day),
   exceptions, conflict detection, week/month.
 - **PermissionEngine** (`Perm`) — roles: owner(Leader) / coleader / member / viewer.
-- **AppRegistry** — runtime autoloader (directory listing → SEED_FILES fallback → live
-  manifest read → fallbackApp). Catalog `id` is filename-based.
+- **AppRegistry** — direct launch uses the baked catalog; served http(s) can live-read
+  manifests as an enhancement. Catalog `id` is filename-based.
 - **Store** — Apple App Store clone (search, category chips, featured hero, category
   rows, product page). **AppHost** — iframe bridge (INIT_APP + DATA_*/ADD_TO_CALENDAR).
 - Theme (light default + per-circle accent), Motion (GSAP, guarded), Scene (Three.js
@@ -76,18 +76,16 @@ MemoryLines `title` column, schedule `durationMin`/`endDate`, the time-display f
 - Me: circle cards, role-aware invite, manage member, circle edit/delete, gradient logout.
 - Apps: iPhone grid (manual GET install) + **Apple App Store clone** (manifest-grounded).
 - App autoloader: filename-based categories (Game/Sport/Productivity/Social/
-  Entertainment), live manifest reads when served, file:// fallback.
+  Entertainment), baked catalog for file://, live manifest reads when served.
 
 ## 6. Known limitations / gotchas
-- **file:// can't read sibling files** (CORS null origin) → Store can't read manifests/
-  icons; falls back to SEED_FILES/BUILTIN with filename-derived data. **Use
-  Serve_Kinetik.bat** for real metadata + true loading. (Three.js "tracking prevention"
-  console lines are harmless.)
-- **A browser cannot list a folder** when index.html is present, so `SEED_FILES` in
-  index.html is the maintained filename list (add one line per new app). This matches
-  the KinetikStoreViewer pattern.
-- **Every app needs a UNIQUE `appId`** AND unique filename. Copies (GameHaha,
-  GameNewApp) currently reuse appIds → duplicate names in the Store until fixed.
+- **file:// can't read sibling files** (CORS null origin), so real metadata is baked
+  into `index.html`. After adding/renaming an app, run `npm run build` or
+  `node build_app_catalog.mjs`.
+- **A browser cannot list a folder** when index.html is present, so `SEED_FILES` and
+  `BUILTIN_APP_CATALOG` are generated into `index.html`.
+- **Every app needs a UNIQUE `appId`** AND unique filename. `build_app_catalog.mjs`
+  now fails on duplicate app IDs.
 - Catalog `id` is filename-based, so renaming a file resets its install state.
 - The preview screenshot tool intermittently times out — DOM/eval verification used instead.
 
@@ -99,20 +97,15 @@ MemoryLines `title` column, schedule `durationMin`/`endDate`, the time-display f
       **`Reactions` sheet** + activates `setReaction`/`listReactions` so Moment reactions
       persist to the DB and sync across members (until then they work locally only).
       Still to add for full @kin persistence: a `Messages` `kind/payload` column (§10).
-- [x] **Done (2026-06-14):** `App_GameHaha`/`App_GameNewApp` phantoms removed from
-      `SEED_FILES`; discovery is now self-healing — on a served folder any listed file
-      that 404s is skipped (no ghost entry, no console spam).
-- [x] **Done (2026-06-15) — drop-in apps auto-discover, single-file.** Root `index.html`
-      shadows the directory listing, so the app list lives in the **`SEED_FILES`** const
-      *inside index.html* (no separate `apps.json` — that file was removed). The loader
-      tries a live directory listing, else uses `SEED_FILES`. `Serve_Kinetik.bat` rewrites
-      that one `SEED_FILES` line from the folder's `App_*.html` on every launch, so a
-      dropped-in app appears after relaunch — nothing to hand-maintain. Verified all 27
-      apps load with real manifest names + emoji icons (no monogram placeholders).
-      **To pick up apps added since the server started, just re-run `Serve_Kinetik.bat`.**
+- [x] **Done (2026-06-14):** old phantom app entries removed from the generated catalog.
+- [x] **Done (2026-06-18) — launcher removed.** `index.html` now contains a baked
+      manifest catalog generated by `node build_app_catalog.mjs`, so it can be opened
+      directly. Served http(s) still live-reads manifests
+      as an optional enhancement.
 - [ ] Reinstall the PWA on iPhone (remove from home screen + re-add) to clear the
       cached pre-100dvh nav.
-- [ ] Optional: open via `Serve_Kinetik.bat` for real app icons/metadata.
+- [ ] When app files change, run `npm run build` or `node build_app_catalog.mjs` to
+      refresh icons/metadata.
 
 ### B. Pending build tasks (frontend)
 - [ ] **#17 Inline comments** — move comments from the bottom-sheet popup to INLINE
@@ -161,11 +154,13 @@ Buddy, Cook Simple (life) · Padel/Tennis/Basketball Coach (sport). Categories i
 Store are limited to **Game · Sport · Productivity · Social · Entertainment**.
 
 ## 8. How to run / verify
-- **Best:** double-click `Serve_Kinetik.bat` → open http://localhost:5500/index.html.
+- **Best:** open `index.html` directly.
 - Demo login: username `aldyth`, PIN `1234` (other members: kinara/baginda/keyla).
 - Backend is live Google Sheets at `LIVE_API_URL` (already wired). Calendar/Moments/
   Chat hit it directly; redeploy needed for the newest actions (see §4).
-- Verify in a served context (not file://) so the autoloader reads manifests.
+- After adding/renaming apps, run `npm run build` / `node build_app_catalog.mjs` so
+  direct launch has the latest manifest catalog.
+- For a non-writing check, run `npm run check` / `node build_app_catalog.mjs --check`.
 
 ## 9. Conventions (do not break)
 - `circleId` / `circleType` / `personId` — never `familyId` / `memberId`.
@@ -207,37 +202,29 @@ action, each renders a specific card, and **nothing is written without a tap**.
 - Next: persist agent cards (Messages `kind/payload` redeploy), RESCHEDULE/CANCEL actions,
   and a real "waiting → accepted" notification when the tagged member confirms.
 
-## 11. LEAN-OUT & REACT/SUPABASE MIGRATION STRATEGY (locked 2026-06-15 — NOT yet executed)
-Goal: a lean project structure (effectively single `index.html` + 27 self-contained
-`App_*.html` + backend), one master doc, ready to port to **React + Supabase**.
-Decisions locked: **drop the PWA layer**; **archive `build.md`**. App icons + app manifests
-are ALREADY inline in each app — only legacy PWA files + bloated docs are the cruft.
+## 11. LEAN STRUCTURE & REACT/SUPABASE MIGRATION STRATEGY
+Goal: a lean project structure (`index.html` + self-contained `App_*.html` +
+backend adapter), ready to port to **React + Supabase**.
 
-### 11a. File cleanup — ✅ DONE 2026-06-15 (files moved to `Legacy/`, refs cleaned)
-- [x] **Moved to `Legacy/`** (recoverable; permanently delete later if desired): the 6 PWA
-      assets `icon_padel.svg`, `manifest_padel.webmanifest`, `icon_poll.svg`,
-      `manifest_poll.webmanifest`, `icon_kinetik.svg`, `manifest_kinetik.webmanifest`,
-      plus `PWA_SW.js` and the stale `README_BUILD_STANDARD.md`.
-- [x] **PWA layer removed from the shell:** `index.html` favicon `<link>`s → a single
-      inline data-URI; the PWA registration block (manifest inject + `serviceWorker.register`)
-      deleted. Re-added by Vite-PWA in the React build.
-- [x] **Stripped dead links** from `App_ProductivityPoll.html` (the `manifest_poll`/`icon_poll`
-      `<link>`s AND its own `serviceWorker.register("PWA_SW.js")` at ~line 181).
-- [x] Verified: 27 apps load, no console errors, no 404s for any moved file.
-- Keep: `index.html`, all `App_*.html`, `Code.gs` (until Supabase), `Serve_Kinetik.bat`.
-- Note: `Legacy/` no longer contains `App_CodeClash.html` (was already removed earlier).
+### 11a. Current lean structure
+- [x] Launcher file removed; `index.html` can open directly.
+- [x] App manifests live inside each `App_*.html`.
+- [x] `build_app_catalog.mjs` validates and bakes the catalog from app manifests.
+- [x] `package.json` exposes `npm run build` and `npm run check`.
+- [x] GitHub workflow checks catalog freshness.
+- Keep: `index.html`, all `App_*.html`, `Code.gs` (until Supabase),
+  `build_app_catalog.mjs`, `package.json`, `.github/workflows/kinetik-catalog.yml`,
+  `KINETIK_APP_AUDIT.md`.
 
 ### 11b. Doc merge → one `KINETIK.md`
 - [ ] Create **`KINETIK.md`** = single source of truth. Sections: 1 Vision/scope ·
       2 Architecture (each JS module → its React component/hook) · 3 **Data model**
       (entities + Sheets→Supabase table map, lifted from `Code.gs` HEADERS) · 4 Feature
-      spec (5 tabs + Ask + Chat + @kin) · 5 App platform (manifest contract + the 4
-      engines + 27-app inventory) · 6 What works / limits · 7 Migration plan.
-- [ ] Absorb `KINETIK_HANDOFF.md` + `APP_ROADMAP.md` + `APP_BUILD_STANDARD.md` into it,
-      then delete those three.
-- [ ] **Archive `build.md` → `ARCHIVE_build.md`** (rename, keep untouched for history);
-      distill only timeless standards (e.g. §38 chat UX) into `KINETIK.md`.
-- [ ] Result: 5 markdown docs → **1** (`KINETIK.md`) + 1 archive.
+      spec (5 tabs + Ask + Chat + @kin) · 5 App platform (manifest contract + reusable
+      engines + current app inventory) · 6 What works / limits · 7 Migration plan.
+- [ ] Absorb `KINETIK_HANDOFF.md`, `KINETIK_APP_AUDIT.md`,
+      `KINETIK_CONTENT_SOURCES.md`, and `APP_BUILD_STANDARD.md` into it when ready.
+- [ ] Result: one canonical `KINETIK.md` plus app source files.
 
 ### 11c. React + Supabase migration map (the end goal this enables)
 | Prototype | → React/Supabase |

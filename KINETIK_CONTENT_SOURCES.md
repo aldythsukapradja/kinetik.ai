@@ -1,7 +1,7 @@
 # KINETIK — Content Sources, Design Directions & Build Strategy
 
 > Research reference for the active build batches.
-> Companion to `APP_ROADMAP.md` and `APP_BUILD_STANDARD.md`.
+> Companion to `KINETIK_APP_AUDIT.md` and `APP_BUILD_STANDARD.md`.
 > Last updated: 2026-06-17
 
 ---

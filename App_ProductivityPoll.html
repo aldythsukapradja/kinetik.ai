@@ -1,569 +1,1595 @@
-<!doctype html>
-<html lang="en" data-theme="light">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
-<title>Kinetik Buddy World — Polished</title>
-<meta name="theme-color" content="#f6fbff" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Kinetik Buddy World</title>
+<script type="application/kinetik-app+json">
+{
+  "appId": "kinetik-buddy-world",
+  "name": "Kinetik Buddy World",
+  "shortName": "Buddy",
+  "icon": "🐣",
+  "gradient": ["#55c7ff", "#7b63ff"],
+  "category": "identity",
+  "tagline": "Your circle, alive.",
+  "about": "A pet-first avatar, app launcher, diamond economy, circle leaderboard and evolution layer for Kinetik.",
+  "audience": "family_friends",
+  "circleTypes": ["family", "friends"],
+  "worksWith": ["offline", "standalone", "kinetik-events"],
+  "status": "prototype",
+  "minMembers": 1
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* ============ THEME TOKENS ============ */
 :root{
-  --bg:#f6fbff; --bg2:#eef5ff; --paper:#ffffff; --panel:rgba(255,255,255,.78);
-  --ink:#132235; --muted:#6a7a8f; --faint:#96a6b7; --line:rgba(19,34,53,.10); --line2:rgba(19,34,53,.16);
-  --blue:#55c7ff; --violet:#7b63ff; --pink:#ff79c8; --gold:#ffbf3f; --green:#2cca8a; --red:#ff6f86;
-  --shadow:0 24px 60px rgba(36,73,118,.16); --soft:0 12px 30px rgba(36,73,118,.10);
-  --font:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
-  --buddyA:#63d7ff; --buddyB:#7d6dff; --buddyC:#fca5ff;
+  --font-display:'Fredoka',system-ui,sans-serif;
+  --font-body:'Inter',system-ui,sans-serif;
+
+  /* LIGHT (default) */
+  --bg:#eef2fb;
+  --bg-grad-1:#e7ecfb;
+  --bg-grad-2:#f3e9ff;
+  --bg-grad-3:#e4f6ff;
+  --surface:rgba(255,255,255,0.72);
+  --surface-solid:#ffffff;
+  --surface-2:rgba(255,255,255,0.55);
+  --ink:#1c2545;
+  --ink-soft:#5a6588;
+  --ink-faint:#97a0c0;
+  --line:rgba(120,130,180,0.18);
+  --shadow:0 18px 50px -18px rgba(80,90,160,0.45);
+  --shadow-soft:0 8px 24px -10px rgba(80,90,160,0.35);
+  --accent:#5b6cff;
+  --accent-2:#7b63ff;
+  --diamond:#26c6ff;
+  --diamond-deep:#0a8fd6;
+  --good:#22c55e;
+  --warn:#f59e0b;
+  --gold:#ffb020;
+  --pill-bg:rgba(255,255,255,0.7);
+  --nav-bg:rgba(255,255,255,0.82);
+  --stage-top:#dfeaff;
+  --stage-bot:#f6ecff;
+  --sheet-bg:rgba(255,255,255,0.92);
 }
 [data-theme="dark"]{
-  --bg:#07101d; --bg2:#111b2f; --paper:#101b2d; --panel:rgba(16,27,45,.80);
-  --ink:#f4fbff; --muted:#b8c5d1; --faint:#7b8ea1; --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
-  --shadow:0 28px 70px rgba(0,0,0,.45); --soft:0 12px 30px rgba(0,0,0,.28);
+  --bg:#070a16;
+  --bg-grad-1:#0a0f22;
+  --bg-grad-2:#120a2a;
+  --bg-grad-3:#06121f;
+  --surface:rgba(22,28,50,0.62);
+  --surface-solid:#141a30;
+  --surface-2:rgba(30,38,66,0.5);
+  --ink:#eef1ff;
+  --ink-soft:#a7b0d8;
+  --ink-faint:#6b76a3;
+  --line:rgba(150,170,255,0.14);
+  --shadow:0 22px 60px -20px rgba(0,0,0,0.75);
+  --shadow-soft:0 10px 30px -12px rgba(0,0,0,0.6);
+  --accent:#6f7dff;
+  --accent-2:#9a7bff;
+  --diamond:#36d3ff;
+  --diamond-deep:#0fb5ee;
+  --good:#34d977;
+  --warn:#fbbf24;
+  --gold:#ffc046;
+  --pill-bg:rgba(28,36,64,0.7);
+  --nav-bg:rgba(13,18,36,0.85);
+  --stage-top:#0c1530;
+  --stage-bot:#160e30;
+  --sheet-bg:rgba(16,21,40,0.94);
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;background:var(--bg)}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 body{
-  font-family:var(--font); color:var(--ink); -webkit-font-smoothing:antialiased;
+  font-family:var(--font-body);
+  color:var(--ink);
+  background:var(--bg);
+  position:fixed;inset:0;
+  user-select:none;-webkit-user-select:none;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+/* ============ APP SHELL ============ */
+#app{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
   background:
-  radial-gradient(110% 65% at 8% -10%, color-mix(in srgb,var(--blue) 24%, transparent), transparent 46%),
-  radial-gradient(95% 58% at 100% 0%, color-mix(in srgb,var(--violet) 20%, transparent), transparent 44%),
-  radial-gradient(100% 66% at 50% 112%, color-mix(in srgb,var(--gold) 12%, transparent), transparent 46%),
-  linear-gradient(180deg,var(--bg),var(--bg2));
+    radial-gradient(120% 80% at 20% 0%,var(--bg-grad-1),transparent 60%),
+    radial-gradient(120% 80% at 90% 10%,var(--bg-grad-2),transparent 55%),
+    radial-gradient(140% 90% at 50% 100%,var(--bg-grad-3),transparent 60%),
+    var(--bg);
+  transition:background .6s ease;
 }
-button,input{font:inherit;color:inherit}button{border:0;background:none;cursor:pointer}
-.app{height:100dvh;max-width:430px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;position:relative}
-.safe{height:max(env(safe-area-inset-top,0px),10px);flex:0 0 auto}
-.screens{flex:1;position:relative;min-height:0}
-.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
-.screen.on{display:flex;animation:screenIn .26s ease both}
-@keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.scroll{flex:1;min-height:0;overflow:auto;scrollbar-width:none;padding:0 16px 22px}.scroll::-webkit-scrollbar{display:none}
-.top{display:flex;align-items:center;gap:10px;padding:10px 16px 12px}.hi{flex:1;min-width:0}.eyebrow{font-size:10.5px;font-weight:950;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}.hi h1{font-size:26px;line-height:1.02;letter-spacing:-.04em;margin-top:3px}
-.chip{height:34px;padding:0 11px;border-radius:999px;background:var(--panel);border:1px solid var(--line);display:inline-flex;align-items:center;gap:6px;box-shadow:var(--soft);font-size:12px;font-weight:950;white-space:nowrap}.chip.gold{background:linear-gradient(135deg,#fff2bf,var(--gold));border:0;color:#433000}.chip.hot{background:linear-gradient(135deg,var(--blue),var(--violet));border:0;color:#fff}
-.label{display:flex;align-items:center;justify-content:space-between;margin:18px 4px 10px;font-size:11px;font-weight:950;letter-spacing:.15em;text-transform:uppercase;color:var(--faint)}.label .link{letter-spacing:0;text-transform:none;font-size:12px;color:var(--violet)}
-.nav{display:flex;background:var(--panel);border-top:1px solid var(--line);backdrop-filter:blur(20px);padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px));flex:0 0 auto;z-index:20}.nav button{flex:1;display:flex;flex-direction:column;gap:4px;align-items:center;color:var(--faint);font-size:10px;font-weight:900;padding:4px 0}.nav button.on{color:var(--violet)}.nav svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.nav .dot{width:5px;height:5px;border-radius:50%;background:var(--violet);opacity:0}.nav button.on .dot{opacity:1}
-.card{background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:28px}
-.smallCard{background:var(--panel);border:1px solid var(--line);box-shadow:var(--soft);border-radius:22px}
-.hero{padding:14px;overflow:hidden;position:relative;background:
-  radial-gradient(80% 50% at 50% 0%, rgba(255,255,255,.88), transparent 60%),
-  radial-gradient(60% 46% at 75% 20%, color-mix(in srgb,var(--buddyA) 28%, transparent), transparent 64%),
-  radial-gradient(80% 56% at 28% 75%, color-mix(in srgb,var(--buddyB) 18%, transparent), transparent 62%),
-  linear-gradient(180deg,rgba(255,255,255,.56),rgba(255,255,255,.26));
+.page{
+  position:absolute;inset:0;bottom:0;
+  display:none;flex-direction:column;
+  padding-top:env(safe-area-inset-top);
+  animation:pageIn .42s cubic-bezier(.2,.9,.3,1);
 }
-.heroTop{display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative;z-index:3}.heroTop .name{font-size:12px;font-weight:950;color:var(--muted)}
-.mood{padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.56);font-size:11px;font-weight:950;box-shadow:var(--soft)}
-.stageWrap{position:relative;height:288px;margin-top:2px;perspective:1100px;transform-style:preserve-3d}
-.orbit, .orbit2{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(255,255,255,.38)}
-.orbit{width:250px;height:250px;background:conic-gradient(from 40deg,rgba(255,255,255,0),color-mix(in srgb,var(--buddyA) 35%, transparent),rgba(255,255,255,0),color-mix(in srgb,var(--buddyB) 28%, transparent),rgba(255,255,255,0));filter:blur(.2px)}
-.orbit2{width:190px;height:190px;background:conic-gradient(from 120deg,rgba(255,255,255,0),color-mix(in srgb,var(--buddyB) 28%, transparent),rgba(255,255,255,0),color-mix(in srgb,var(--buddyC) 26%, transparent),rgba(255,255,255,0));opacity:.8}
-.floorShadow{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:230px;height:56px;border-radius:50%;background:radial-gradient(ellipse,rgba(11,28,49,.28),rgba(11,28,49,.06) 62%,transparent 70%);filter:blur(5px)}
-.miniPortal{position:absolute;width:48px;height:48px;border-radius:18px;background:rgba(255,255,255,.72);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.6);display:grid;place-items:center;box-shadow:0 16px 26px rgba(32,64,100,.12);font-size:22px}
-.miniPortal span{filter:drop-shadow(0 3px 4px rgba(0,0,0,.12))}
-.p1{left:12px;top:52px}.p2{right:18px;top:62px}.p3{left:32px;bottom:70px}.p4{right:34px;bottom:62px}
-#petStage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:250px;height:220px;pointer-events:none}
-.petWrap{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:182px;height:182px;transform-style:preserve-3d;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 30px 34px rgba(31,58,90,.18))}
-.petHalo{position:absolute;inset:-8px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb,var(--buddyA) 24%, transparent), transparent 66%);opacity:.9}
-.petSvg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.petAccessory{position:absolute;left:50%;top:8px;transform:translateX(-50%) rotate(-8deg);font-size:34px;filter:drop-shadow(0 7px 7px rgba(0,0,0,.12))}
-.petCompanion{position:absolute;right:18px;top:48px;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%, rgba(255,255,255,.95), rgba(255,255,255,.36) 30%, transparent 31%),linear-gradient(135deg,#b8f3dd,#6ea7ff);box-shadow:0 12px 24px rgba(29,64,100,.16), inset -8px -9px 12px rgba(36,52,100,.12), inset 8px 8px 12px rgba(255,255,255,.36)}
-.petCompanion::before,.petCompanion::after{content:"";position:absolute;width:8px;height:12px;background:#142236;border-radius:10px;top:16px}.petCompanion::before{left:14px}.petCompanion::after{right:14px}.petCompanion i{position:absolute;left:17px;bottom:10px;width:14px;height:8px;border-bottom:3px solid #142236;border-radius:0 0 12px 12px}
-.spark{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold)}
-.spark.s1{left:6px;top:86px}.spark.s2{right:4px;top:22px}.spark.s3{right:24px;bottom:44px}
-.speech{position:relative;z-index:3;background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.58);backdrop-filter:blur(10px);border-radius:20px;padding:14px;margin-top:-2px;box-shadow:var(--soft)}
-.speech b{display:block;font-size:15px;letter-spacing:-.02em}.speech p{font-size:12.5px;line-height:1.42;color:var(--muted);margin-top:4px}
-.heroBtns{display:flex;gap:10px;margin-top:12px}.btn{height:50px;border-radius:18px;font-size:14px;font-weight:950;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px}.btn.primary{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;box-shadow:0 18px 34px rgba(85,104,255,.24)}.btn.ghost{background:rgba(255,255,255,.60);border:1px solid rgba(255,255,255,.64);box-shadow:var(--soft)}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.stat{padding:13px 8px;text-align:center}.stat b{display:block;font-size:22px;letter-spacing:-.04em}.stat span{display:block;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:3px}
-.quest{padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px}.questIcon{width:48px;height:48px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 14%, var(--paper)),color-mix(in srgb,var(--violet) 14%, var(--paper)));font-size:24px;box-shadow:var(--soft)}.questInfo{flex:1;min-width:0}.questInfo b{font-size:14.5px}.questInfo p{font-size:12px;color:var(--muted);line-height:1.38;margin-top:3px}.quest .reward{font-size:11px;font-weight:950;color:#5c4600;background:linear-gradient(135deg,#fff2bc,var(--gold));padding:6px 8px;border-radius:999px;white-space:nowrap}.quest.done{opacity:.68}.quest.done .questIcon{background:linear-gradient(135deg,var(--green),#89ebc0);color:#fff}
-.energyGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.energy{padding:13px}.energyTop{display:flex;justify-content:space-between;font-size:12px;font-weight:950;margin-bottom:8px}.track{height:11px;border-radius:999px;background:var(--line2);overflow:hidden}.track i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--violet))}
-.mapStage{position:relative;height:360px;padding:14px;overflow:hidden;background:
-  radial-gradient(80% 50% at 50% 0%, rgba(255,255,255,.9), transparent 60%),
-  linear-gradient(180deg,#ebf7ff,#edf0ff)}
-.mapBlob{position:absolute;border-radius:50%;filter:blur(0px)}.blob1{left:-34px;top:36px;width:150px;height:84px;background:linear-gradient(135deg,#c3f3f0,#b6dcff)}.blob2{right:-28px;top:84px;width:120px;height:72px;background:linear-gradient(135deg,#ffc9ef,#d5c5ff)}.blob3{left:28px;bottom:18px;width:128px;height:76px;background:linear-gradient(135deg,#ffe8b4,#ffdd85)}
-.path{position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,transparent 0 12px,transparent 13px),linear-gradient(transparent,transparent), none}
-.pathSvg{position:absolute;inset:0;width:100%;height:100%}
-.mapBuddy{position:absolute;left:44%;top:56%;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:26px;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%, rgba(255,255,255,.94), rgba(255,255,255,.34) 30%, transparent 31%),linear-gradient(135deg,var(--buddyA),var(--buddyB));box-shadow:0 18px 28px rgba(31,58,90,.16), inset 8px 8px 14px rgba(255,255,255,.3), inset -12px -12px 16px rgba(31,58,90,.14);font-size:28px;z-index:3}
-.portal{position:absolute;width:78px;height:78px;border-radius:26px;background:rgba(255,255,255,.76);border:1px solid rgba(255,255,255,.68);backdrop-filter:blur(14px);box-shadow:0 18px 28px rgba(33,63,100,.12);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;font-size:11px;font-weight:950;color:var(--ink)}.portal .e{font-size:24px}.portal small{font-size:10px;color:var(--muted)}.portal.hot::after{content:"";position:absolute;inset:-5px;border-radius:30px;border:2px solid color-mix(in srgb,var(--gold) 72%, transparent);opacity:.9;animation:pulse 1.8s ease-in-out infinite}
-.p-cal{left:18px;top:38px}.p-mom{right:26px;top:58px}.p-gro{left:18px;top:178px}.p-pad{right:28px;top:186px}.p-learn{left:140px;top:16px}.p-game{left:148px;top:248px}
-.portalCard{padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px}.portalThumb{width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 16%,var(--paper)),color-mix(in srgb,var(--violet) 14%,var(--paper)));display:grid;place-items:center;font-size:24px}.portalCard .meta{flex:1;min-width:0}.portalCard b{font-size:14.5px}.portalCard p{font-size:12px;color:var(--muted);line-height:1.38;margin-top:3px}.pill{padding:6px 8px;border-radius:999px;background:color-mix(in srgb,var(--violet) 12%, var(--paper));color:var(--violet);font-size:11px;font-weight:950;white-space:nowrap}
-.board{padding:14px;margin-bottom:10px}.board h3{font-size:16px;letter-spacing:-.02em}.board p{font-size:12px;color:var(--muted);margin-top:4px}.boardRow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.boardRow:last-child{border-bottom:0;padding-bottom:0}.rank{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#fff1c0,#ffc14e);font-size:12px;font-weight:950;color:#4a3300;flex:0 0 auto}.who{flex:1;min-width:0}.who b{font-size:13.5px}.who p{font-size:11.5px;color:var(--muted);margin-top:2px}.score{font-size:12px;font-weight:950;color:var(--violet)}
-.segment{display:flex;background:var(--line2);padding:4px;border-radius:16px;gap:4px;margin-bottom:12px}.segment button{flex:1;height:36px;border-radius:12px;font-size:13px;font-weight:950;color:var(--muted)}.segment button.on{background:var(--paper);color:var(--ink);box-shadow:var(--soft)}
-.previewCard{padding:14px;overflow:hidden}.closetTop{display:flex;gap:14px;align-items:center}.miniStage{width:120px;height:120px;border-radius:28px;background:radial-gradient(80% 50% at 50% 0%, rgba(255,255,255,.92), transparent 60%),linear-gradient(180deg,#eef9ff,#edf0ff);border:1px solid var(--line);display:grid;place-items:center;position:relative;overflow:hidden}.miniPet{position:absolute;transform:scale(.62)}.closetMeta h3{font-size:20px;letter-spacing:-.03em}.closetMeta p{font-size:12.5px;color:var(--muted);line-height:1.44;margin-top:5px}
-.tabs{display:flex;gap:8px;overflow:auto;scrollbar-width:none;margin:12px 0 10px}.tabs::-webkit-scrollbar{display:none}.tabs button{height:34px;padding:0 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:12px;font-weight:950;color:var(--muted);white-space:nowrap}.tabs button.on{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;border:0}
-.items{display:grid;grid-template-columns:1fr 1fr;gap:10px}.item{padding:12px;min-height:150px;position:relative;overflow:hidden}.itemIcon{height:58px;border-radius:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 16%, var(--paper)),color-mix(in srgb,var(--violet) 16%, var(--paper)));display:grid;place-items:center;font-size:32px;margin-bottom:10px}.item b{font-size:14px}.item p{font-size:11.5px;color:var(--muted);line-height:1.34;margin-top:4px}.priceTag{position:absolute;right:10px;top:10px;padding:5px 7px;border-radius:999px;background:linear-gradient(135deg,#fff2bc,var(--gold));font-size:10px;font-weight:950;color:#503800}.item.owned .priceTag{background:linear-gradient(135deg,var(--green),#95efc9);color:#fff}
-.circleHero{padding:16px;text-align:center;background:
-  radial-gradient(80% 52% at 50% 0%, rgba(255,255,255,.9), transparent 60%),
-  radial-gradient(80% 50% at 18% 100%, color-mix(in srgb,var(--pink) 16%, transparent), transparent 60%),
-  linear-gradient(180deg,rgba(255,255,255,.52),rgba(255,255,255,.22))}
-.cluster{height:144px;position:relative;display:flex;align-items:center;justify-content:center;gap:8px}.cluster .pet{width:72px;height:72px;border-radius:30px;background:linear-gradient(135deg,var(--buddyA),var(--buddyB));box-shadow:0 18px 26px rgba(31,58,90,.14), inset 8px 8px 12px rgba(255,255,255,.28);display:grid;place-items:center;font-size:32px}.cluster .pet.main{width:96px;height:96px;font-size:42px}.circleHero h2{font-size:22px;letter-spacing:-.04em}.circleHero p{font-size:12.5px;color:var(--muted);margin-top:4px}
-.member{padding:13px;display:flex;align-items:center;gap:12px;margin-bottom:10px}.memberAv{width:44px;height:44px;border-radius:17px;background:linear-gradient(135deg,var(--buddyA),var(--buddyB));display:grid;place-items:center;font-size:22px;box-shadow:var(--soft)}.memberInfo{flex:1;min-width:0}.memberInfo b{font-size:14.5px}.memberInfo p{font-size:11.8px;color:var(--muted);margin-top:3px}.tag{padding:6px 8px;border-radius:999px;background:color-mix(in srgb,var(--violet) 12%, var(--paper));color:var(--violet);font-size:11px;font-weight:950}
-.goal{padding:14px;margin-bottom:10px;background:linear-gradient(135deg,color-mix(in srgb,var(--gold) 18%, var(--paper)), var(--panel))}.goalTop{display:flex;gap:12px}.goalIcon{width:50px;height:50px;border-radius:18px;background:rgba(255,255,255,.7);display:grid;place-items:center;font-size:28px}.goal b{font-size:15px}.goal p{font-size:12px;color:var(--muted);line-height:1.4;margin-top:4px}.goalBar{height:12px;border-radius:999px;background:rgba(80,58,0,.12);overflow:hidden;margin-top:10px}.goalBar i{display:block;height:100%;width:72%;background:linear-gradient(90deg,#ffcc58,#ff9d2e)}
-.sheet{position:absolute;inset:0;background:rgba(7,17,29,.45);backdrop-filter:blur(5px);display:none;flex-direction:column;z-index:60}.sheet.on{display:flex}.sheetBody{margin-top:auto;background:var(--bg);border-radius:30px 30px 0 0;max-height:88%;box-shadow:0 -30px 70px rgba(0,0,0,.28);animation:sheetIn .28s ease both}.grab{width:42px;height:5px;border-radius:999px;background:var(--line2);margin:11px auto 6px}.sheetInner{padding:10px 20px calc(24px + env(safe-area-inset-bottom,0px));overflow:auto;max-height:calc(88vh - 22px)}.sheetInner h2{font-size:24px;letter-spacing:-.04em}.sheetInner p{font-size:14px;color:var(--muted);line-height:1.5;margin-top:8px}.sheetActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-@keyframes sheetIn{from{transform:translateY(100%)}to{transform:none}}
-.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);opacity:0;background:rgba(13,22,36,.96);color:#fff;font-size:13px;font-weight:950;padding:11px 15px;border-radius:999px;box-shadow:0 18px 36px rgba(0,0,0,.34);transition:.24s;pointer-events:none;z-index:90}.toast.on{opacity:1;transform:translate(-50%,0)}
-.gem{position:absolute;z-index:80;font-size:18px;pointer-events:none}
-@keyframes pulse{50%{transform:scale(1.04);opacity:.58}}
-@keyframes blink{0%,44%,48%,100%{transform:scaleY(1)}46%{transform:scaleY(.08)}}
-@keyframes pulseAura{50%{transform:scale(1.04);opacity:.65}}
-@media (max-width:360px){.hi h1{font-size:22px}.stageWrap{height:272px}.portal{width:72px;height:72px}.scroll{padding-left:14px;padding-right:14px}}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.page.active{display:flex}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:none}}
+.page-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:120px}
+.page-scroll::-webkit-scrollbar{display:none}
+
+/* ============ TOP BAR ============ */
+.topbar{
+  position:absolute;top:0;left:0;right:0;z-index:30;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;
+  pointer-events:none;
+}
+.topbar .tb-btn,.topbar .wallet{pointer-events:auto}
+.tb-btn{
+  width:44px;height:44px;border-radius:16px;
+  background:var(--pill-bg);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  display:grid;place-items:center;box-shadow:var(--shadow-soft);
+  border:1px solid var(--line);transition:transform .2s;
+}
+.tb-btn:active{transform:scale(.9)}
+.tb-btn svg{width:21px;height:21px}
+.wallet{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 16px 9px 12px;border-radius:18px;
+  background:var(--pill-bg);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:var(--shadow-soft);border:1px solid var(--line);
+  font-weight:700;font-size:16px;font-family:var(--font-display);
+  transition:transform .2s;
+}
+.wallet:active{transform:scale(.94)}
+.wallet .dia{width:22px;height:22px;filter:drop-shadow(0 2px 4px rgba(38,198,255,.5))}
+.wallet #walletNum{min-width:20px;text-align:left;letter-spacing:.3px}
+
+/* ============ BOTTOM NAV ============ */
+.nav{
+  position:absolute;left:0;right:0;bottom:0;z-index:40;
+  display:flex;align-items:stretch;justify-content:space-around;
+  padding:8px 14px calc(env(safe-area-inset-bottom) + 8px);
+  background:var(--nav-bg);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);
+  border-top:1px solid var(--line);
+  box-shadow:0 -10px 40px -18px rgba(60,70,140,.4);
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 0 4px;border-radius:16px;color:var(--ink-faint);
+  transition:color .25s,transform .2s;position:relative;
+}
+.nav-btn svg{width:25px;height:25px;transition:transform .3s cubic-bezier(.2,1.4,.4,1)}
+.nav-btn .lbl{font-size:10px;font-weight:600;letter-spacing:.2px;opacity:.85}
+.nav-btn.active{color:var(--accent)}
+.nav-btn.active svg{transform:translateY(-2px) scale(1.12)}
+.nav-btn.active::before{
+  content:"";position:absolute;top:2px;width:30px;height:30px;border-radius:50%;
+  background:radial-gradient(circle,var(--accent),transparent 70%);opacity:.18;
+}
+.nav-btn:active svg{transform:scale(.85)}
+/* ============ PAGE 1: BUDDY STAGE ============ */
+#stage{
+  position:absolute;inset:0;z-index:1;
+  background:linear-gradient(180deg,var(--stage-top),var(--stage-bot));
+  transition:background .6s;
+}
+#petCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.stage-vignette{
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(60% 50% at 50% 42%,transparent 50%,rgba(40,40,90,.06) 100%);
+}
+.mood-chip{
+  position:absolute;z-index:6;left:50%;transform:translateX(-50%);
+  bottom:196px;display:flex;align-items:center;gap:7px;
+  padding:7px 15px;border-radius:20px;font-weight:600;font-size:13px;
+  background:var(--surface);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--line);box-shadow:var(--shadow-soft);
+  color:var(--ink);transition:bottom .35s;
+}
+.mood-chip .dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good)}
+.pet-name{
+  position:absolute;z-index:6;left:50%;transform:translateX(-50%);
+  bottom:232px;font-family:var(--font-display);font-weight:600;
+  font-size:26px;color:var(--ink);text-align:center;
+  text-shadow:0 2px 14px rgba(255,255,255,.5);transition:bottom .35s;letter-spacing:.5px;
+}
+[data-theme="dark"] .pet-name{text-shadow:0 2px 20px rgba(110,130,255,.4)}
+.pet-lvl{font-size:13px;color:var(--ink-soft);font-weight:500;font-family:var(--font-body)}
+
+/* speech bubble */
+.speech{
+  position:absolute;z-index:8;left:50%;transform:translateX(-50%) scale(.4);
+  top:96px;max-width:240px;padding:13px 18px;border-radius:20px;
+  background:var(--surface-solid);box-shadow:var(--shadow);
+  border:1px solid var(--line);font-size:14px;font-weight:600;text-align:center;
+  color:var(--ink);opacity:0;pointer-events:none;line-height:1.35;
+}
+.speech::after{
+  content:"";position:absolute;bottom:-9px;left:50%;transform:translateX(-50%) rotate(45deg);
+  width:18px;height:18px;background:var(--surface-solid);border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+.speech.show{animation:speechPop .5s cubic-bezier(.2,1.5,.4,1) forwards}
+@keyframes speechPop{0%{opacity:0;transform:translateX(-50%) scale(.4) translateY(10px)}60%{opacity:1;transform:translateX(-50%) scale(1.06)}100%{opacity:1;transform:translateX(-50%) scale(1)}}
+
+.tap-hint{
+  position:absolute;z-index:5;left:50%;transform:translateX(-50%);
+  bottom:166px;font-size:12px;color:var(--ink-faint);font-weight:500;
+  display:flex;align-items:center;gap:5px;animation:hintPulse 2.4s ease-in-out infinite;
+  opacity:0;transition:opacity .4s;
+}
+.tap-hint.show{opacity:1}
+#app.sheet-open .pet-name,#app.sheet-open .mood-chip,#app.sheet-open .tap-hint{opacity:0;pointer-events:none;transition:opacity .3s}
+@keyframes hintPulse{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+
+/* ============ SWIPE-UP SHEET ============ */
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;z-index:20;
+  background:var(--sheet-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
+  border-radius:30px 30px 0 0;border-top:1px solid var(--line);
+  box-shadow:0 -20px 60px -20px rgba(50,60,130,.35);
+  padding:10px 18px calc(env(safe-area-inset-bottom) + 96px);
+  transform:translateY(calc(100% - 150px));
+  transition:transform .5s cubic-bezier(.25,.9,.25,1);
+  touch-action:none;max-height:82%;overflow:hidden;
+}
+.sheet.half{transform:translateY(40%)}
+.sheet.full{transform:translateY(0);overflow-y:auto}
+.sheet::-webkit-scrollbar{display:none}
+.sheet-handle{width:40px;height:5px;border-radius:3px;background:var(--ink-faint);opacity:.4;margin:6px auto 12px}
+.sheet-head{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.sheet-head h2{font-family:var(--font-display);font-size:22px;font-weight:600}
+.sheet-head .mood{font-size:13px;color:var(--ink-soft);font-weight:500;margin-left:auto}
+.sheet-sub{font-size:12px;color:var(--ink-faint);margin-bottom:16px}
+
+.section-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink-faint);margin:18px 2px 10px}
+
+/* quests */
+.quest{
+  display:flex;align-items:center;gap:13px;padding:13px 14px;margin-bottom:9px;
+  background:var(--surface);border:1px solid var(--line);border-radius:18px;
+  box-shadow:var(--shadow-soft);transition:transform .2s,opacity .3s;
+}
+.quest:active{transform:scale(.98)}
+.quest.done{opacity:.55}
+.qcheck{
+  width:26px;height:26px;border-radius:9px;border:2px solid var(--ink-faint);
+  flex-shrink:0;display:grid;place-items:center;transition:all .3s;
+}
+.quest.done .qcheck{background:var(--good);border-color:var(--good)}
+.qcheck svg{width:15px;height:15px;stroke:#fff;opacity:0;transform:scale(.4);transition:all .3s}
+.quest.done .qcheck svg{opacity:1;transform:scale(1)}
+.qtext{flex:1}
+.qtext .qt{font-weight:600;font-size:14px}
+.qtext .qd{font-size:11px;color:var(--ink-faint);margin-top:1px}
+.qreward{display:flex;align-items:center;gap:4px;font-weight:700;font-size:14px;color:var(--diamond-deep);font-family:var(--font-display)}
+.qreward .dia{width:16px;height:16px}
+
+.row-btns{display:flex;gap:10px;margin-top:14px}
+.btn{
+  flex:1;padding:15px;border-radius:18px;font-weight:700;font-size:15px;
+  font-family:var(--font-display);display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .15s,box-shadow .3s;box-shadow:var(--shadow-soft);
+}
+.btn:active{transform:scale(.96)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;box-shadow:0 10px 26px -8px var(--accent)}
+.btn-ghost{background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+
+/* energy bars */
+.energy-row{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.energy-row .en{width:64px;font-size:12px;font-weight:600;color:var(--ink-soft)}
+.energy-track{flex:1;height:9px;border-radius:6px;background:var(--surface-2);overflow:hidden;position:relative}
+.energy-fill{height:100%;border-radius:6px;width:0;transition:width 1s cubic-bezier(.3,1,.4,1);position:relative}
+.energy-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:shimmer 2.5s linear infinite}
+@keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(200%)}}
+.energy-pct{width:36px;text-align:right;font-size:11px;font-weight:700;color:var(--ink-soft)}
+
+/* stat strip */
+.stat-strip{display:flex;gap:10px;margin:16px 0}
+.stat-card{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:13px;text-align:center;box-shadow:var(--shadow-soft)}
+.stat-card .sv{font-family:var(--font-display);font-size:22px;font-weight:600;line-height:1}
+.stat-card .sl{font-size:10px;color:var(--ink-faint);margin-top:4px;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+
+.evo-banner{
+  margin-top:8px;padding:15px 16px;border-radius:18px;
+  background:linear-gradient(120deg,rgba(123,99,255,.16),rgba(38,198,255,.12));
+  border:1px solid var(--line);display:flex;align-items:center;gap:13px;box-shadow:var(--shadow-soft);
+}
+.evo-banner .evo-ic{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;flex-shrink:0;box-shadow:0 6px 16px -4px var(--accent)}
+.evo-banner .evo-ic svg{width:24px;height:24px;stroke:#fff}
+.evo-banner .et{flex:1}
+.evo-banner .et .t{font-weight:700;font-size:14px}
+.evo-banner .et .d{font-size:11px;color:var(--ink-soft);margin-top:1px}
+.evo-banner .arrow{color:var(--ink-faint)}
+/* ============ GENERIC PAGE HEADER ============ */
+.page-head{padding:calc(env(safe-area-inset-top) + 64px) 20px 8px}
+.page-head h1{font-family:var(--font-display);font-size:30px;font-weight:600;letter-spacing:.3px}
+.page-head p{font-size:13px;color:var(--ink-soft);margin-top:2px}
+
+/* ============ PAGE 2: MAP / PORTALS ============ */
+.portal-wrap{padding:6px 16px}
+.portal-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.portal{
+  position:relative;border-radius:22px;padding:16px;overflow:hidden;
+  background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-soft);
+  transition:transform .2s;min-height:128px;display:flex;flex-direction:column;
+}
+.portal:active{transform:scale(.96)}
+.portal .glow{position:absolute;top:-30px;right:-30px;width:90px;height:90px;border-radius:50%;filter:blur(24px);opacity:.5}
+.portal .pic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;box-shadow:var(--shadow-soft);position:relative;z-index:1}
+.portal .pname{font-family:var(--font-display);font-weight:600;font-size:16px;margin-top:11px;position:relative;z-index:1}
+.portal .penergy{font-size:11px;color:var(--ink-soft);margin-top:1px;position:relative;z-index:1}
+.portal .pfoot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;padding-top:10px}
+.portal .preward{display:flex;align-items:center;gap:4px;font-weight:700;font-size:14px;color:var(--diamond-deep);font-family:var(--font-display)}
+.portal .preward .dia{width:15px;height:15px}
+.portal .pbadge{font-size:10px;font-weight:700;padding:4px 9px;border-radius:10px;letter-spacing:.3px}
+.pbadge.hot{background:rgba(245,90,90,.16);color:#f5504a}
+.pbadge.done{background:rgba(34,197,94,.16);color:var(--good)}
+.pbadge.rank{background:rgba(91,108,255,.14);color:var(--accent)}
+.portal.locked{opacity:.6}
+.portal.locked .lock{position:absolute;inset:0;background:rgba(20,24,48,.04);display:grid;place-items:center;z-index:2}
+.portal.locked .lock svg{width:26px;height:26px;opacity:.5}
+
+/* ============ PAGE 3: BOARDS ============ */
+.segment{display:flex;gap:6px;padding:5px;margin:6px 16px 16px;background:var(--surface-2);border-radius:16px;border:1px solid var(--line)}
+.seg-btn{flex:1;padding:11px;border-radius:12px;font-weight:700;font-size:13px;color:var(--ink-soft);transition:all .25s}
+.seg-btn.active{background:var(--surface-solid);color:var(--accent);box-shadow:var(--shadow-soft)}
+.board-card{margin:0 16px 14px;background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-soft)}
+.board-card h3{font-family:var(--font-display);font-weight:600;font-size:16px;padding:15px 17px 4px;display:flex;align-items:center;gap:8px}
+.board-card .bsub{font-size:11px;color:var(--ink-faint);padding:0 17px 10px}
+.rank-row{display:flex;align-items:center;gap:13px;padding:12px 17px;border-top:1px solid var(--line);transition:background .2s}
+.rank-row.me{background:linear-gradient(90deg,rgba(91,108,255,.1),transparent)}
+.rank-medal{width:30px;text-align:center;font-size:18px;flex-shrink:0}
+.rank-pet{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex-shrink:0;box-shadow:var(--shadow-soft)}
+.rank-info{flex:1}
+.rank-info .rn{font-weight:700;font-size:14px}
+.rank-info .rd{font-size:11px;color:var(--ink-faint)}
+.rank-pts{font-family:var(--font-display);font-weight:600;font-size:16px;color:var(--accent)}
+.showcase{margin:0 16px 14px;padding:18px;border-radius:20px;background:linear-gradient(125deg,rgba(123,99,255,.12),rgba(38,198,255,.1));border:1px solid var(--line);box-shadow:var(--shadow-soft)}
+.showcase h3{font-family:var(--font-display);font-weight:600;font-size:17px;margin-bottom:10px}
+.showcase .sc-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;border-bottom:1px dashed var(--line)}
+.showcase .sc-row:last-child{border:none}
+.showcase .sc-row b{font-weight:700;color:var(--accent)}
+
+/* ============ PAGE 4: SHOP ============ */
+.shop-preview{
+  position:relative;height:260px;margin:6px 16px 4px;border-radius:24px;overflow:hidden;
+  background:linear-gradient(180deg,var(--stage-top),var(--stage-bot));border:1px solid var(--line);box-shadow:var(--shadow-soft);
+}
+#shopCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.shop-preview .pv-tag{position:absolute;top:12px;left:14px;font-size:11px;font-weight:700;padding:6px 12px;border-radius:12px;background:var(--surface);backdrop-filter:blur(14px);border:1px solid var(--line);color:var(--ink-soft);z-index:2}
+.shop-preview .pv-spin{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--ink-faint);z-index:2;display:flex;align-items:center;gap:5px}
+.cat-tabs{display:flex;gap:8px;overflow-x:auto;padding:14px 16px 6px;scrollbar-width:none}
+.cat-tabs::-webkit-scrollbar{display:none}
+.cat-tab{flex-shrink:0;padding:9px 16px;border-radius:14px;font-weight:700;font-size:13px;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);transition:all .25s}
+.cat-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border-color:transparent}
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;padding:8px 16px}
+.shop-item{
+  position:relative;border-radius:20px;padding:14px;background:var(--surface);
+  border:1px solid var(--line);box-shadow:var(--shadow-soft);transition:transform .18s;overflow:hidden;
+}
+.shop-item:active{transform:scale(.95)}
+.shop-item.equipped{border-color:var(--good);box-shadow:0 0 0 2px var(--good),var(--shadow-soft)}
+.shop-item .swatch{height:78px;border-radius:14px;display:grid;place-items:center;font-size:38px;margin-bottom:10px;position:relative;overflow:hidden}
+.shop-item .iname{font-weight:700;font-size:14px}
+.shop-item .idesc{font-size:10px;color:var(--ink-faint);margin-top:1px;height:13px}
+.shop-item .ifoot{margin-top:10px}
+.price{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--diamond-deep)}
+.price .dia{width:15px;height:15px}
+.tag-owned{font-size:11px;font-weight:700;color:var(--ink-faint)}
+.tag-eq{font-size:11px;font-weight:700;color:var(--good);display:flex;align-items:center;gap:4px}
+.btn-equip{width:100%;margin-top:8px;padding:9px;border-radius:12px;font-weight:700;font-size:12px;background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.btn-buy{width:100%;margin-top:8px;padding:9px;border-radius:12px;font-weight:700;font-size:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff}
+.btn-buy.cant{background:var(--surface-2);color:var(--ink-faint)}
+.shop-item .crown{position:absolute;top:8px;right:8px;font-size:14px;z-index:2}
+/* ============ PAGE 5: CIRCLE ============ */
+.circle-hero{margin:6px 16px 16px;padding:20px;border-radius:24px;text-align:center;background:linear-gradient(135deg,rgba(123,99,255,.16),rgba(38,198,255,.13));border:1px solid var(--line);box-shadow:var(--shadow-soft);position:relative;overflow:hidden}
+.circle-hero .ch-pet{font-size:60px;filter:drop-shadow(0 8px 16px rgba(123,99,255,.4));animation:floaty 3.5s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.circle-hero h2{font-family:var(--font-display);font-weight:600;font-size:20px;margin-top:8px}
+.circle-hero p{font-size:12px;color:var(--ink-soft);margin-top:2px}
+.circle-stats{display:flex;gap:10px;margin:14px 16px}
+.cstat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 10px;text-align:center;box-shadow:var(--shadow-soft)}
+.cstat .cv{font-family:var(--font-display);font-weight:600;font-size:19px;color:var(--accent)}
+.cstat .cl{font-size:10px;color:var(--ink-faint);margin-top:3px;font-weight:600}
+.member{display:flex;align-items:center;gap:13px;margin:0 16px 11px;padding:13px 15px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-soft);transition:transform .2s}
+.member:active{transform:scale(.98)}
+.member .m-pet{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:23px;flex-shrink:0;box-shadow:var(--shadow-soft)}
+.member .m-info{flex:1}
+.member .m-info .mn{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px}
+.member .m-info .md{font-size:11px;color:var(--ink-faint)}
+.member .m-rank{font-family:var(--font-display);font-weight:600;font-size:15px;color:var(--accent)}
+.member .cheer{padding:8px 12px;border-radius:12px;font-size:12px;font-weight:700;background:var(--surface-2);border:1px solid var(--line);color:var(--ink)}
+.goal-card{margin:16px;padding:20px;border-radius:24px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.goal-card .gtitle{font-family:var(--font-display);font-weight:600;font-size:18px;display:flex;align-items:center;gap:8px}
+.goal-card .gsub{font-size:12px;color:var(--ink-soft);margin:3px 0 14px}
+.goal-track{height:14px;border-radius:8px;background:var(--surface-2);overflow:hidden;position:relative}
+.goal-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--accent),var(--diamond));transition:width 1s cubic-bezier(.3,1,.4,1);position:relative}
+.goal-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:shimmer 2s linear infinite}
+.goal-meta{display:flex;justify-content:space-between;margin:9px 0 16px;font-size:12px;font-weight:600}
+.goal-meta .gleft{color:var(--ink-soft)}
+.goal-rewards{margin-top:14px}
+.goal-rewards .gr{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:13px;color:var(--ink-soft)}
+.goal-rewards .gr svg{width:17px;height:17px;stroke:var(--good);flex-shrink:0}
+
+/* ============ MODALS / SHEETS ============ */
+.modal-bg{position:fixed;inset:0;z-index:100;background:rgba(20,24,50,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .35s;display:flex;align-items:flex-end;justify-content:center}
+.modal-bg.show{opacity:1;pointer-events:auto}
+.modal{
+  width:100%;max-width:480px;background:var(--sheet-bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
+  border-radius:28px 28px 0 0;border-top:1px solid var(--line);
+  padding:14px 20px calc(env(safe-area-inset-bottom) + 24px);
+  transform:translateY(100%);transition:transform .45s cubic-bezier(.2,.9,.25,1);max-height:88%;overflow-y:auto;
+}
+.modal::-webkit-scrollbar{display:none}
+.modal-bg.show .modal{transform:translateY(0)}
+.modal-handle{width:40px;height:5px;border-radius:3px;background:var(--ink-faint);opacity:.4;margin:0 auto 16px}
+.modal h2{font-family:var(--font-display);font-weight:600;font-size:22px;margin-bottom:4px}
+.modal .msub{font-size:13px;color:var(--ink-soft);margin-bottom:18px}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:8px}
+.action-btn{padding:18px 14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:700;font-size:13px;box-shadow:var(--shadow-soft);transition:transform .15s}
+.action-btn:active{transform:scale(.94)}
+.action-btn .ab-ic{font-size:28px}
+.modal-close{width:100%;margin-top:14px;padding:15px;border-radius:16px;background:var(--surface-2);border:1px solid var(--line);font-weight:700;font-size:15px;color:var(--ink)}
+
+/* settings / cheat */
+.set-group{margin-bottom:8px}
+.set-row{display:flex;align-items:center;gap:12px;padding:15px 16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:9px;box-shadow:var(--shadow-soft)}
+.set-row .sr-ic{font-size:20px}
+.set-row .sr-txt{flex:1}
+.set-row .sr-txt .srt{font-weight:700;font-size:14px}
+.set-row .sr-txt .srd{font-size:11px;color:var(--ink-faint);margin-top:1px}
+.toggle{width:50px;height:30px;border-radius:16px;background:var(--surface-2);border:1px solid var(--line);position:relative;transition:background .3s;flex-shrink:0}
+.toggle.on{background:linear-gradient(135deg,var(--accent),var(--accent-2))}
+.toggle .knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:left .3s cubic-bezier(.3,1.4,.4,1)}
+.toggle.on .knob{left:23px}
+.cheat-banner{margin:4px 0 14px;padding:12px 14px;border-radius:14px;background:linear-gradient(120deg,rgba(255,176,32,.18),rgba(245,90,90,.12));border:1px solid rgba(255,176,32,.35);font-size:12px;color:var(--ink);display:flex;align-items:center;gap:9px}
+.cheat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cheat-btn{padding:15px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:var(--shadow-soft);transition:transform .15s}
+.cheat-btn:active{transform:scale(.94)}
+.cheat-btn .cb-ic{font-size:22px}
+.cheat-btn.danger{border-color:rgba(245,90,90,.4);color:#f5504a}
+
+/* buy sheet preview */
+.buy-preview{height:150px;border-radius:18px;display:grid;place-items:center;font-size:64px;margin-bottom:16px;position:relative;overflow:hidden}
+.buy-name{font-family:var(--font-display);font-weight:600;font-size:20px;text-align:center}
+.buy-desc{font-size:13px;color:var(--ink-soft);text-align:center;margin:4px 0 18px}
+
+/* ============ TOAST ============ */
+#toastWrap{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 100px);z-index:200;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.toast{padding:12px 20px;border-radius:16px;background:var(--surface-solid);box-shadow:var(--shadow);border:1px solid var(--line);font-weight:600;font-size:14px;display:flex;align-items:center;gap:9px;transform:translateY(20px) scale(.9);opacity:0;transition:all .4s cubic-bezier(.2,1.4,.4,1)}
+.toast.show{transform:none;opacity:1}
+.toast .ti{font-size:18px}
+
+/* diamond particle */
+.dia-particle{position:fixed;z-index:300;width:20px;height:20px;pointer-events:none;will-change:transform,opacity}
+
+/* evolution overlay */
+#evoOverlay{position:fixed;inset:0;z-index:400;background:rgba(10,12,30,.6);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;flex-direction:column}
+#evoOverlay.show{display:flex}
+.evo-flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#fff,transparent 60%);opacity:0}
+.evo-content{text-align:center;z-index:2;position:relative}
+.evo-stage-pet{font-size:90px;filter:drop-shadow(0 10px 30px rgba(123,99,255,.6))}
+.evo-content h2{font-family:var(--font-display);color:#fff;font-size:28px;margin-top:14px;text-shadow:0 4px 20px rgba(123,99,255,.6)}
+.evo-content p{color:rgba(255,255,255,.8);font-size:14px;margin-top:6px}
+.evo-content .btn{max-width:200px;margin:22px auto 0}
+
+.hidden{display:none!important}
 </style>
 </head>
 <body>
-<div class="app" id="app">
-  <div class="safe"></div>
-  <main class="screens">
-    <section class="screen on" id="s-buddy">
-      <header class="top">
-        <div class="hi"><div class="eyebrow">Kinetik Buddy</div><h1>Your circle, alive</h1></div>
-        <button class="chip gold">💎 <b class="walletInline">245</b></button>
-        <button class="chip hot">Lv <b id="levelTop">7</b></button>
-      </header>
-      <div class="scroll">
-        <section class="hero card" id="heroCard">
-          <div class="heroTop"><div class="name" id="buddyTitle">Bento · Care Buddy</div><button class="mood" id="moodChip">✨ Cozy</button></div>
-          <div class="stageWrap" id="tiltStage">
-            <div class="orbit"></div><div class="orbit2"></div><div class="floorShadow"></div>
-            <div class="miniPortal p1"><span>📅</span></div>
-            <div class="miniPortal p2"><span>🧠</span></div>
-            <div class="miniPortal p3"><span>🛒</span></div>
-            <div class="miniPortal p4"><span>🎾</span></div>
-            <div id="petStage"></div>
-          </div>
-          <div class="speech" id="speechBox"><b>Nova is close to evolving.</b><p>Finish one learning session to earn 12 diamonds and unlock more energy.</p></div>
-          <div class="heroBtns"><button class="btn primary" id="bestMoveBtn">▶ Start best move</button><button class="btn ghost" id="petActionBtn">Pet actions</button></div>
-        </section>
+<div id="app">
 
-        <div class="grid3">
-          <div class="stat smallCard"><b id="streakValue">6</b><span>Streak</span></div>
-          <div class="stat smallCard"><b id="xpValue">540</b><span>XP</span></div>
-          <div class="stat smallCard"><b id="rankValue">#1</b><span>Family</span></div>
-        </div>
+  <!-- ======= TOP BAR ======= -->
+  <div class="topbar">
+    <button class="tb-btn" id="settingsBtn" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="wallet" id="walletBtn">
+      <svg class="dia" viewBox="0 0 24 24"><defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fe9ff"/><stop offset="1" stop-color="#0a8fd6"/></linearGradient></defs><path d="M6 3h12l4 6-10 12L2 9z" fill="url(#dg)"/><path d="M2 9h20M12 3 8 9l4 12M12 3l4 6-4 12" fill="none" stroke="#fff" stroke-width="0.6" opacity="0.55"/></svg>
+      <span id="walletNum">240</span>
+    </button>
+  </div>
 
-        <div class="label">Today’s buddy quests <span class="link" id="resetQuests">Reset</span></div>
-        <div id="questList"></div>
+  <!-- ======= PAGE 1: BUDDY ======= -->
+  <section class="page active" id="page-buddy">
+    <div id="stage">
+      <canvas id="petCanvas"></canvas>
+      <div class="stage-vignette"></div>
+    </div>
+    <div class="speech" id="speech"></div>
+    <div class="pet-name" id="petName">Nova <span class="pet-lvl" id="petLvlInline">· Lv 4</span></div>
+    <div class="mood-chip" id="moodChip"><span class="dot"></span><span id="moodText">Playful</span></div>
+    <div class="tap-hint" id="tapHint">tap Nova to play · swipe up for quests ↑</div>
 
-        <div class="label">Evolution energy <span class="link" id="energyHelp">Details</span></div>
-        <div class="energyGrid" id="energyGrid"></div>
+    <!-- swipe sheet -->
+    <div class="sheet" id="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h2 id="sheetName">Nova</h2>
+        <span class="mood" id="sheetMood">Playful 😄</span>
       </div>
-    </section>
+      <div class="sheet-sub" id="sheetSub">Level 4 Learning Buddy · close to evolving</div>
 
-    <section class="screen" id="s-map">
-      <header class="top">
-        <div class="hi"><div class="eyebrow">Map</div><h1>Enter app worlds</h1></div>
-        <span class="chip gold">💎 <b class="walletInline">245</b></span>
-      </header>
-      <div class="scroll">
-        <div class="mapStage card" id="mapCard">
-          <div class="mapBlob blob1"></div><div class="mapBlob blob2"></div><div class="mapBlob blob3"></div>
-          <svg class="pathSvg" viewBox="0 0 360 360" preserveAspectRatio="none"><path d="M70 76 C135 90 94 192 176 183 C258 174 228 79 299 103 C330 114 311 178 263 211 C230 232 172 221 152 266 C140 292 174 318 210 308" fill="none" stroke="rgba(120,138,170,.28)" stroke-width="10" stroke-linecap="round" stroke-dasharray="1 18"/></svg>
-          <button class="portal p-cal hot" data-app="calendar"><span class="e">📅</span>Calendar<small>+5 💎</small></button>
-          <button class="portal p-mom" data-app="moments"><span class="e">🖼️</span>Moments<small>+8 💎</small></button>
-          <button class="portal p-gro hot" data-app="groceries"><span class="e">🛒</span>Kitchen<small>+8 💎</small></button>
-          <button class="portal p-pad" data-app="padel"><span class="e">🎾</span>Padel<small>+15 💎</small></button>
-          <button class="portal p-learn hot" data-app="clock"><span class="e">🕒</span>Learning<small>+12 💎</small></button>
-          <button class="portal p-game" data-app="chess"><span class="e">♟️</span>Strategy<small>+10 💎</small></button>
-          <div class="mapBuddy" id="mapBuddy">🐣</div>
-        </div>
-
-        <div class="label">Recommended portals</div>
-        <div id="portalList"></div>
+      <div class="row-btns">
+        <button class="btn btn-primary" id="bestMoveBtn">✨ Today's Best Move</button>
+        <button class="btn btn-ghost" id="petActionsBtn">🐾 Pet</button>
       </div>
-    </section>
 
-    <section class="screen" id="s-boards">
-      <header class="top"><div class="hi"><div class="eyebrow">Boards</div><h1>One-stop leaderboards</h1></div><span class="chip hot">🔥 Weekly</span></header>
-      <div class="scroll">
-        <div class="segment" id="boardSeg">
-          <button class="on" data-mode="overall">Overall</button>
-          <button data-mode="apps">Apps</button>
-          <button data-mode="showcases">Showcases</button>
-        </div>
-        <div id="boardsList"></div>
+      <div class="section-label">Today's Quests</div>
+      <div id="questList"></div>
+
+      <div class="stat-strip">
+        <div class="stat-card"><div class="sv" id="statStreak">7</div><div class="sl">Day Streak</div></div>
+        <div class="stat-card"><div class="sv" id="statXP">340</div><div class="sl">XP</div></div>
+        <div class="stat-card"><div class="sv" id="statRank">#2</div><div class="sl">Rank</div></div>
       </div>
-    </section>
 
-    <section class="screen" id="s-closet">
-      <header class="top"><div class="hi"><div class="eyebrow">Closet</div><h1>Style your buddy</h1></div><span class="chip gold">💎 <b class="walletInline">245</b></span></header>
-      <div class="scroll">
-        <div class="previewCard card">
-          <div class="closetTop">
-            <div class="miniStage"><div class="miniPet" id="miniStage"></div></div>
-            <div class="closetMeta"><h3 id="closetName">Nova</h3><p id="closetDesc">A polished Pixar-like learning buddy with soft 3D shading, premium accessories, and expressive moods.</p></div>
-          </div>
-          <div class="tabs" id="closetTabs">
-            <button class="on" data-tab="species">Species</button>
-            <button data-tab="hat">Hat</button>
-            <button data-tab="aura">Aura</button>
-            <button data-tab="room">Room</button>
-          </div>
-          <div class="items" id="itemsGrid"></div>
+      <div class="section-label">Evolution Energy</div>
+      <div id="energyList"></div>
+
+      <div class="evo-banner" id="evoBanner">
+        <div class="evo-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 9 9l-7 .5 5.5 4.5L5.5 21 12 17l6.5 4-2-7L22 9.5 15 9z"/></svg></div>
+        <div class="et"><div class="t" id="evoTitle">Scholar evolution at 60%</div><div class="d">Feed Learning energy to evolve Nova</div></div>
+        <div class="arrow">›</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= PAGE 2: MAP ======= -->
+  <section class="page" id="page-map">
+    <div class="page-scroll">
+      <div class="page-head"><h1>App World</h1><p>Open a portal, earn diamonds, feed Nova's energy</p></div>
+      <div class="portal-wrap"><div class="portal-grid" id="portalGrid"></div></div>
+    </div>
+  </section>
+
+  <!-- ======= PAGE 3: BOARDS ======= -->
+  <section class="page" id="page-boards">
+    <div class="page-scroll">
+      <div class="page-head"><h1>Boards</h1><p>One league for the whole circle</p></div>
+      <div class="segment">
+        <button class="seg-btn active" data-seg="overall">Overall</button>
+        <button class="seg-btn" data-seg="apps">Apps</button>
+        <button class="seg-btn" data-seg="showcases">Showcases</button>
+      </div>
+      <div id="boardContent"></div>
+    </div>
+  </section>
+
+  <!-- ======= PAGE 4: SHOP ======= -->
+  <section class="page" id="page-shop">
+    <div class="page-scroll">
+      <div class="page-head"><h1>Closet</h1><p>Dress Nova up · spend your diamonds</p></div>
+      <div class="shop-preview">
+        <canvas id="shopCanvas"></canvas>
+        <div class="pv-tag" id="pvTag">Nova · Learning Buddy</div>
+        <div class="pv-spin">↻ drag to spin</div>
+      </div>
+      <div class="cat-tabs" id="catTabs"></div>
+      <div class="shop-grid" id="shopGrid"></div>
+    </div>
+  </section>
+
+  <!-- ======= PAGE 5: CIRCLE ======= -->
+  <section class="page" id="page-circle">
+    <div class="page-scroll">
+      <div class="page-head"><h1>Your Circle</h1><p>The Sukapradja family · this week</p></div>
+      <div class="circle-hero">
+        <div class="ch-pet">🐉</div>
+        <h2>Family Dragon</h2>
+        <p>Your circle's shared Buddy — grows with everyone</p>
+      </div>
+      <div class="circle-stats">
+        <div class="cstat"><div class="cv" id="cDiamonds">2,840</div><div class="cl">💎 This Week</div></div>
+        <div class="cstat"><div class="cv">12</div><div class="cl">🔥 Top Streak</div></div>
+        <div class="cstat"><div class="cv">34</div><div class="cl">⚡ Sessions</div></div>
+      </div>
+      <div class="section-label" style="padding-left:18px">Family League</div>
+      <div id="memberList"></div>
+      <div class="goal-card">
+        <div class="gtitle">🥚 Family Dragon Egg</div>
+        <div class="gsub">Pool diamonds to hatch a rare shared Buddy</div>
+        <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:78%"></div></div>
+        <div class="goal-meta"><span class="gleft"><b id="goalNow">780</b> / 1000 💎</span><span id="goalLeft">220 to hatch</span></div>
+        <div class="row-btns">
+          <button class="btn btn-primary" id="contributeBtn">Contribute 50 💎</button>
+          <button class="btn btn-ghost" id="celebrateBtn">🎉</button>
+        </div>
+        <div class="goal-rewards">
+          <div class="gr"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>Rare Family Dragon Buddy</div>
+          <div class="gr"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>Dragon Lair room for everyone</div>
+          <div class="gr"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>Family crown + board trophy</div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="screen" id="s-circle">
-      <header class="top"><div class="hi"><div class="eyebrow">Circle</div><h1>Family buddy league</h1></div><span class="chip hot">🏆 #1</span></header>
-      <div class="scroll">
-        <div class="circleHero card">
-          <div class="cluster"><div class="pet">🐣</div><div class="pet main">✨</div><div class="pet">🌟</div></div>
-          <h2>Family Circle</h2>
-          <p>The house feels playful today. Shared actions power the Circle Dragon Egg.</p>
-        </div>
-        <div class="label">Shared goal</div>
-        <div class="goal smallCard">
-          <div class="goalTop"><div class="goalIcon">🐉</div><div><b>Family Dragon Egg</b><p>Unlock a rare shared buddy, new room animation, and a family badge at 1,000 circle diamonds.</p></div></div>
-          <div class="goalBar"><i></i></div>
-        </div>
-        <div class="label">Members</div>
-        <div id="memberList"></div>
-      </div>
-    </section>
-  </main>
-
-  <nav class="nav" id="nav">
-    <button class="on" data-tab="buddy"><svg viewBox="0 0 24 24"><path d="M12 6c3 0 6 2.5 6 6.2S15.6 19 12 19s-6-2.6-6-6.8S9 6 12 6Z"/><path d="M9 7 7.5 4.5"/><path d="M15 7l1.5-2.5"/><path d="M9 13h0"/><path d="M15 13h0"/></svg><span>Buddy</span><i class="dot"></i></button>
-    <button data-tab="map"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14"/><path d="M15 6v14"/></svg><span>Map</span><i class="dot"></i></button>
-    <button data-tab="boards"><svg viewBox="0 0 24 24"><path d="M4 19V8"/><path d="M10 19V4"/><path d="M16 19v-7"/><path d="M22 19H2"/></svg><span>Boards</span><i class="dot"></i></button>
-    <button data-tab="closet"><svg viewBox="0 0 24 24"><path d="M7 4h10l2 4v12H5V8z"/><path d="M9 4v4"/><path d="M15 4v4"/></svg><span>Closet</span><i class="dot"></i></button>
-    <button data-tab="circle"><svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="8" r="2.5"/><path d="M2.5 20c0-3.2 3.1-5 5.5-5s5.5 1.8 5.5 5"/><path d="M12 20c.4-2.3 2.5-3.8 4.6-3.8 2 0 4 .9 4.9 2.8"/></svg><span>Circle</span><i class="dot"></i></button>
+  <!-- ======= BOTTOM NAV ======= -->
+  <nav class="nav">
+    <button class="nav-btn active" data-page="buddy">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="6"/><circle cx="9.5" cy="9" r="1" fill="currentColor"/><circle cx="14.5" cy="9" r="1" fill="currentColor"/><path d="M9 13c.8.7 2 1 3 1s2.2-.3 3-1"/><path d="M7 5.5C6 4 5 4 4.5 5s0 2.5 1 3M17 5.5c1-1.5 2-1.5 2.5-.5s0 2.5-1 3"/></svg>
+      <span class="lbl">Buddy</span>
+    </button>
+    <button class="nav-btn" data-page="map">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
+      <span class="lbl">Map</span>
+    </button>
+    <button class="nav-btn" data-page="boards">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V11M12 21V4M17 21v-7"/></svg>
+      <span class="lbl">Boards</span>
+    </button>
+    <button class="nav-btn" data-page="shop">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16l-1 13H5z"/><path d="M8 7a4 4 0 0 1 8 0"/></svg>
+      <span class="lbl">Closet</span>
+    </button>
+    <button class="nav-btn" data-page="circle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M15.5 14c2.5.2 5 1.6 5 4.5"/></svg>
+      <span class="lbl">Circle</span>
+    </button>
   </nav>
 
-  <section class="sheet" id="sheet"><div class="sheetBody"><div class="grab"></div><div class="sheetInner" id="sheetInner"></div></div></section>
-  <div class="toast" id="toast"></div>
+  <!-- ======= MODALS ======= -->
+  <div class="modal-bg" id="modalBg"><div class="modal" id="modalBody"></div></div>
+
+  <!-- evolution overlay -->
+  <div id="evoOverlay"><div class="evo-flash" id="evoFlash"></div><div class="evo-content" id="evoContent"></div></div>
+
+  <div id="toastWrap"></div>
 </div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
-(()=>{
-  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
-  const STORE = 'kinetik_buddy_world_polished_v1';
+/* =========================================================
+   KINETIK BUDDY WORLD — single-file prototype
+   Light theme default · Three.js pet · GSAP · localStorage
+   ========================================================= */
 
-  const species = {
-    bento:{name:'Bento', role:'Care Buddy', colors:['#5fd8b2','#54b8ff','#b9f3d4'], emoji:'🧺', mood:'✨ Cozy', speech:['Bento is hungry for progress.','Complete one grocery action or home task to earn +8 diamonds.'], accessory:'🧑‍🍳', desc:'A home-care buddy with chef energy, cozy cheeks, and helpful routines.'},
-    nova:{name:'Nova', role:'Learning Buddy', colors:['#69d4ff','#7a6bff','#f4b4ff'], emoji:'🌟', mood:'🚀 Curious', speech:['Nova is close to evolving.','Finish one learning session to earn +12 diamonds and unlock more energy.'], accessory:'🪄', desc:'A bright learning buddy with cosmic sparkles and a premium galaxy glow.'},
-    bolt:{name:'Bolt', role:'Play Buddy', colors:['#ffd45f','#ff8a61','#ff66bb'], emoji:'⚡', mood:'🎉 Playful', speech:['Bolt wants action today.','Play any game or padel challenge to earn +15 diamonds.'], accessory:'🏅', desc:'A sporty little champion with punchy energy and playful competitive flair.'}
-  };
+/* ---------- SPECIES BIBLE ---------- */
+const SPECIES = {
+  nova:  {name:'Nova',  role:'Learning Buddy', emoji:'🐣', price:0,   energy:'learning',
+          body:0x6b7cff, belly:0xc9d2ff, cheek:0xff9ec4, ear:0x8b6bff, aura:0x5b6cff, orb:0x9fd0ff, eye:0x2b2f55},
+  bento: {name:'Bento', role:'Care Buddy',     emoji:'🍵', price:150, energy:'care',
+          body:0x7ed99a, belly:0xf3f0d8, cheek:0xffb0a0, ear:0x5cc47f, aura:0x22c55e, orb:0xb6f5c8, eye:0x244a30},
+  bolt:  {name:'Bolt',  role:'Play Buddy',     emoji:'⚡', price:200, energy:'play',
+          body:0xffc24a, belly:0xfff0c4, cheek:0xff8a5c, ear:0xff9e2c, aura:0xffb020, orb:0xffe08a, eye:0x4a3410},
+  lumi:  {name:'Lumi',  role:'Memory Buddy',   emoji:'🌸', price:180, energy:'joy',
+          body:0xff9ec4, belly:0xffe0ee, cheek:0xff7ab0, ear:0xd98bff, aura:0xff6fb0, orb:0xffd0e8, eye:0x5a2a48},
+  tempo: {name:'Tempo', role:'Rhythm Buddy',   emoji:'🎵', price:250, energy:'rhythm',
+          body:0x33d6d0, belly:0xc8fffb, cheek:0xff9ec4, ear:0x14b8a6, aura:0x14b8a6, orb:0xa0fff8, eye:0x103e3c},
+  sora:  {name:'Sora',  role:'Calm Buddy',     emoji:'☁️', price:220, energy:'calm',
+          body:0xb8c6e6, belly:0xeef4ff, cheek:0xffc2d4, ear:0x9fb2da, aura:0x8fb0e0, orb:0xe0ecff, eye:0x33425e},
+};
 
-  const energyKeys = [
-    ['Joy',70],['Care',62],['Rhythm',54],['Play',48],['Learning',78],['Calm',44]
-  ];
+/* ---------- SHOP CATALOGUE ---------- */
+const SHOP = {
+  species:[
+    {id:'nova', cat:'species', name:'Nova', desc:'Learning Buddy', price:0, sw:'🐣', color:'#6b7cff'},
+    {id:'bento',cat:'species', name:'Bento',desc:'Care Buddy', price:150, sw:'🍵', color:'#7ed99a'},
+    {id:'bolt', cat:'species', name:'Bolt', desc:'Play Buddy', price:200, sw:'⚡', color:'#ffc24a'},
+    {id:'lumi', cat:'species', name:'Lumi', desc:'Memory Buddy', price:180, sw:'🌸', color:'#ff9ec4'},
+    {id:'tempo',cat:'species', name:'Tempo',desc:'Rhythm Buddy', price:250, sw:'🎵', color:'#33d6d0'},
+    {id:'sora', cat:'species', name:'Sora', desc:'Calm Buddy', price:220, sw:'☁️', color:'#b8c6e6'},
+  ],
+  hats:[
+    {id:'chef',  cat:'hats', name:'Chef Hat',    desc:'Kitchen ready', price:80,  sw:'👨‍🍳', color:'#f3f0e0', kind:'hat', hat:'chef'},
+    {id:'wand',  cat:'hats', name:'Orbit Wand',  desc:'Stellar spark', price:90,  sw:'🪄', color:'#cfd6ff', kind:'hat', hat:'wand'},
+    {id:'crown', cat:'hats', name:'Family Crown',desc:'Circle royalty', price:120, sw:'👑', color:'#ffe6a0', kind:'hat', hat:'crown'},
+    {id:'cap',   cat:'hats', name:'Spark Cap',   desc:'Speedy style', price:85,  sw:'🧢', color:'#ffd28a', kind:'hat', hat:'cap'},
+    {id:'tiara', cat:'hats', name:'Star Tiara',  desc:'Dreamy shine', price:100, sw:'✨', color:'#ffd0ec', kind:'hat', hat:'tiara'},
+    {id:'puff',  cat:'hats', name:'Cloud Puff',  desc:'So cozy', price:95,  sw:'☁️', color:'#e6efff', kind:'hat', hat:'puff'},
+  ],
+  auras:[
+    {id:'spark',  cat:'auras', name:'Spark Aura', desc:'Gold crackle', price:100, sw:'💫', color:'#ffd86a', kind:'aura', aura:0xffb020},
+    {id:'orbit',  cat:'auras', name:'Orbit Aura', desc:'Cobalt ring', price:120, sw:'🌀', color:'#7d8cff', kind:'aura', aura:0x5b6cff},
+    {id:'cloudA', cat:'auras', name:'Cloud Aura', desc:'Soft mist', price:130, sw:'🌫️', color:'#cdd8f0', kind:'aura', aura:0xc8d4ff},
+    {id:'rainbow',cat:'auras', name:'Rainbow Aura',desc:'Full spectrum', price:200, sw:'🌈', color:'#ff9ec4', kind:'aura', aura:0xff6fb0, rainbow:true},
+    {id:'fire',   cat:'auras', name:'Fire Aura',  desc:'Hot flicker', price:180, sw:'🔥', color:'#ff8a4a', kind:'aura', aura:0xff6a2c},
+    {id:'void',   cat:'auras', name:'Void Aura',  desc:'Dark sparkle', price:250, sw:'🌌', color:'#8b6bff', kind:'aura', aura:0x7b3bff},
+  ],
+  rooms:[
+    {id:'cloud',  cat:'rooms', name:'Cloud Room',  desc:'Floating sky', price:300, sw:'☁️', color:'#dcebff', kind:'room', top:'#cfe2ff', bot:'#efe2ff'},
+    {id:'kitchen',cat:'rooms', name:'Kitchen Room',desc:'Warm & cozy', price:350, sw:'🍳', color:'#ffe7c4', kind:'room', top:'#ffe9cf', bot:'#ffd9e0'},
+    {id:'court',  cat:'rooms', name:'Padel Court', desc:'Game on', price:350, sw:'🎾', color:'#c4f0d8', kind:'room', top:'#d2f6e0', bot:'#cfeaff'},
+    {id:'library',cat:'rooms', name:'Library Room',desc:'Quiet focus', price:320, sw:'📚', color:'#e6dcc4', kind:'room', top:'#efe6d0', bot:'#e0d0ff'},
+    {id:'lair',   cat:'rooms', name:'Dragon Lair', desc:'Circle unlock', price:500, sw:'🐉', color:'#d0c4ff', kind:'room', top:'#1a1438', bot:'#2a1450', locked:true},
+  ],
+  companions:[
+    {id:'book',  cat:'companions', name:'Book Orb',     desc:'Glows blue', price:150, sw:'📘', color:'#9fd0ff', kind:'orb', orb:0x9fd0ff},
+    {id:'heart', cat:'companions', name:'Heart Orb',    desc:'Glows green', price:150, sw:'💚', color:'#b6f5c8', kind:'orb', orb:0xb6f5c8},
+    {id:'lightn',cat:'companions', name:'Lightning Orb',desc:'Crackles gold', price:160, sw:'⚡', color:'#ffe08a', kind:'orb', orb:0xffe08a},
+    {id:'star',  cat:'companions', name:'Star Orb',     desc:'Sparkles pink', price:160, sw:'⭐', color:'#ffd0e8', kind:'orb', orb:0xffd0e8},
+  ],
+  seasonal:[
+    {id:'egg',    cat:'seasonal', name:'Dragon Egg',  desc:'Limited drop', price:400, sw:'🥚', color:'#d0c4ff', kind:'badge', crown:'⭐'},
+    {id:'iceA',   cat:'seasonal', name:'Ice Aura',    desc:'Winter only', price:180, sw:'❄️', color:'#c4ecff', kind:'aura', aura:0x6ad4ff, crown:'⭐'},
+    {id:'sumCrwn',cat:'seasonal', name:'Summer Crown',desc:'Sunny days', price:100, sw:'🌞', color:'#ffe6a0', kind:'hat', hat:'crown', crown:'⭐'},
+  ],
+};
 
-  const appMeta = {
-    groceries:{icon:'🛒',name:'Kitchen',reward:8,copy:'Complete one grocery or home-care action.'},
-    clock:{icon:'🕒',name:'Learning',reward:12,copy:'Finish one Clock Trainer or Times Table round.'},
-    padel:{icon:'🎾',name:'Padel',reward:15,copy:'Log a sporty session and boost Play energy.'},
-    calendar:{icon:'📅',name:'Calendar',reward:5,copy:'Check one plan or add a family action.'},
-    moments:{icon:'🖼️',name:'Moments',reward:8,copy:'Share a memory to boost Joy energy.'},
-    chess:{icon:'♟️',name:'Strategy',reward:10,copy:'Play Chess or Code Clash to boost Focus.'}
-  };
+const CATS = [
+  {id:'species', label:'Species'},
+  {id:'hats', label:'Hats'},
+  {id:'auras', label:'Auras'},
+  {id:'rooms', label:'Rooms'},
+  {id:'companions', label:'Companions'},
+  {id:'seasonal', label:'Seasonal'},
+];
 
-  const closetData = {
-    species:[
-      {id:'bento', icon:'🧺', title:'Bento', sub:'Home-care specialist', cost:'Owned', owned:true},
-      {id:'nova', icon:'🌟', title:'Nova', sub:'Learning buddy', cost:'Free', owned:true},
-      {id:'bolt', icon:'⚡', title:'Bolt', sub:'Play champion', cost:'120 💎'}
-    ],
-    hat:[
-      {id:'chef', icon:'🧑‍🍳', title:'Chef Hat', sub:'Home helper glow', cost:'Owned', owned:true},
-      {id:'wizard', icon:'🪄', title:'Orbit Wand', sub:'Cosmic sparkle look', cost:'120 💎'},
-      {id:'crown', icon:'👑', title:'Family Crown', sub:'Unlocked by #1 weekly board', cost:'300 💎'}
-    ],
-    aura:[
-      {id:'soft', icon:'✨', title:'Spark Aura', sub:'Soft premium shine', cost:'Owned', owned:true},
-      {id:'orbit', icon:'🪐', title:'Orbit Aura', sub:'Strava-meets-cosmic energy', cost:'200 💎'},
-      {id:'rainbow', icon:'🌈', title:'Rainbow Ring', sub:'Celebration halo', cost:'260 💎'}
-    ],
-    room:[
-      {id:'cloud', icon:'☁️', title:'Cloud Room', sub:'Light calm background', cost:'Owned', owned:true},
-      {id:'padel', icon:'🎾', title:'Padel Court', sub:'Sport-themed room skin', cost:'180 💎'},
-      {id:'kitchen', icon:'🍳', title:'Kitchen Room', sub:'Warm family care vibe', cost:'150 💎'}
-    ]
-  };
+/* ---------- PORTALS (priority apps from housekeeping) ---------- */
+const PORTALS = [
+  {id:'times-table-quest', name:'Times Table', icon:'📚', energy:'learning', reward:12, badge:'hot', badgeTxt:'Hot 🔥', grad:'#6b7cff,#9a7bff'},
+  {id:'snake-ladder',      name:'Wisdom Trail',icon:'🪜', energy:'calm',    reward:15, badge:'rank',badgeTxt:'#3', grad:'#34d977,#14b8a6'},
+  {id:'lucky-spin',        name:'Lucky Spin',  icon:'🎡', energy:'joy',     reward:5,  badge:'hot', badgeTxt:'Spin!', grad:'#ff9ec4,#ffb020'},
+  {id:'grocery-buddy',     name:'Groceries',   icon:'🛒', energy:'care',    reward:8,  badge:'done',badgeTxt:'Done ✓', grad:'#7ed99a,#34d977'},
+  {id:'padel-americano',   name:'Padel',       icon:'🎾', energy:'play',    reward:15, badge:'rank',badgeTxt:'#2', grad:'#ffc24a,#ff8a4a'},
+  {id:'circle-chess',      name:'Chess',       icon:'♟️', energy:'play',    reward:15, badge:'rank',badgeTxt:'#4', grad:'#8b6bff,#5b6cff'},
+  {id:'chore-quest',       name:'Chores',      icon:'🧹', energy:'care',    reward:10, badge:'hot', badgeTxt:'+3 new', grad:'#33d6d0,#14b8a6'},
+  {id:'charisma-coach',    name:'Charisma',    icon:'🎤', energy:'social',  reward:12, badge:'rank',badgeTxt:'#1', grad:'#ff6fb0,#9a7bff'},
+  {id:'cook-simple',       name:'Cook',        icon:'🍳', energy:'care',    reward:10, badge:'hot', badgeTxt:'Dinner', grad:'#ffb0a0,#ff8a5c'},
+  {id:'emoji-party',       name:'Emoji Party', icon:'😄', energy:'joy',     reward:5,  badge:'done',badgeTxt:'Done ✓', grad:'#6ad4ff,#5b6cff', locked:false},
+];
 
-  const defaultState = {wallet:245,xp:540,level:7,streak:6,buddy:'nova',hat:'wizard',aura:'soft',room:'cloud',boardMode:'overall',closetTab:'species',quests:[
-    {id:'q1', icon:'🕒', title:'Finish one learning round', body:'Clock Trainer or Times Table · evolves Nova', reward:12, app:'clock', done:false},
-    {id:'q2', icon:'🛒', title:'Complete one home task', body:'Groceries or home care · boosts Bento', reward:8, app:'groceries', done:false},
-    {id:'q3', icon:'🎾', title:'Play one mini-game', body:'Padel or game challenge · boosts Bolt', reward:15, app:'padel', done:false}
-  ], energies:{Joy:70,Care:62,Rhythm:54,Play:48,Learning:78,Calm:44} };
-  let state = load();
+const ENERGY_META = {
+  learning:{label:'Learning',color:'#5b6cff'},
+  play:    {label:'Play',    color:'#ffb020'},
+  care:    {label:'Care',    color:'#22c55e'},
+  joy:     {label:'Joy',     color:'#ff6fb0'},
+  rhythm:  {label:'Rhythm',  color:'#14b8a6'},
+  calm:    {label:'Calm',    color:'#8b94c0'},
+  social:  {label:'Social',  color:'#9a7bff'},
+};
 
-  function load(){ try{return {...defaultState,...JSON.parse(localStorage.getItem(STORE)||'{}')};}catch(e){return structuredClone(defaultState);} }
-  function save(){ localStorage.setItem(STORE, JSON.stringify(state)); }
-  function setVar(k,v){ document.documentElement.style.setProperty(k,v); }
-  function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast._); toast._=setTimeout(()=>t.classList.remove('on'),1800); }
-  function openSheet(html){ $('#sheetInner').innerHTML=html; $('#sheet').classList.add('on'); }
-  function closeSheet(){ $('#sheet').classList.remove('on'); }
+const MEMBERS = [
+  {name:'Aldyth', pet:'🐣', species:'nova', pts:840, streak:7, rank:1, me:true},
+  {name:'Kinara', pet:'☁️', species:'sora', pts:710, streak:5, rank:2},
+  {name:'Baginda',pet:'⚡', species:'bolt', pts:660, streak:4, rank:3},
+  {name:'Keyla',  pet:'🌸', species:'lumi', pts:520, streak:3, rank:4},
+];
 
-  function renderPet(targetId){
-    const b = species[state.buddy];
-    setVar('--buddyA', b.colors[0]); setVar('--buddyB', b.colors[1]); setVar('--buddyC', b.colors[2]);
-    const target = document.getElementById(targetId);
-    target.innerHTML = `
-      <div class="petWrap" id="petWrap">
-        <div class="petHalo"></div>
-        <div class="petAccessory">${b.accessory}</div>
-        <svg class="petSvg" viewBox="0 0 200 200" aria-hidden="true">
-          <defs>
-            <linearGradient id="gradBody" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="${b.colors[0]}"/>
-              <stop offset="65%" stop-color="${b.colors[1]}"/>
-              <stop offset="100%" stop-color="${b.colors[2]}"/>
-            </linearGradient>
-            <radialGradient id="shine" cx="36%" cy="24%" r="44%">
-              <stop offset="0%" stop-color="rgba(255,255,255,.96)"/>
-              <stop offset="38%" stop-color="rgba(255,255,255,.36)"/>
-              <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
-            </radialGradient>
-            <radialGradient id="belly" cx="50%" cy="20%" r="75%">
-              <stop offset="0%" stop-color="rgba(255,255,255,.58)"/>
-              <stop offset="100%" stop-color="rgba(255,255,255,.10)"/>
-            </radialGradient>
-          </defs>
-          <g id="earL" transform="translate(40 36) rotate(-19)">
-            <path d="M0 56 C8 12 29 -2 51 0 C46 23 40 49 30 67 C22 81 9 79 0 56 Z" fill="url(#gradBody)"/>
-            <path d="M17 48 C20 24 31 14 42 14 C39 27 34 45 28 56 C24 63 19 60 17 48 Z" fill="rgba(255,255,255,.26)"/>
-          </g>
-          <g id="earR" transform="translate(108 35) scale(-1 1) rotate(-18)">
-            <path d="M0 56 C8 12 29 -2 51 0 C46 23 40 49 30 67 C22 81 9 79 0 56 Z" fill="url(#gradBody)"/>
-            <path d="M17 48 C20 24 31 14 42 14 C39 27 34 45 28 56 C24 63 19 60 17 48 Z" fill="rgba(255,255,255,.26)"/>
-          </g>
-          <g id="bodyG">
-            <path d="M100 172 C62 172 34 146 34 110 C34 75 59 48 100 46 C141 48 166 75 166 110 C166 146 138 172 100 172 Z" fill="url(#gradBody)"/>
-            <ellipse cx="100" cy="112" rx="47" ry="40" fill="url(#belly)" opacity=".92"/>
-            <ellipse cx="82" cy="78" rx="42" ry="28" fill="url(#shine)" opacity=".94"/>
-            <ellipse cx="104" cy="178" rx="24" ry="8" fill="rgba(255,255,255,.22)"/>
-          </g>
-          <g id="faceG">
-            <ellipse id="eyeL" cx="72" cy="104" rx="12" ry="15" fill="#15253a" style="transform-origin:72px 104px; animation:blink 5.2s infinite;"/>
-            <ellipse id="eyeR" cx="128" cy="104" rx="12" ry="15" fill="#15253a" style="transform-origin:128px 104px; animation:blink 5.2s infinite .1s;"/>
-            <ellipse cx="67" cy="98" rx="4.5" ry="5.5" fill="#fff" opacity=".95"/>
-            <ellipse cx="123" cy="98" rx="4.5" ry="5.5" fill="#fff" opacity=".95"/>
-            <ellipse cx="54" cy="126" rx="12" ry="7" fill="rgba(255,121,200,.34)"/>
-            <ellipse cx="146" cy="126" rx="12" ry="7" fill="rgba(255,121,200,.34)"/>
-            <path d="M94 121 Q100 127 106 121" fill="none" stroke="#15253a" stroke-width="3.2" stroke-linecap="round"/>
-            <path d="M90 130 Q100 138 110 130" fill="none" stroke="#15253a" stroke-width="3.2" stroke-linecap="round"/>
-          </g>
-          <g id="feetG">
-            <ellipse cx="77" cy="165" rx="17" ry="11" fill="rgba(60,84,140,.36)"/>
-            <ellipse cx="123" cy="165" rx="17" ry="11" fill="rgba(60,84,140,.36)"/>
-          </g>
-        </svg>
-        <div class="petCompanion" id="petCompanion"><i></i></div>
-        <div class="spark s1"></div><div class="spark s2"></div><div class="spark s3"></div>
-      </div>`;
+/* ---------- STATE ---------- */
+const DEFAULT_STATE = {
+  diamonds:240, xp:340, xpMax:500, level:4, streak:7, rank:2,
+  species:'nova',
+  owned:['nova'],
+  equipped:{hat:null, aura:'orbit', room:'cloud', orb:'book'},
+  energy:{learning:60, play:40, care:70, joy:30, rhythm:25, calm:35, social:45},
+  quests:[
+    {id:'q1', t:'Finish 1 Learning session', d:'Times Table or Clock', r:12, done:false, energy:'learning'},
+    {id:'q2', t:'Help with 3 chores', d:'Chore Quest', r:8, done:false, energy:'care'},
+    {id:'q3', t:'Spin the Lucky wheel', d:'Lucky Spin', r:5, done:false, energy:'joy'},
+    {id:'q4', t:'Drink 2L water', d:'Wellbeing', r:5, done:true, energy:'calm'},
+  ],
+  goalNow:780, goalMax:1000,
+  theme:'light', cheat:false,
+};
+let S = load();
+function load(){ try{const r=localStorage.getItem('kbw_state'); if(r){return Object.assign(JSON.parse(JSON.stringify(DEFAULT_STATE)),JSON.parse(r));}}catch(e){} return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
+function save(){ try{localStorage.setItem('kbw_state',JSON.stringify(S));}catch(e){} }
+</script>
+<script>
+/* =========================================================
+   PET ENGINE — reusable Pixar-ish creature (Three.js)
+   ========================================================= */
+function makePet(canvas, opts){
+  opts = opts || {};
+  const scene = new THREE.Scene();
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  let W=canvas.clientWidth||360, H=canvas.clientHeight||560;
+  const camera = new THREE.PerspectiveCamera(34, W/H, 0.1, 100);
+  camera.position.set(0, 0.55, 10.2);
+  camera.lookAt(0, -0.55, 0);
 
-    if(targetId==='miniStage'){ target.firstElementChild?.classList.add('miniPet'); }
-    bindPetInteractions();
-    animatePet();
+  /* lighting — soft studio */
+  const hemi = new THREE.HemisphereLight(0xffffff, 0xbfc9ff, 0.95);
+  scene.add(hemi);
+  const key = new THREE.DirectionalLight(0xffffff, 1.15);
+  key.position.set(-3.5, 5, 4); scene.add(key);
+  const fill = new THREE.DirectionalLight(0xa9c0ff, 0.5);
+  fill.position.set(4, -1, 2); scene.add(fill);
+  const rim = new THREE.PointLight(0xffffff, 0.7, 30);
+  rim.position.set(2, 3.5, -4); scene.add(rim);
+
+  /* root groups */
+  const root = new THREE.Group(); scene.add(root);          // whole pet (bounce)
+  const bodyG = new THREE.Group(); root.add(bodyG);          // body squash
+  const faceG = new THREE.Group(); root.add(faceG);          // face elements
+  const auraG = new THREE.Group(); root.add(auraG);
+  const orbitG = new THREE.Group(); root.add(orbitG);
+  const earG = new THREE.Group(); bodyG.add(earG);
+  const hatG = new THREE.Group(); root.add(hatG);
+
+  const mats = {};
+  function softMat(color, rough){ return new THREE.MeshStandardMaterial({color, roughness:rough!=null?rough:0.45, metalness:0.0}); }
+
+  /* BODY — chubby egg */
+  mats.body = softMat(0x6b7cff,0.4);
+  const bodyGeo = new THREE.SphereGeometry(1.5, 64, 64);
+  bodyGeo.scale(1, 1.12, 0.96);
+  const body = new THREE.Mesh(bodyGeo, mats.body);
+  body.position.y = -0.1;
+  bodyG.add(body);
+
+  /* shine highlight (subtle top-left gloss) */
+  mats.shine = new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.14});
+  const shineGeo = new THREE.SphereGeometry(0.5,32,32); shineGeo.scale(1.3,0.8,1);
+  const shine = new THREE.Mesh(shineGeo, mats.shine);
+  shine.position.set(-0.55,0.75,1.05); bodyG.add(shine);
+
+  /* BELLY patch */
+  mats.belly = softMat(0xc9d2ff,0.55);
+  const bellyGeo = new THREE.SphereGeometry(0.95,48,48); bellyGeo.scale(1,1.15,0.5);
+  const belly = new THREE.Mesh(bellyGeo, mats.belly);
+  belly.position.set(0,-0.28,0.92); bodyG.add(belly);
+
+  /* CHEEKS */
+  mats.cheek = new THREE.MeshStandardMaterial({color:0xff9ec4, roughness:0.7, transparent:true, opacity:0.85});
+  function cheek(x){ const g=new THREE.CircleGeometry(0.26,32); const m=new THREE.Mesh(g,mats.cheek); m.position.set(x,0.05,1.36); m.rotation.y=x>0?-0.25:0.25; return m; }
+  const cheekL=cheek(-0.72), cheekR=cheek(0.72); faceG.add(cheekL,cheekR);
+
+  /* EYES — white + iris + pupil + highlight */
+  mats.eyeWhite = softMat(0xffffff,0.25);
+  mats.iris = softMat(0x2b2f55,0.3);
+  function eye(x){
+    const g=new THREE.Group();
+    const wGeo=new THREE.SphereGeometry(0.3,40,40); wGeo.scale(0.82,1.05,0.7);
+    const white=new THREE.Mesh(wGeo,mats.eyeWhite); g.add(white);
+    const iris=new THREE.Mesh(new THREE.SphereGeometry(0.17,32,32), mats.iris);
+    iris.scale.set(1,1.05,1); iris.position.z=0.16; g.add(iris);
+    const pupil=new THREE.Mesh(new THREE.SphereGeometry(0.085,24,24), new THREE.MeshBasicMaterial({color:0x0a0c18}));
+    pupil.position.z=0.28; g.add(pupil);
+    const hi=new THREE.Mesh(new THREE.SphereGeometry(0.05,16,16), new THREE.MeshBasicMaterial({color:0xffffff}));
+    hi.position.set(0.07,0.09,0.33); g.add(hi);
+    const hi2=new THREE.Mesh(new THREE.SphereGeometry(0.028,12,12), new THREE.MeshBasicMaterial({color:0xffffff}));
+    hi2.position.set(-0.06,-0.05,0.33); g.add(hi2);
+    g.position.set(x,0.34,1.18);
+    g.userData={white,iris,pupil};
+    return g;
   }
+  const eyeL=eye(-0.42), eyeR=eye(0.42); faceG.add(eyeL,eyeR);
 
-  function bindPetInteractions(){
-    const pet = $('#petWrap'); if(!pet) return;
-    pet.onclick = ()=>{
-      bouncePet();
-      openSheet(`<h2>${species[state.buddy].name}</h2><p>${species[state.buddy].desc}</p><p><b>Best move today:</b> ${species[state.buddy].speech[1]}</p><div class="sheetActions"><button class="btn primary" onclick="window._buddyReward()">Give reward</button><button class="btn ghost" onclick="window._switchBuddy()">Switch buddy</button></div>`);
-    };
-  }
+  /* MOUTH — small smile (torus arc) */
+  mats.mouth = new THREE.MeshBasicMaterial({color:0x3a2740});
+  const mouthGeo=new THREE.TorusGeometry(0.16,0.035,12,40,Math.PI);
+  const mouth=new THREE.Mesh(mouthGeo,mats.mouth);
+  mouth.position.set(0,-0.16,1.42); mouth.rotation.z=Math.PI;
+  faceG.add(mouth);
 
-  function animatePet(){
-    const pet = $('#petWrap'); if(!pet) return;
-    if(window.gsap){
-      gsap.killTweensOf(pet);
-      gsap.to(pet,{y:-8,rotation:1.2,duration:2.4,repeat:-1,yoyo:true,ease:'sine.inOut'});
-      gsap.to('.orbit',{rotation:360,duration:18,repeat:-1,ease:'none'});
-      gsap.to('.orbit2',{rotation:-360,duration:12,repeat:-1,ease:'none'});
-      gsap.to('.miniPortal',{y:-6,duration:2.5,stagger:.18,repeat:-1,yoyo:true,ease:'sine.inOut'});
-      gsap.to('.spark',{scale:.55,opacity:.45,duration:1.3,stagger:.2,repeat:-1,yoyo:true,ease:'sine.inOut'});
-      gsap.to('#petCompanion',{x:10,y:-8,duration:2.8,repeat:-1,yoyo:true,ease:'sine.inOut'});
-      gsap.to('#earL',{rotation:-25,transformOrigin:'48px 72px',duration:2.7,repeat:-1,yoyo:true,ease:'sine.inOut'});
-      gsap.to('#earR',{rotation:25,transformOrigin:'152px 72px',duration:2.5,repeat:-1,yoyo:true,ease:'sine.inOut'});
-    }
-  }
-
-  function bouncePet(){
-    const pet = $('#petWrap'); if(!pet) return;
-    if(window.gsap){ gsap.fromTo(pet,{scale:1},{scale:1.08,duration:.16,yoyo:true,repeat:1,ease:'power2.out'}); }
-  }
-
-  function updateTop(){
-    $$('.walletInline').forEach(el=>el.textContent=state.wallet);
-    $('#levelTop').textContent = state.level;
-    $('#xpValue').textContent = state.xp;
-    $('#streakValue').textContent = state.streak;
-  }
-
-  function renderHero(){
-    const b = species[state.buddy];
-    $('#buddyTitle').textContent = `${b.name} · ${b.role}`;
-    $('#moodChip').textContent = b.mood;
-    $('#speechBox').innerHTML = `<b>${b.speech[0]}</b><p>${b.speech[1]}</p>`;
-    renderPet('petStage');
-    renderPet('miniStage');
-    $('#closetName').textContent = b.name;
-    $('#closetDesc').textContent = b.desc;
-    $('#mapBuddy').textContent = b.emoji;
-  }
-
-  function renderQuests(){
-    $('#questList').innerHTML = state.quests.map(q=>`
-      <div class="quest smallCard ${q.done?'done':''}" data-id="${q.id}">
-        <div class="questIcon">${q.done?'✓':q.icon}</div>
-        <div class="questInfo"><b>${q.title}</b><p>${q.body}</p></div>
-        <div class="reward">+${q.reward} 💎</div>
-      </div>`).join('');
-    $$('#questList .quest').forEach(el=>el.onclick=()=>completeQuest(el.dataset.id));
-  }
-
-  function renderEnergy(){
-    $('#energyGrid').innerHTML = Object.entries(state.energies).map(([k,v])=>`
-      <div class="energy smallCard"><div class="energyTop"><span>${k}</span><b>${v}</b></div><div class="track"><i style="width:${v}%"></i></div></div>
-    `).join('');
-  }
-
-  function renderPortals(){
-    const cards = [appMeta.clock, appMeta.groceries, appMeta.padel].map(a=>`
-      <div class="portalCard smallCard" data-app="${Object.keys(appMeta).find(k=>appMeta[k]===a)}">
-        <div class="portalThumb">${a.icon}</div>
-        <div class="meta"><b>${a.name}</b><p>${a.copy}</p></div>
-        <div class="pill">+${a.reward} 💎</div>
-      </div>`).join('');
-    $('#portalList').innerHTML = cards;
-    $$('#portalList .portalCard, .portal').forEach(el=>el.onclick=(e)=>{ e.stopPropagation(); rewardFromApp(el.dataset.app); });
-  }
-
-  function renderBoards(){
-    const mode = state.boardMode;
-    $$('#boardSeg button').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
-    let html='';
-    if(mode==='overall'){
-      html += `<div class="board smallCard"><h3>Overall Family League</h3><p>All app points in one Strava-like hub.</p>
-        ${[
-          ['1','Aldyth + Nova','840 pts · #1 Padel, #2 Chess'],['2','Kinara + Sora','710 pts · #1 Groceries'],['3','Baginda + Nova','660 pts · #1 Clock Trainer'],['4','Keyla + Lumi','520 pts · #1 Moments']
-        ].map(r=>`<div class="boardRow"><div class="rank">${r[0]}</div><div class="who"><b>${r[1]}</b><p>${r[2]}</p></div><div class="score">🔥</div></div>`).join('')}
-      </div>`;
-      html += `<div class="board smallCard"><h3>Family Contribution Board</h3><p>Who helped the circle most this week.</p>
-        ${[['1','Aldyth','4 plans, 2 games'],['2','Kinara','18 grocery items'],['3','Baginda','4 learning rounds']].map(r=>`<div class="boardRow"><div class="rank">${r[0]}</div><div class="who"><b>${r[1]}</b><p>${r[2]}</p></div><div class="score">+${r[0]==='1'?120:r[0]==='2'?95:74} 💎</div></div>`).join('')}
-      </div>`;
-    } else if(mode==='apps'){
-      html += `<div class="board smallCard"><h3>Clock Trainer Board</h3><p>Fastest improvers this week.</p>
-        ${[['1','Baginda + Nova','92% accuracy'],['2','Keyla + Nova','85% accuracy'],['3','Aldyth + Nova','74% accuracy']].map(r=>`<div class="boardRow"><div class="rank">${r[0]}</div><div class="who"><b>${r[1]}</b><p>${r[2]}</p></div><div class="score">🕒</div></div>`).join('')}
-      </div>`;
-      html += `<div class="board smallCard"><h3>Padel Americano Board</h3><p>Top sporty buddies this week.</p>
-        ${[['1','Aldyth + Bolt','4 wins'],['2','Kinara + Bolt','3 wins'],['3','Baginda + Bolt','2 wins']].map(r=>`<div class="boardRow"><div class="rank">${r[0]}</div><div class="who"><b>${r[1]}</b><p>${r[2]}</p></div><div class="score">🎾</div></div>`).join('')}
-      </div>`;
-    } else {
-      html += `<div class="board smallCard"><h3>Active Showcases</h3><p>Pokémon GO-style timed competitions adapted for Kinetik.</p>
-        ${[['Clock Trainer Showcase','Ends in 2 days','Baginda is #1 at 92%'],['Moments Memory Showcase','Ends tomorrow','Keyla is #1 with 6 memories'],['Padel Weekend Showcase','Ends tonight','Aldyth is #1 with 4 wins']].map((r,i)=>`<div class="boardRow"><div class="rank">${i+1}</div><div class="who"><b>${r[0]}</b><p>${r[2]}</p></div><div class="score">${r[1]}</div></div>`).join('')}
-      </div>`;
-    }
-    $('#boardsList').innerHTML = html;
-  }
-
-  function renderCloset(){
-    const tab = state.closetTab;
-    $$('#closetTabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
-    const items = closetData[tab] || [];
-    $('#itemsGrid').innerHTML = items.map(it=>`
-      <div class="item smallCard ${it.owned?'owned':''}" data-tab="${tab}" data-id="${it.id}">
-        <div class="priceTag">${it.cost}</div>
-        <div class="itemIcon">${it.icon}</div>
-        <b>${it.title}</b><p>${it.sub}</p>
-      </div>`).join('');
-    $$('#itemsGrid .item').forEach(el=>el.onclick=()=>chooseItem(el.dataset.tab, el.dataset.id));
-  }
-
-  function renderMembers(){
-    const members = [
-      ['Aldyth','🌟','Level 7 · Overall #1 this week'],
-      ['Kinara','✨','Top groceries contributor'],
-      ['Baginda','🚀','Clock Trainer champion'],
-      ['Keyla','💖','Moments memory leader']
-    ];
-    $('#memberList').innerHTML = members.map((m,i)=>`
-      <div class="member smallCard"><div class="memberAv">${m[1]}</div><div class="memberInfo"><b>${m[0]}</b><p>${m[2]}</p></div><div class="tag">#${i+1}</div></div>
-    `).join('');
-  }
-
-  function completeQuest(id){
-    const q = state.quests.find(x=>x.id===id); if(!q || q.done) return;
-    q.done=true;
-    reward(q.reward, q.app);
-    state.streak = Math.max(state.streak, 6);
-    save(); render();
-  }
-
-  function reward(amount, appKey='clock'){
-    state.wallet += amount; state.xp += amount*3; state.level = Math.floor(state.xp/80)+1;
-    const incMap = {clock:'Learning', groceries:'Care', padel:'Play', calendar:'Rhythm', moments:'Joy', chess:'Calm'};
-    const k = incMap[appKey] || 'Learning'; state.energies[k] = Math.min(100, (state.energies[k]||0)+6);
-    gemBurst(); toast(`+${amount} diamonds · ${appMeta[appKey]?.name||'Action'} complete`);
-    bouncePet(); save(); render();
-  }
-
-  function rewardFromApp(appKey){
-    const app = appMeta[appKey];
-    if(!app) return;
-    reward(app.reward, appKey);
-    openSheet(`<h2>${app.name}</h2><p>${app.copy}</p><p><b>Leaderboard impact:</b> your buddy just gained points in the one-stop Kinetik Boards hub.</p><div class="sheetActions"><button class="btn primary" onclick="document.querySelector('[data-tab=boards]').click(); window._closeSheet()">View Boards</button><button class="btn ghost" onclick="window._closeSheet()">Close</button></div>`);
-  }
-
-  function gemBurst(){
-    const anchor = $('#heroCard'); if(!anchor) return;
-    const rect = anchor.getBoundingClientRect();
-    for(let i=0;i<6;i++){
-      const gem = document.createElement('div'); gem.className='gem'; gem.textContent='💎';
-      gem.style.left = (rect.left + rect.width*0.48 + (Math.random()*30-15))+'px';
-      gem.style.top = (rect.top + rect.height*0.58 + (Math.random()*24-12))+'px';
-      document.body.appendChild(gem);
-      if(window.gsap){
-        gsap.to(gem,{x:130 + Math.random()*24,y:-280 + Math.random()*20,scale:.35,rotation:220+Math.random()*180,opacity:0,duration:.95,ease:'power2.out',onComplete:()=>gem.remove()});
-      } else { setTimeout(()=>gem.remove(),900); }
-    }
-  }
-
-  function chooseItem(tab,id){
-    if(tab==='species' && species[id]){ state.buddy=id; save(); render(); toast(`${species[id].name} equipped`); return; }
-    if(tab==='hat'){ const map={chef:'🧑‍🍳',wizard:'🪄',crown:'👑'}; state.hat=id; species[state.buddy].accessory = map[id] || species[state.buddy].accessory; toast('Accessory preview updated'); }
-    if(tab==='aura'){ toast('Aura preview updated'); }
-    if(tab==='room'){ toast('Room skin preview updated'); }
-  }
-
-  function setTab(tab){
-    $$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
-    $$('.screen').forEach(s=>s.classList.remove('on'));
-    $('#s-'+tab).classList.add('on');
-  }
-
-  function tiltHero(){
-    const stage = $('#tiltStage');
-    stage.addEventListener('pointermove', e=>{
-      const r = stage.getBoundingClientRect(); const x=(e.clientX-r.left)/r.width-.5, y=(e.clientY-r.top)/r.height-.5;
-      if(window.gsap){ gsap.to('#petWrap',{rotationY:x*18,rotationX:-y*12,duration:.35,ease:'power2.out'}); }
+  /* EARS — rebuildable per species */
+  mats.ear = softMat(0x8b6bff,0.4);
+  function buildEars(){
+    while(earG.children.length) earG.remove(earG.children[0]);
+    [-1,1].forEach(s=>{
+      const eGeo=new THREE.SphereGeometry(0.42,32,32); eGeo.scale(0.62,1.15,0.6);
+      const e=new THREE.Mesh(eGeo,mats.ear);
+      e.position.set(s*0.92,1.35,0.1); e.rotation.z=s*0.35;
+      earG.add(e);
     });
-    stage.addEventListener('pointerleave', ()=>{ if(window.gsap) gsap.to('#petWrap',{rotationY:0,rotationX:0,duration:.45,ease:'power2.out'}); });
+  }
+  buildEars();
+
+  /* FEET nubs */
+  mats.feet = softMat(0x5a6bff,0.5);
+  [-1,1].forEach(s=>{
+    const f=new THREE.Mesh(new THREE.SphereGeometry(0.34,28,28), mats.feet);
+    f.scale.set(1,0.6,1.1); f.position.set(s*0.55,-1.55,0.45); bodyG.add(f);
+  });
+
+  /* AURA ring — orbits low around the body base */
+  auraG.position.y=-1.15;
+  mats.aura = new THREE.MeshBasicMaterial({color:0x5b6cff, transparent:true, opacity:0.5, side:THREE.DoubleSide});
+  const auraGeo=new THREE.TorusGeometry(1.55,0.06,16,80);
+  const aura=new THREE.Mesh(auraGeo,mats.aura);
+  aura.rotation.x=Math.PI/2; auraG.add(aura);
+  const auraGeo2=new THREE.TorusGeometry(1.85,0.035,16,80);
+  const aura2=new THREE.Mesh(auraGeo2,new THREE.MeshBasicMaterial({color:0x5b6cff,transparent:true,opacity:0.28,side:THREE.DoubleSide}));
+  aura2.rotation.x=Math.PI/2; aura2.position.y=0.15; auraG.add(aura2);
+
+  /* COMPANION orb */
+  mats.orb = new THREE.MeshStandardMaterial({color:0x9fd0ff, emissive:0x6aa8ff, emissiveIntensity:0.6, roughness:0.2});
+  const orb=new THREE.Mesh(new THREE.SphereGeometry(0.26,32,32), mats.orb);
+  const orbGlow=new THREE.Mesh(new THREE.SphereGeometry(0.4,24,24), new THREE.MeshBasicMaterial({color:0x9fd0ff,transparent:true,opacity:0.22}));
+  orb.add(orbGlow);
+  orbitG.add(orb);
+
+  /* FLOOR shadow */
+  mats.shadow = new THREE.MeshBasicMaterial({color:0x2a2f55, transparent:true, opacity:0.16});
+  const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.3,48), mats.shadow);
+  shadow.rotation.x=-Math.PI/2; shadow.position.y=-1.95; root.add(shadow);
+
+  /* HAT builder */
+  function buildHat(type){
+    while(hatG.children.length) hatG.remove(hatG.children[0]);
+    if(!type) return;
+    const top=new THREE.Group(); top.position.set(0,1.65,0.2);
+    if(type==='chef'){
+      const band=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.55,0.3,32), softMat(0xffffff,0.6)); band.position.y=0.1; top.add(band);
+      const puff=new THREE.Mesh(new THREE.SphereGeometry(0.55,32,32), softMat(0xffffff,0.6)); puff.scale.set(1,0.8,1); puff.position.y=0.5; top.add(puff);
+    } else if(type==='crown'){
+      const c=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.5,0.35,5), softMat(0xffd24a,0.2)); c.position.y=0.15; top.add(c);
+      for(let i=0;i<5;i++){const sp=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.3,4), softMat(0xffe08a,0.2)); const a=i/5*Math.PI*2; sp.position.set(Math.cos(a)*0.5,0.42,Math.sin(a)*0.5); top.add(sp);}
+      const gem=new THREE.Mesh(new THREE.SphereGeometry(0.1,16,16), new THREE.MeshStandardMaterial({color:0xff5a8a,emissive:0x880033,roughness:0.1})); gem.position.set(0,0.2,0.52); top.add(gem);
+    } else if(type==='wand'||type==='tiara'){
+      const star=new THREE.Mesh(new THREE.ConeGeometry(0.22,0.34,5), new THREE.MeshStandardMaterial({color:0xffe08a,emissive:0xffaa22,emissiveIntensity:0.5,roughness:0.2}));
+      star.position.y=0.5; top.add(star);
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(0.4,0.05,12,32), softMat(0xcfd6ff,0.2)); ring.position.y=0.18; ring.rotation.x=Math.PI/2; top.add(ring);
+    } else if(type==='cap'){
+      const dome=new THREE.Mesh(new THREE.SphereGeometry(0.55,32,32,0,Math.PI*2,0,Math.PI/2), softMat(0xffc24a,0.4)); dome.position.y=0.05; top.add(dome);
+      const brim=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,0.06,32,1,false,0,Math.PI), softMat(0xff9e2c,0.4)); brim.position.set(0,0.04,0.5); top.add(brim);
+    } else if(type==='puff'){
+      [[0,0.2,0.5],[ -0.3,0.1,0.45],[0.3,0.12,0.42]].forEach(p=>{const b=new THREE.Mesh(new THREE.SphereGeometry(0.32,24,24), softMat(0xffffff,0.7)); b.position.set(p[0],p[1],p[2]); top.add(b);});
+    }
+    hatG.add(top);
   }
 
-  function bind(){
-    $('#nav').onclick=e=>{ const b=e.target.closest('button[data-tab]'); if(b) setTab(b.dataset.tab); };
-    $('#sheet').onclick=e=>{ if(e.target.id==='sheet') closeSheet(); };
-    $('#bestMoveBtn').onclick = ()=>rewardFromApp('clock');
-    $('#petActionBtn').onclick = ()=>openSheet(`<h2>Pet actions</h2><p>Make the buddy feel premium and alive with little rituals. Try one of these now.</p><div class="sheetActions"><button class="btn primary" onclick="window._buddyReward()">Give Treat</button><button class="btn ghost" onclick="window._switchBuddy()">Switch Species</button></div>`);
-    $('#resetQuests').onclick = ()=>{ state.quests = structuredClone(defaultState.quests); save(); render(); toast('Quests reset'); };
-    $('#energyHelp').onclick = ()=>openSheet(`<h2>Evolution energy</h2><p>Every Kinetik app pushes a different energy type: <b>Joy</b> from Moments, <b>Care</b> from Groceries, <b>Rhythm</b> from Calendar, <b>Play</b> from Games, <b>Learning</b> from kids apps, and <b>Calm</b> from wellbeing tools. Balanced energy creates the rarest buddy evolutions.</p>`);
-    $('#boardSeg').onclick = e=>{ const b=e.target.closest('button[data-mode]'); if(!b) return; state.boardMode=b.dataset.mode; save(); renderBoards(); };
-    $('#closetTabs').onclick = e=>{ const b=e.target.closest('button[data-tab]'); if(!b) return; state.closetTab=b.dataset.tab; save(); renderCloset(); };
-    tiltHero();
+  /* APPLY species + accessories */
+  function applyLook(sp, eq){
+    const s=SPECIES[sp]||SPECIES.nova;
+    mats.body.color.setHex(s.body);
+    mats.belly.color.setHex(s.belly);
+    mats.cheek.color.setHex(s.cheek);
+    mats.ear.color.setHex(s.ear);
+    mats.feet.color.setHex(s.body);
+    mats.iris.color.setHex(s.eye);
+    // aura: equipped aura overrides species
+    let auraColor=s.aura;
+    if(eq&&eq.aura){const item=findShop(eq.aura); if(item&&item.aura!=null)auraColor=item.aura;}
+    mats.aura.color.setHex(auraColor); aura2.material.color.setHex(auraColor);
+    // orb: equipped companion overrides species
+    let orbColor=s.orb;
+    if(eq&&eq.orb){const item=findShop(eq.orb); if(item&&item.orb!=null)orbColor=item.orb;}
+    mats.orb.color.setHex(orbColor); mats.orb.emissive.setHex(orbColor); orbGlow.material.color.setHex(orbColor);
+    // hat
+    buildHat(eq&&eq.hat?(findShop(eq.hat)||{}).hat:null);
   }
+  function findShop(id){ for(const c in SHOP){const f=SHOP[c].find(i=>i.id===id); if(f)return f;} return null; }
 
-  function render(){ updateTop(); renderHero(); renderQuests(); renderEnergy(); renderPortals(); renderBoards(); renderCloset(); renderMembers(); save(); }
+  /* ANIMATION STATE */
+  let t=0, blinkT=0, nextBlink=2+Math.random()*3, pointerX=0, pointerY=0;
+  let bounceY=0, squash=1, spin=0, celebrate=0, levitate=0;
+  const api={};
 
-  window._closeSheet = closeSheet;
-  window._buddyReward = ()=>{ closeSheet(); reward(10,'moments'); };
-  window._switchBuddy = ()=>{ const order=['nova','bento','bolt']; const next=order[(order.indexOf(state.buddy)+1)%order.length]; state.buddy=next; closeSheet(); render(); toast(`${species[next].name} is now active`); };
+  api.applyLook=applyLook;
+  api.bounce=function(){
+    gsap.timeline()
+      .to(api.fx,{squash:1.25,duration:0.1,ease:'power2.out'})
+      .to(api.fx,{squash:0.85,duration:0.08})
+      .to(api.fx,{bounceY:0.55,duration:0.22,ease:'power2.out'},'<')
+      .to(api.fx,{squash:1,duration:0.25,ease:'elastic.out(1,0.4)'})
+      .to(api.fx,{bounceY:0,duration:0.4,ease:'bounce.out'},'<');
+  };
+  api.celebrate=function(){
+    gsap.timeline()
+      .to(api.fx,{spin:api.fx.spin+Math.PI*2,duration:0.8,ease:'power2.inOut'})
+      .to(api.fx,{bounceY:0.7,duration:0.3,ease:'power2.out'},'<')
+      .to(api.fx,{bounceY:0,duration:0.5,ease:'bounce.out'},'>-0.1')
+      .to(api.fx,{squash:1.15,duration:0.15},'<')
+      .to(api.fx,{squash:1,duration:0.3,ease:'elastic.out(1,0.4)'});
+    api.fx.star=1; setTimeout(()=>api.fx.star=0,1400);
+  };
+  api.levitate=function(on){ gsap.to(api.fx,{levitate:on?0.5:0,duration:0.8,ease:'sine.inOut'}); gsap.to(mats.aura,{opacity:on?0.9:0.55,duration:0.6}); };
+  api.fx={squash:1,bounceY:0,spin:0,star:0,levitate:0,auraBoost:0};
+  api.setPointer=function(x,y){ pointerX=x; pointerY=y; };
 
-  bind(); render();
-})();
+  /* RENDER LOOP */
+  function resize(){ W=canvas.clientWidth; H=canvas.clientHeight; renderer.setSize(W,H,false); camera.aspect=W/H; camera.updateProjectionMatrix(); }
+  function frame(){
+    requestAnimationFrame(frame);
+    t+=0.016;
+    // idle breathing
+    const breathe=1+Math.sin(t*1.6)*0.025;
+    const floatY=Math.sin(t*1.1)*0.06 + api.fx.bounceY + api.fx.levitate;
+    bodyG.scale.set(api.fx.squash*breathe, (2-api.fx.squash)*breathe, api.fx.squash*breathe);
+    root.position.y=floatY;
+    root.rotation.y=api.fx.spin + pointerX*0.25;
+    faceG.rotation.x = -pointerY*0.12; faceG.rotation.y = pointerX*0.18;
+    earG.rotation.z=Math.sin(t*1.6)*0.04;
+    // shadow scales inverse to float
+    const sc=1-floatY*0.12; shadow.scale.set(sc,sc,sc); mats.shadow.opacity=0.16-floatY*0.05;
+    // blink
+    blinkT+=0.016;
+    let blink=1;
+    if(blinkT>nextBlink){ const p=(blinkT-nextBlink)/0.15; blink=p<1?Math.abs(1-Math.sin(p*Math.PI)*0.95):1; if(p>=1){blinkT=0;nextBlink=2+Math.random()*3.5;} }
+    [eyeL,eyeR].forEach(e=>{ e.scale.y=api.fx.star?1.15:blink; e.userData.iris.position.x=pointerX*0.05; });
+    // mouth: happy when star
+    mouth.scale.set(api.fx.star?1.4:1, api.fx.star?1.5:1, 1);
+    // aura spin + pulse
+    auraG.rotation.z+=0.004;
+    const ap=0.45+Math.sin(t*2)*0.15+api.fx.auraBoost;
+    mats.aura.opacity=Math.min(1,ap); 
+    if(opts.rainbowAura){ const h=(t*0.1)%1; mats.aura.color.setHSL(h,0.8,0.6); aura2.material.color.setHSL((h+0.2)%1,0.8,0.6); }
+    // companion orbit
+    const oa=t*1.1; orb.position.set(Math.cos(oa)*2.0, 0.6+Math.sin(t*2)*0.2, Math.sin(oa)*1.0);
+    orbGlow.scale.setScalar(1+Math.sin(t*3)*0.12);
+    // hat follows body bounce
+    hatG.position.y=floatY*0.0; hatG.scale.set(api.fx.squash,2-api.fx.squash,api.fx.squash);
+    renderer.render(scene,camera);
+  }
+  resize(); frame();
+  window.addEventListener('resize',resize);
+  api.resize=resize; api.scene=scene; api.setRainbow=function(v){opts.rainbowAura=v; if(!v){mats.aura.color.setHex(SPECIES[S.species].aura);}};
+  return api;
+}
+</script>
+<script>
+/* =========================================================
+   APP LOGIC
+   ========================================================= */
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
+const DIA='<svg class="dia" viewBox="0 0 24 24" style="width:14px;height:14px;vertical-align:-2px"><defs><linearGradient id="dg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fe9ff"/><stop offset="1" stop-color="#0a8fd6"/></linearGradient></defs><path d="M6 3h12l4 6-10 12L2 9z" fill="url(#dg2)"/></svg>';
+
+let pet, shopPet;
+
+/* ---------- INIT ---------- */
+function init(){
+  document.documentElement.setAttribute('data-theme', S.theme);
+  pet = makePet($('#petCanvas'), {rainbowAura: S.equipped.aura==='rainbow'});
+  pet.applyLook(S.species, S.equipped);
+  applyRoom($('#stage'), S.equipped.room);
+  bindNav(); bindStage(); bindSheet(); bindTopbar(); bindBoards(); bindCircle();
+  renderAll();
+  setTimeout(()=>{ $('#tapHint').classList.add('show'); }, 1200);
+  setTimeout(()=>{ $('#tapHint').classList.remove('show'); }, 7000);
+  // intro speech
+  setTimeout(()=>speak(`Hi! I'm ${SPECIES[S.species].name} 🌟`), 800);
+}
+
+function renderAll(){
+  renderWallet(); renderSheet(); renderQuests(); renderEnergy();
+  renderPortals(); renderBoards('overall'); renderShop(); renderCircle();
+  updateEvoBanner();
+}
+
+/* ---------- WALLET ---------- */
+function renderWallet(){ $('#walletNum').textContent = S.diamonds.toLocaleString(); }
+function spend(n){ if(S.diamonds<n) return false; S.diamonds-=n; renderWallet(); save(); return true; }
+function earn(n,fromEl){ S.diamonds+=n; flyDiamonds(n,fromEl); save(); }
+
+/* ---------- SHEET (buddy page) ---------- */
+function renderSheet(){
+  const sp=SPECIES[S.species];
+  $('#petName').innerHTML=`${sp.name} <span class="pet-lvl">· Lv ${S.level}</span>`;
+  $('#sheetName').textContent=sp.name;
+  $('#sheetSub').textContent=`Level ${S.level} ${sp.role} · ${evoPct()}% to evolve`;
+  $('#statStreak').textContent=S.streak;
+  $('#statXP').textContent=S.xp;
+  $('#statRank').textContent='#'+S.rank;
+  const moods=['Playful 😄','Curious 🤔','Bright ✨','Cozy 🫶','Focused 🎯','Celebrating 🎉'];
+  const m=moods[Math.min(moods.length-1,Math.floor(S.energy[sp.energy]/20))];
+  $('#sheetMood').textContent=m; $('#moodText').textContent=m.split(' ')[0];
+}
+function renderQuests(){
+  $('#questList').innerHTML=S.quests.map(q=>`
+    <div class="quest ${q.done?'done':''}" data-q="${q.id}">
+      <div class="qcheck"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div class="qtext"><div class="qt">${q.t}</div><div class="qd">${q.d}</div></div>
+      <div class="qreward">+${q.r} ${DIA}</div>
+    </div>`).join('');
+  $$('#questList .quest').forEach(el=>el.onclick=()=>completeQuest(el.dataset.q,el));
+}
+function renderEnergy(){
+  $('#energyList').innerHTML=Object.keys(ENERGY_META).map(k=>{
+    const m=ENERGY_META[k], v=Math.round(S.energy[k]||0);
+    return `<div class="energy-row"><div class="en">${m.label}</div>
+      <div class="energy-track"><div class="energy-fill" data-en="${k}" style="background:linear-gradient(90deg,${m.color},${m.color}aa)"></div></div>
+      <div class="energy-pct">${v}%</div></div>`;
+  }).join('');
+  requestAnimationFrame(()=>$$('#energyList .energy-fill').forEach(f=>f.style.width=(S.energy[f.dataset.en]||0)+'%'));
+}
+
+/* ---------- QUESTS / REWARDS ---------- */
+function completeQuest(id,el){
+  const q=S.quests.find(x=>x.id===id); if(!q||q.done) return;
+  q.done=true; el.classList.add('done');
+  addEnergy(q.energy,10);
+  earn(q.r, el.querySelector('.qreward'));
+  pet.celebrate();
+  speak(`+${q.r} diamonds! ${SPECIES[S.species].name} loved that.`);
+  gainXP(q.r);
+  toast(`Quest done · +${q.r} 💎`,'✅');
+  renderSheet(); renderEnergy(); updateEvoBanner(); save();
+}
+function bestMove(el){
+  // simulate completing the highest-value undone quest, or a generic session
+  const q=S.quests.find(x=>!x.done);
+  if(q){ completeQuest(q.id, $(`[data-q="${q.id}"]`)||el); return; }
+  // all done — simulate a learning session
+  addEnergy('learning',12); earn(12,el); gainXP(12); pet.celebrate();
+  speak('Bonus learning session! +12 💎'); toast('Best move complete · +12 💎','✨');
+  renderSheet(); renderEnergy(); updateEvoBanner();
+}
+function gainXP(n){
+  S.xp+=n;
+  while(S.xp>=S.xpMax){ S.xp-=S.xpMax; S.level++; S.xpMax=Math.round(S.xpMax*1.15); toast(`Level up! Nova is Lv ${S.level} 🎉`,'⭐'); }
+  save();
+}
+function addEnergy(type,amt){ S.energy[type]=Math.min(100,(S.energy[type]||0)+amt); save(); }
+
+/* ---------- SPEECH ---------- */
+let speechTimer;
+function speak(txt){
+  const s=$('#speech'); s.textContent=txt; s.classList.remove('show'); void s.offsetWidth; s.classList.add('show');
+  clearTimeout(speechTimer); speechTimer=setTimeout(()=>s.classList.remove('show'),2600);
+}
+
+/* ---------- DIAMOND PARTICLES ---------- */
+function flyDiamonds(n,fromEl){
+  const wallet=$('#walletBtn').getBoundingClientRect();
+  const from=fromEl?fromEl.getBoundingClientRect():{left:window.innerWidth/2,top:window.innerHeight/2,width:0,height:0};
+  const count=Math.min(8,Math.max(3,Math.round(n/3)));
+  for(let i=0;i<count;i++){
+    const p=document.createElement('div'); p.className='dia-particle';
+    p.innerHTML='<svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 12L2 9z" fill="#26c6ff"/><path d="M2 9h20" stroke="#fff" stroke-width="0.8" opacity="0.6"/></svg>';
+    document.body.appendChild(p);
+    const sx=from.left+from.width/2+(Math.random()-0.5)*30, sy=from.top+from.height/2;
+    const tx=wallet.left+wallet.width/2, ty=wallet.top+wallet.height/2;
+    gsap.set(p,{x:sx,y:sy,scale:0.3,opacity:0});
+    gsap.timeline({onComplete:()=>p.remove()})
+      .to(p,{opacity:1,scale:1,duration:0.2,delay:i*0.05})
+      .to(p,{x:sx+(Math.random()-0.5)*60,y:sy-50-Math.random()*40,duration:0.3,ease:'power2.out'},'<')
+      .to(p,{x:tx,y:ty,scale:0.5,duration:0.5,ease:'power2.in'})
+      .to(p,{opacity:0,duration:0.1},'>-0.1');
+  }
+  // animate counter
+  const num=$('#walletNum'); const start=S.diamonds-n; let cur=start;
+  gsap.to({v:start},{v:S.diamonds,duration:0.7,delay:0.4,ease:'power2.out',onUpdate:function(){num.textContent=Math.round(this.targets()[0].v).toLocaleString();}});
+  gsap.fromTo($('#walletBtn'),{scale:1},{scale:1.15,duration:0.2,delay:0.6,yoyo:true,repeat:1});
+}
+
+/* ---------- TOAST ---------- */
+function toast(msg,icon){
+  const t=document.createElement('div'); t.className='toast';
+  t.innerHTML=`<span class="ti">${icon||'💎'}</span>${msg}`;
+  $('#toastWrap').appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>{t.classList.remove('show'); setTimeout(()=>t.remove(),400);},2400);
+}
+
+/* ---------- NAV ---------- */
+function bindNav(){
+  $$('.nav-btn').forEach(b=>b.onclick=()=>{
+    const pg=b.dataset.page;
+    $$('.nav-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+    $$('.page').forEach(p=>p.classList.remove('active'));
+    $('#page-'+pg).classList.add('active');
+    if(pg==='shop'){ ensureShopPet(); }
+  });
+}
+
+/* ---------- STAGE INTERACTION ---------- */
+function bindStage(){
+  const c=$('#petCanvas'); let lastTap=0;
+  c.addEventListener('pointerdown',e=>{
+    const now=Date.now();
+    if(now-lastTap<300){ pet.celebrate(); speak('Wheee! 🎉'); }
+    else { pet.bounce(); const lines=['Hehe!','That tickles!','Hi there 👋','Play with me?','I feel great!']; speak(lines[Math.floor(Math.random()*lines.length)]); }
+    lastTap=now; burst(e.clientX,e.clientY);
+    $('#tapHint').classList.remove('show');
+  });
+  c.addEventListener('pointermove',e=>{
+    const r=c.getBoundingClientRect();
+    pet.setPointer((e.clientX-r.left)/r.width*2-1, (e.clientY-r.top)/r.height*2-1);
+  });
+  c.addEventListener('pointerleave',()=>pet.setPointer(0,0));
+  // long press → pet actions
+  let pressTimer;
+  c.addEventListener('pointerdown',()=>{ pressTimer=setTimeout(openPetActions,550); });
+  c.addEventListener('pointerup',()=>clearTimeout(pressTimer));
+  c.addEventListener('pointerleave',()=>clearTimeout(pressTimer));
+}
+function burst(x,y){
+  for(let i=0;i<7;i++){
+    const p=document.createElement('div'); p.className='dia-particle';
+    p.style.fontSize='16px'; p.textContent=['✨','💫','⭐','🌟'][i%4];
+    document.body.appendChild(p);
+    gsap.set(p,{x:x-8,y:y-8,scale:0.4,opacity:1});
+    const a=Math.random()*Math.PI*2, d=40+Math.random()*50;
+    gsap.timeline({onComplete:()=>p.remove()})
+      .to(p,{x:x+Math.cos(a)*d,y:y+Math.sin(a)*d-20,scale:1,duration:0.5,ease:'power2.out'})
+      .to(p,{opacity:0,scale:0.3,duration:0.3},'>-0.2');
+  }
+}
+
+/* ---------- SWIPE SHEET ---------- */
+function bindSheet(){
+  const sheet=$('#sheet'); let startY=0,curState=0;
+  const handle=sheet.querySelector('.sheet-handle');
+  function setState(s){ curState=s; sheet.classList.toggle('half',s===1); sheet.classList.toggle('full',s===2);
+    $('#app').classList.toggle('sheet-open', s>0); }
+  let dragging=false;
+  function onDown(e){ dragging=true; startY=(e.touches?e.touches[0].clientY:e.clientY); }
+  function onMove(e){ if(!dragging)return; const y=(e.touches?e.touches[0].clientY:e.clientY); const dy=y-startY;
+    if(dy<-40){ setState(Math.min(2,curState+1)); dragging=false; } else if(dy>40){ setState(Math.max(0,curState-1)); dragging=false; } }
+  function onUp(){ dragging=false; }
+  [handle, sheet.querySelector('.sheet-head')].forEach(el=>{
+    el.addEventListener('pointerdown',onDown); 
+  });
+  sheet.addEventListener('pointermove',onMove); sheet.addEventListener('pointerup',onUp);
+  handle.addEventListener('click',()=>setState(curState>=2?0:curState+1));
+  $('#bestMoveBtn').onclick=e=>bestMove(e.currentTarget);
+  $('#petActionsBtn').onclick=openPetActions;
+  $('#evoBanner').onclick=openEvolution;
+}
+</script>
+<script>
+/* ---------- PORTALS (Map) ---------- */
+function renderPortals(){
+  $('#portalGrid').innerHTML=PORTALS.map(p=>{
+    const em=ENERGY_META[p.energy];
+    return `<div class="portal ${p.locked?'locked':''}" data-p="${p.id}">
+      <div class="glow" style="background:radial-gradient(circle,${p.grad.split(',')[0]},transparent)"></div>
+      <div class="pic" style="background:linear-gradient(135deg,${p.grad})">${p.icon}</div>
+      <div class="pname">${p.name}</div>
+      <div class="penergy" style="color:${em.color}">${em.label} energy</div>
+      <div class="pfoot">
+        <div class="preward">+${p.reward} ${DIA}</div>
+        <div class="pbadge ${p.badge}">${p.badgeTxt}</div>
+      </div>
+      ${p.locked?'<div class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>':''}
+    </div>`;
+  }).join('');
+  $$('#portalGrid .portal').forEach(el=>el.onclick=()=>openPortal(el.dataset.p));
+}
+function openPortal(id){
+  const p=PORTALS.find(x=>x.id===id); if(!p) return;
+  if(p.locked){ toast('Unlocks at level 6','🔒'); return; }
+  const em=ENERGY_META[p.energy];
+  openModal(`
+    <div class="modal-handle"></div>
+    <h2>${p.icon} ${p.name}</h2>
+    <p class="msub">${em.label} energy · earns +${p.reward} 💎 per session</p>
+    <div class="buy-preview" style="background:linear-gradient(135deg,${p.grad});font-size:64px">${p.icon}</div>
+    <div class="stat-strip" style="margin:0 0 16px">
+      <div class="stat-card"><div class="sv">+${p.reward}</div><div class="sl">Diamonds</div></div>
+      <div class="stat-card"><div class="sv">+8</div><div class="sl">${em.label}</div></div>
+      <div class="stat-card"><div class="sv">${p.badge==='rank'?p.badgeTxt:'New'}</div><div class="sl">Your Rank</div></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="simulateApp('${id}')">▶ Open & complete session</button>
+    <button class="modal-close" onclick="closeModal()">Maybe later</button>
+  `);
+}
+function simulateApp(id){
+  const p=PORTALS.find(x=>x.id===id); closeModal();
+  setTimeout(()=>{
+    addEnergy(p.energy,8); 
+    // jump to buddy page so reward feels grounded on the pet
+    $$('.nav-btn').forEach(x=>x.classList.remove('active')); $('[data-page="buddy"]').classList.add('active');
+    $$('.page').forEach(pg=>pg.classList.remove('active')); $('#page-buddy').classList.add('active');
+    earn(p.reward, $('#walletBtn'));
+    gainXP(p.reward); pet.celebrate();
+    speak(`${p.name} done! +${p.reward} 💎`);
+    toast(`${p.name} session complete · +${p.reward} 💎`, p.icon);
+    // mark portal done
+    p.badge='done'; p.badgeTxt='Done ✓'; renderPortals();
+    renderSheet(); renderEnergy(); updateEvoBanner();
+    // bump circle goal
+    S.goalNow=Math.min(S.goalMax,S.goalNow+Math.round(p.reward/2)); renderCircle();
+  },450);
+}
+
+/* ---------- BOARDS ---------- */
+function bindBoards(){
+  $$('.seg-btn').forEach(b=>b.onclick=()=>{
+    $$('.seg-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+    renderBoards(b.dataset.seg);
+  });
+}
+function renderBoards(seg){
+  const C=$('#boardContent');
+  if(seg==='overall'){
+    C.innerHTML=`<div class="board-card"><h3>🏆 Family League</h3><div class="bsub">This week · resets Sunday</div>${
+      MEMBERS.map(m=>`<div class="rank-row ${m.me?'me':''}">
+        <div class="rank-medal">${['🥇','🥈','🥉','4️⃣'][m.rank-1]}</div>
+        <div class="rank-pet" style="background:linear-gradient(135deg,${SHOP.species.find(s=>s.id===m.species).color},#ffffff55)">${m.pet}</div>
+        <div class="rank-info"><div class="rn">${m.name}${m.me?' (you)':''}</div><div class="rd">${m.streak}-day streak</div></div>
+        <div class="rank-pts">${m.pts}</div></div>`).join('')}</div>`;
+  } else if(seg==='apps'){
+    const boards=[
+      {t:'⚡ Clock Trainer',sub:'Weekly accuracy',rows:[['Keyla','94%'],['Aldyth','92%'],['Kinara','88%']]},
+      {t:'🎾 Padel Americano',sub:'Weekend wins',rows:[['Baginda','12'],['Aldyth','8'],['Kinara','6']]},
+      {t:'🛒 Grocery Buddy',sub:'Shopping runs',rows:[['Kinara','9'],['Aldyth','5'],['Baginda','3']]},
+      {t:'♟️ MindCastle Chess',sub:'Weekly wins',rows:[['Aldyth','7'],['Baginda','5'],['Keyla','2']]},
+    ];
+    C.innerHTML=boards.map(b=>`<div class="board-card"><h3>${b.t}</h3><div class="bsub">${b.sub}</div>${
+      b.rows.map((r,i)=>`<div class="rank-row ${r[0]==='Aldyth'?'me':''}"><div class="rank-medal">${['🥇','🥈','🥉'][i]}</div>
+      <div class="rank-info"><div class="rn">${r[0]}</div></div><div class="rank-pts">${r[1]}</div></div>`).join('')}</div>`).join('');
+  } else {
+    C.innerHTML=`
+    <div class="showcase"><h3>⚡ This Week's Clock Masters</h3>
+      <div class="sc-row"><span>Peak accuracy</span><b>Keyla · 94%</b></div>
+      <div class="sc-row"><span>Longest streak</span><b>Aldyth · 12 days</b></div>
+      <div class="sc-row"><span>Most improved</span><b>Baginda · +18%</b></div></div>
+    <div class="showcase"><h3>🎾 Weekend Padel Warriors</h3>
+      <div class="sc-row"><span>Most games</span><b>Baginda · 5</b></div>
+      <div class="sc-row"><span>Fastest match</span><b>Kinara · 18 min</b></div></div>
+    <div class="showcase"><h3>🌸 Moments Memory</h3>
+      <div class="sc-row"><span>Memories saved</span><b>Keyla · 18</b></div>
+      <div class="sc-row"><span>Family favourite</span><b>Beach day 🏖️</b></div></div>`;
+  }
+}
+
+/* ---------- CIRCLE ---------- */
+function bindCircle(){
+  $('#contributeBtn').onclick=e=>{
+    if(!spend(50)){ toast('Need 50 💎 to contribute','💎'); return; }
+    S.goalNow=Math.min(S.goalMax,S.goalNow+50); renderCircle();
+    flyDiamonds(50,$('#goalFill')); toast('+50 💎 to Family Dragon Egg','🥚');
+    if(S.goalNow>=S.goalMax){ setTimeout(()=>{ toast('Family Dragon Egg hatched! 🐉','🎉'); celebrateGoal(); },600); }
+    save();
+  };
+  $('#celebrateBtn').onclick=()=>{ celebrateGoal(); toast('You cheered the circle! 🎉','💜'); };
+}
+function renderCircle(){
+  $('#cDiamonds').textContent=(2840).toLocaleString();
+  $('#memberList').innerHTML=MEMBERS.map(m=>`
+    <div class="member" data-m="${m.name}">
+      <div class="m-pet" style="background:linear-gradient(135deg,${SHOP.species.find(s=>s.id===m.species).color},#ffffff55)">${m.pet}</div>
+      <div class="m-info"><div class="mn">${m.name}${m.me?'':''} ${m.rank===1?'👑':''}</div><div class="md">${m.pts} pts · ${m.streak}-day streak</div></div>
+      <div class="m-rank">#${m.rank}</div>
+      <button class="cheer" data-cheer="${m.name}">Cheer</button>
+    </div>`).join('');
+  $$('#memberList .cheer').forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); earn(3,b); toast(`Cheered ${b.dataset.cheer}! +3 💎`,'👏'); });
+  $$('#memberList .member').forEach(el=>el.onclick=()=>openPassport(el.dataset.m));
+  const pct=Math.round(S.goalNow/S.goalMax*100);
+  $('#goalFill').style.width=pct+'%'; $('#goalNow').textContent=S.goalNow;
+  $('#goalLeft').textContent=(S.goalMax-S.goalNow)+' to hatch';
+}
+function openPassport(name){
+  const m=MEMBERS.find(x=>x.name===name); const sp=SHOP.species.find(s=>s.id===m.species);
+  openModal(`<div class="modal-handle"></div>
+    <div class="buy-preview" style="background:linear-gradient(135deg,${sp.color},#ffffff55);font-size:70px">${m.pet}</div>
+    <h2>${m.name}</h2><p class="msub">${sp.name} · ${sp.desc} · Rank #${m.rank}</p>
+    <div class="stat-strip" style="margin:0 0 8px">
+      <div class="stat-card"><div class="sv">${m.pts}</div><div class="sl">Points</div></div>
+      <div class="stat-card"><div class="sv">${m.streak}</div><div class="sl">Streak</div></div>
+      <div class="stat-card"><div class="sv">#${m.rank}</div><div class="sl">Rank</div></div></div>
+    <button class="btn btn-primary" style="width:100%" onclick="earn(3,document.querySelector('#walletBtn'));toast('Cheered ${m.name}! +3 💎','👏');closeModal()">👏 Send a cheer</button>
+    <button class="modal-close" onclick="closeModal()">Close</button>`);
+}
+function celebrateGoal(){
+  for(let i=0;i<20;i++){ setTimeout(()=>{ const x=Math.random()*window.innerWidth, y=window.innerHeight*0.4; burst(x,y); }, i*60); }
+}
+</script>
+<script>
+/* ---------- SHOP ---------- */
+let curCat='species';
+function renderShop(){
+  $('#catTabs').innerHTML=CATS.map(c=>`<button class="cat-tab ${c.id===curCat?'active':''}" data-cat="${c.id}">${c.label}</button>`).join('');
+  $$('#catTabs .cat-tab').forEach(b=>b.onclick=()=>{ curCat=b.dataset.cat; renderShop(); });
+  const items=SHOP[curCat]||[];
+  $('#shopGrid').innerHTML=items.map(it=>shopCard(it)).join('');
+  $$('#shopGrid .shop-item').forEach(el=>el.onclick=()=>tapItem(el.dataset.id));
+  updatePvTag();
+}
+function isOwned(it){ return it.price===0 || S.owned.includes(it.id); }
+function isEquipped(it){
+  if(it.cat==='species') return S.species===it.id;
+  if(it.kind==='hat') return S.equipped.hat===it.id;
+  if(it.kind==='aura') return S.equipped.aura===it.id;
+  if(it.kind==='room') return S.equipped.room===it.id;
+  if(it.kind==='orb') return S.equipped.orb===it.id;
+  return false;
+}
+function shopCard(it){
+  const owned=isOwned(it), eq=isEquipped(it);
+  let foot;
+  if(eq) foot=`<div class="tag-eq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" style="width:13px;height:13px"><path d="M20 6 9 17l-5-5"/></svg>Equipped</div>`;
+  else if(owned) foot=`<button class="btn-equip">Equip</button>`;
+  else { const can=S.diamonds>=it.price; foot=`<button class="btn-buy ${can?'':'cant'}">${can?`Buy · ${it.price} 💎`:`Need ${it.price-S.diamonds} more`}</button>`; }
+  return `<div class="shop-item ${eq?'equipped':''}" data-id="${it.id}">
+    ${it.crown?`<div class="crown">${it.crown}</div>`:''}
+    <div class="swatch" style="background:linear-gradient(135deg,${it.color},#ffffff66)">${it.sw}</div>
+    <div class="iname">${it.name}</div><div class="idesc">${it.desc}</div>
+    <div class="ifoot">${foot}</div></div>`;
+}
+function tapItem(id){
+  const it=findItem(id); if(!it) return;
+  if(it.locked && !isOwned(it)){ toast('Unlocks via Family Dragon Egg goal','🐉'); return; }
+  if(isOwned(it)){ equipItem(it); }
+  else openBuy(it);
+}
+function findItem(id){ for(const c in SHOP){const f=SHOP[c].find(i=>i.id===id); if(f)return f;} return null; }
+function equipItem(it){
+  if(it.cat==='species'){ S.species=it.id; pet.applyLook(it.id,S.equipped); pet.setRainbow(S.equipped.aura==='rainbow'); }
+  else if(it.kind==='hat'){ S.equipped.hat=isEquipped(it)?null:it.id; }
+  else if(it.kind==='aura'){ S.equipped.aura=it.id; pet.setRainbow(it.id==='rainbow'); }
+  else if(it.kind==='room'){ S.equipped.room=it.id; applyRoom($('#stage'),it.id); }
+  else if(it.kind==='orb'){ S.equipped.orb=it.id; }
+  pet.applyLook(S.species,S.equipped);
+  if(shopPet){ shopPet.applyLook(S.species,S.equipped); shopPet.setRainbow(S.equipped.aura==='rainbow'); applyRoom($('.shop-preview'),S.equipped.room); }
+  renderShop(); renderSheet(); save();
+  toast(`${it.name} equipped`, it.sw); 
+  if(shopPet) shopPet.bounce();
+}
+function openBuy(it){
+  openModal(`<div class="modal-handle"></div>
+    <div class="buy-preview" style="background:linear-gradient(135deg,${it.color},#ffffff66)">${it.sw}</div>
+    <div class="buy-name">${it.name}</div><div class="buy-desc">${it.desc}</div>
+    <div style="display:flex;justify-content:center;margin-bottom:18px"><span class="price" style="font-size:20px">${it.price} ${DIA}</span></div>
+    ${S.diamonds>=it.price
+      ? `<button class="btn btn-primary" style="width:100%" onclick="buyItem('${it.id}')">Buy & equip</button>`
+      : `<button class="btn btn-primary" style="width:100%;opacity:.5;pointer-events:none">Need ${it.price-S.diamonds} more 💎</button>
+         <p style="text-align:center;font-size:12px;color:var(--ink-faint);margin-top:10px">Earn diamonds in the App World, or use Simulation Mode in settings.</p>`}
+    <button class="modal-close" onclick="closeModal()">Close</button>`);
+}
+function buyItem(id){
+  const it=findItem(id); if(!it) return;
+  if(!spend(it.price)){ toast('Not enough diamonds','💎'); return; }
+  S.owned.push(it.id); save(); closeModal();
+  equipItem(it); toast(`Bought ${it.name}!`, '🛍️');
+}
+function ensureShopPet(){
+  if(!shopPet){
+    shopPet=makePet($('#shopCanvas'),{rainbowAura:S.equipped.aura==='rainbow'});
+    shopPet.applyLook(S.species,S.equipped);
+    applyRoom($('.shop-preview'),S.equipped.room);
+    let drag=false,lastX=0,rot=0;
+    const c=$('#shopCanvas');
+    c.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;});
+    c.addEventListener('pointermove',e=>{ if(drag){ rot+=(e.clientX-lastX)*0.01; lastX=e.clientX; shopPet.setPointer(rot,0);} });
+    window.addEventListener('pointerup',()=>drag=false);
+    c.addEventListener('click',()=>shopPet.bounce());
+  } else { shopPet.resize(); }
+}
+function updatePvTag(){ const sp=SPECIES[S.species]; $('#pvTag').textContent=`${sp.name} · ${sp.role}`; }
+
+/* ---------- ROOM BACKGROUNDS ---------- */
+function applyRoom(el,roomId){
+  if(!el) return;
+  const r=SHOP.rooms.find(x=>x.id===roomId);
+  if(r&&r.top){ el.style.background=`linear-gradient(180deg,${r.top},${r.bot})`; }
+  else el.style.background='';
+}
+
+/* ---------- PET ACTIONS MODAL ---------- */
+function openPetActions(){
+  const sp=SPECIES[S.species];
+  openModal(`<div class="modal-handle"></div>
+    <h2>🐾 ${sp.name}'s actions</h2><p class="msub">What would ${sp.name} like to do?</p>
+    <div class="action-grid">
+      <button class="action-btn" onclick="petAction('play')"><span class="ab-ic">🎮</span>Play</button>
+      <button class="action-btn" onclick="petAction('feed')"><span class="ab-ic">🍖</span>Feed</button>
+      <button class="action-btn" onclick="petAction('rest')"><span class="ab-ic">😴</span>Rest</button>
+      <button class="action-btn" onclick="openEvolution()"><span class="ab-ic">✨</span>Evolve</button>
+      <button class="action-btn" onclick="closeModal();gotoPage('shop')"><span class="ab-ic">🎀</span>Customize</button>
+      <button class="action-btn" onclick="petAction('stats')"><span class="ab-ic">📊</span>Stats</button>
+    </div>
+    <button class="modal-close" onclick="closeModal()">Close</button>`);
+}
+function petAction(a){
+  closeModal();
+  if(a==='play'){ addEnergy('play',6); pet.celebrate(); speak('So fun! +6 Play ⚡'); earn(3,$('#walletBtn')); }
+  else if(a==='feed'){ addEnergy('care',6); pet.bounce(); speak('Yum! +6 Care 💚'); }
+  else if(a==='rest'){ addEnergy('calm',8); pet.levitate(true); speak('Zzz... +8 Calm 🌙'); setTimeout(()=>pet.levitate(false),2000); }
+  else if(a==='stats'){ $('#sheet').classList.add('full'); }
+  renderSheet(); renderEnergy(); updateEvoBanner();
+}
+function gotoPage(pg){ $(`[data-page="${pg}"]`).click(); }
+</script>
+<script>
+/* ---------- EVOLUTION ---------- */
+const EVO_PATHS = {
+  learning:{name:'Scholar', emoji:'🦉', next:'Arcane Guardian'},
+  play:    {name:'Champion',emoji:'🐲', next:'Battle Legend'},
+  care:    {name:'Caretaker',emoji:'🦌', next:'Harmony Guardian'},
+  joy:     {name:'Memory Keeper',emoji:'🦋', next:'Dream Guardian'},
+  rhythm:  {name:'Planner',emoji:'🦚', next:'Tempo Master'},
+  calm:    {name:'Calm Guardian',emoji:'🐢', next:'Sage'},
+  social:  {name:'Harmony',emoji:'🦁', next:'Supreme Guardian'},
+};
+function dominantEnergy(){
+  let best='learning',bv=-1;
+  for(const k in S.energy){ if(S.energy[k]>bv){bv=S.energy[k];best=k;} }
+  return best;
+}
+function evoPct(){
+  // progress = avg of dominant energy and xp ratio
+  const dom=S.energy[dominantEnergy()]||0;
+  const xpR=S.xp/S.xpMax*100;
+  return Math.min(100,Math.round(dom*0.6+xpR*0.4));
+}
+function updateEvoBanner(){
+  const dom=dominantEnergy(); const path=EVO_PATHS[dom]; const pct=evoPct();
+  $('#evoTitle').textContent=`${path.name} evolution at ${pct}%`;
+  $('#evoBanner').querySelector('.d').textContent=`Feed ${ENERGY_META[dom].label} energy to evolve ${SPECIES[S.species].name}`;
+}
+function openEvolution(){
+  closeModal();
+  const dom=dominantEnergy(); const path=EVO_PATHS[dom]; const pct=evoPct(); const ready=pct>=100;
+  const sp=SPECIES[S.species];
+  openModal(`<div class="modal-handle"></div>
+    <h2>✨ Evolution</h2><p class="msub">${sp.name} is leaning ${ENERGY_META[dom].label}</p>
+    <div style="display:flex;align-items:center;justify-content:center;gap:18px;margin:8px 0 18px">
+      <div style="text-align:center"><div style="font-size:54px">${sp.emoji}</div><div style="font-size:12px;color:var(--ink-soft);margin-top:4px">${sp.name} · Lv ${S.level}</div></div>
+      <div style="font-size:24px;color:var(--ink-faint)">→</div>
+      <div style="text-align:center;opacity:${ready?1:0.5}"><div style="font-size:54px">${path.emoji}</div><div style="font-size:12px;color:var(--ink-soft);margin-top:4px">${path.name}</div></div>
+    </div>
+    <div class="goal-track" style="margin:0 0 6px"><div class="goal-fill" style="width:${pct}%"></div></div>
+    <div style="text-align:center;font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px">${pct}% ready</div>
+    <p style="text-align:center;font-size:12px;color:var(--ink-faint);margin-bottom:16px">Then unlocks: ${path.next}</p>
+    ${ready
+      ? `<button class="btn btn-primary" style="width:100%" onclick="doEvolve('${dom}')">🌟 Evolve now</button>`
+      : `<button class="btn btn-primary" style="width:100%;opacity:.5;pointer-events:none">Keep feeding ${ENERGY_META[dom].label}</button>
+         <p style="text-align:center;font-size:12px;color:var(--ink-faint);margin-top:10px">Reach 100% — or use Simulation Mode to evolve instantly.</p>`}
+    <button class="modal-close" onclick="closeModal()">Close</button>`);
+}
+function doEvolve(dom){
+  closeModal();
+  const path=EVO_PATHS[dom]; const sp=SPECIES[S.species];
+  const ov=$('#evoOverlay'), flash=$('#evoFlash');
+  $('#evoContent').innerHTML=`<div class="evo-stage-pet">${sp.emoji}</div><h2>Evolving...</h2>`;
+  ov.classList.add('show');
+  pet.levitate(true);
+  gsap.timeline()
+    .to(flash,{opacity:1,duration:0.5,delay:0.6})
+    .add(()=>{ $('#evoContent').innerHTML=`<div class="evo-stage-pet">${path.emoji}</div><h2>${path.name}!</h2><p>${sp.name} evolved · ${ENERGY_META[dom].label} path</p><button class="btn btn-primary" onclick="finishEvolve()">Amazing ✨</button>`; })
+    .to(flash,{opacity:0,duration:0.7});
+  S.level+=1; S.xp=0; gainXP(0);
+  for(let i=0;i<24;i++) setTimeout(()=>burst(Math.random()*window.innerWidth,Math.random()*window.innerHeight*0.6),i*50);
+}
+function finishEvolve(){ $('#evoOverlay').classList.remove('show'); pet.levitate(false); pet.celebrate(); speak('I evolved! 🌟'); renderSheet(); updateEvoBanner(); toast('Evolution complete!','🌟'); }
+
+/* ---------- MODAL ---------- */
+function openModal(html){ $('#modalBody').innerHTML=html; $('#modalBg').classList.add('show'); }
+function closeModal(){ $('#modalBg').classList.remove('show'); }
+$('#modalBg').addEventListener('click',e=>{ if(e.target.id==='modalBg') closeModal(); });
+
+/* ---------- TOPBAR / SETTINGS / CHEAT ---------- */
+function bindTopbar(){
+  $('#settingsBtn').onclick=openSettings;
+  $('#walletBtn').onclick=openWallet;
+}
+function openWallet(){
+  openModal(`<div class="modal-handle"></div>
+    <h2>💎 Your Diamonds</h2><p class="msub">Earn by completing apps, quests & cheers</p>
+    <div class="buy-preview" style="background:linear-gradient(135deg,#7fe9ff,#0a8fd6);font-size:52px;color:#fff">${S.diamonds.toLocaleString()} 💎</div>
+    <div class="set-row"><span class="sr-ic">🗺️</span><div class="sr-txt"><div class="srt">Play apps</div><div class="srd">Open the App World to earn</div></div><button class="btn-equip" onclick="closeModal();gotoPage('map')">Go</button></div>
+    <div class="set-row"><span class="sr-ic">✨</span><div class="sr-txt"><div class="srt">Simulation Mode</div><div class="srd">Unlimited diamonds for testing</div></div><button class="btn-equip" onclick="closeModal();openSettings()">Open</button></div>
+    <button class="modal-close" onclick="closeModal()">Close</button>`);
+}
+function openSettings(){
+  openModal(`<div class="modal-handle"></div>
+    <h2>Settings</h2><p class="msub">Theme, simulation & reset</p>
+    <div class="set-row"><span class="sr-ic">🌙</span><div class="sr-txt"><div class="srt">Dark theme</div><div class="srd">Light is the default</div></div>
+      <div class="toggle ${S.theme==='dark'?'on':''}" id="themeToggle"><div class="knob"></div></div></div>
+
+    <div class="section-label" style="margin-top:18px">Simulation Mode (cheats)</div>
+    <div class="cheat-banner">⚡ Test the full economy — add diamonds, fill energy, evolve and unlock everything instantly.</div>
+    <div class="cheat-grid">
+      <button class="cheat-btn" onclick="cheatDiamonds(500)"><span class="cb-ic">💎</span>+500 Diamonds</button>
+      <button class="cheat-btn" onclick="cheatDiamonds(99999)"><span class="cb-ic">🤑</span>Unlimited 💎</button>
+      <button class="cheat-btn" onclick="cheatEnergy()"><span class="cb-ic">🔋</span>Fill Energy</button>
+      <button class="cheat-btn" onclick="cheatLevel()"><span class="cb-ic">⬆️</span>Level Up</button>
+      <button class="cheat-btn" onclick="cheatUnlock()"><span class="cb-ic">🔓</span>Unlock All Items</button>
+      <button class="cheat-btn" onclick="cheatEvolve()"><span class="cb-ic">🌟</span>Evolve Now</button>
+    </div>
+    <button class="cheat-btn danger" style="width:100%;flex-direction:row;margin-top:10px" onclick="cheatReset()"><span class="cb-ic">♻️</span>Reset Everything</button>
+    <button class="modal-close" onclick="closeModal()">Done</button>`);
+  $('#themeToggle').onclick=toggleTheme;
+}
+function toggleTheme(){
+  S.theme=S.theme==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',S.theme);
+  $('#themeToggle').classList.toggle('on',S.theme==='dark');
+  save();
+}
+function cheatDiamonds(n){ S.diamonds+=n; renderWallet(); save(); flyDiamonds(Math.min(n,30),$('#settingsBtn')); toast(n>=99999?'Unlimited diamonds!':`+${n} 💎`,'🤑'); renderShop(); }
+function cheatEnergy(){ for(const k in S.energy) S.energy[k]=80; save(); renderEnergy(); renderSheet(); updateEvoBanner(); toast('All energy filled to 80%','🔋'); if(pet)pet.celebrate(); }
+function cheatLevel(){ S.level+=1; S.xp=0; save(); renderSheet(); updateEvoBanner(); toast(`Now level ${S.level}`,'⬆️'); if(pet)pet.celebrate(); }
+function cheatUnlock(){ for(const c in SHOP) SHOP[c].forEach(it=>{ if(!S.owned.includes(it.id)) S.owned.push(it.id); }); save(); renderShop(); toast('All items unlocked','🔓'); }
+function cheatEvolve(){ closeModal(); for(const k in S.energy) S.energy[k]=Math.max(S.energy[k],60); doEvolve(dominantEnergy()); }
+function cheatReset(){
+  openModal(`<div class="modal-handle"></div><h2>Reset everything?</h2><p class="msub">This clears all progress and starts fresh.</p>
+    <button class="btn btn-primary" style="width:100%;background:linear-gradient(135deg,#f5504a,#ff8a5c)" onclick="localStorage.removeItem('kbw_state');location.reload()">Yes, reset</button>
+    <button class="modal-close" onclick="openSettings()">Cancel</button>`);
+}
+
+/* ---------- BOOT ---------- */
+window.addEventListener('load', init);
 </script>
 </body>
 </html>

@@ -68,12 +68,18 @@ invalid JSON, the app is skipped.
 
 ## §3. Register the file (zero hand-editing — no apps.json)
 A browser can't list a folder at runtime, so the catalog is generated at build time.
-`node build_apps.mjs` scans every `App_*.html`, reads its manifest, and rewrites the
-embedded `BUILTIN_APP_CATALOG` inside `index.html` (between the `KINETIK_APPS` markers).
-The GitHub Action reruns it on every push that touches an `App_*.html`.
+`node build_app_catalog.mjs` scans every `App_*.html`, validates its manifest, and rewrites
+the embedded `BUILTIN_APP_CATALOG` inside `index.html` (between the `KINETIK_APPS`
+markers). The script fails if any app is missing a manifest, has invalid JSON, reuses an
+`appId`, or uses unsupported manifest values.
 
-**Add an app:** drop `App_<Name>.html` → run `node build_apps.mjs` (or just push).
-It appears in the Store, fully categorized. Nothing else to edit.
+**Add an app:** drop `App_<Name>.html` → run `npm run build` or
+`node build_app_catalog.mjs`. It appears in the Store, fully categorized. Nothing else
+to edit.
+
+**Check catalog freshness:** run `npm run check` or `node build_app_catalog.mjs --check`.
+The GitHub Action runs this check on push/PR, and Vercel can run `npm run build` before
+deploying the static files.
 
 ## §4. Embedded vs standalone
 The shell loads the app in an iframe. Detect it and adapt:
@@ -143,7 +149,7 @@ falls back to `productivity`.
 - [ ] Single `App_<Name>.html`, opens with no server.
 - [ ] Valid manifest header in `<head>` (no rating/version).
 - [ ] `appId` unique + stable; `category` from §6; `icon`, `gradient`, `tagline`, `about` set.
-- [ ] Ran `node build_apps.mjs` (or pushed so the Action regenerates the catalog).
+- [ ] Ran `npm run build` / `node build_app_catalog.mjs`.
 - [ ] Detects `embedded` and fills the iframe cleanly.
 - [ ] Honors `theme` from INIT_APP; light default; safe-area aware.
 - [ ] Works offline (or degrades gracefully); no ads/trackers.

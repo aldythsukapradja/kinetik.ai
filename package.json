@@ -1,0 +1,10 @@
+{
+  "name": "kinetik-ai-static",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build_app_catalog.mjs",
+    "catalog": "node build_app_catalog.mjs",
+    "check": "node build_app_catalog.mjs --check"
+  }
+}
