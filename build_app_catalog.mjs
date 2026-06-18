@@ -116,6 +116,13 @@ function validateManifest(file, j, issues) {
   if (!Array.isArray(j.gradient) || j.gradient.length < 2 || j.gradient.some(c => !/^#[0-9a-f]{3,8}$/i.test(String(c)))) {
     issues.push(`${file}: gradient must contain two hex colors`);
   }
+  const icon = String(j.icon || "").trim();
+  if (!/^<svg\b/i.test(icon)) {
+    issues.push(`${file}: icon must be an inline SVG stored in the app manifest`);
+  }
+  if (/<text\b/i.test(icon)) {
+    issues.push(`${file}: icon must be a symbolic SVG, not a text/initial lettermark`);
+  }
   if (j.audience && !ALLOWED_AUDIENCE.includes(j.audience)) {
     issues.push(`${file}: audience must be one of ${ALLOWED_AUDIENCE.join(", ")}`);
   }

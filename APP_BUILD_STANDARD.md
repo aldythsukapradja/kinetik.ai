@@ -1,210 +1,472 @@
-# KINETIK APP BUILD STANDARD — v1.0 (mandatory)
+# KINETIK APP BUILD STANDARD - v1.1
 
-> Hand this whole file to any LLM before it builds a Kinetik app.
-> An app that does not meet **§1 (single file)** and **§2 (manifest header)** will
-> NOT be digested by the Kinetik Store and will be ignored.
+> Hand this file to any external builder or LLM before it creates a Kinetik app.
+> The goal is simple: build anywhere, then drop the finished HTML file back into
+> Kinetik with almost no porting work.
 
-Kinetik is a private life app for **Family + Friends circles**. Apps are tiny,
-self-contained mini-apps the Store installs **per circle**. They open full-screen
-inside the main shell (in an iframe) and can also run standalone.
+Kinetik is a private app world for family and friends circles. Apps are small,
+self-contained experiences that install per circle, open inside the Kinetik shell,
+and can also run by themselves during external development.
 
----
+For Buddy, diamonds, `@kin`, Moment Studio, cross-app actions, and future LLM
+behavior, read `KINETIK_AGENT_SYSTEM.md` before changing app behavior.
 
-## §1. One app = one self-contained HTML file (HARD REQUIREMENT)
-- Exactly one file, named **`App_<Name>.html`** (PascalCase, no spaces). Examples:
-  `App_PadelAmericano.html`, `App_Chess.html`, `App_CodeClash.html`.
-- Everything inline: HTML + CSS + vanilla JS in the one file. **No build step, no
-  frameworks, NO CDNs, no external dependencies.** (CDNs get blocked by tracking
-  prevention and break offline — draw any visuals with inline SVG.)
-- Must work by simply opening the file (`file://`) with no server.
-- Hide visible scrollbars while keeping touch/mouse scroll working
-  (`scrollbar-width:none` + `::-webkit-scrollbar{display:none}`).
-- Light mode is the DEFAULT; support a basic dark mode. Pixel-polished: no squeezed
-  layouts, no text overflow, no overlap. Verify mentally at 390px width.
+## 1. The Non-Negotiables
 
-## §2. The manifest header (HARD REQUIREMENT — this is what the Store reads)
-Place this **once, inside `<head>`**, right after `<title>`. The Store fetches the
-file, extracts this block, and builds the catalog entry from it. If it is missing or
-invalid JSON, the app is skipped.
+- One app is one HTML file.
+- File name must be `App_<Category><Name>.html`.
+- The app manifest lives inside that HTML file.
+- The app icon lives inside that manifest as inline SVG.
+- No extra app manifest files, icon files, app JSON files, or server launcher files.
+- The app must open standalone from the file itself.
+- The app must also behave cleanly when embedded in the Kinetik iframe.
+- The shell owns the PWA/home-screen identity. Individual apps do not add their own
+  PWA manifests unless the app is an approved specialized sidecar.
+
+## 2. File Naming
+
+Use this exact pattern:
+
+```text
+App_<Category><Name>.html
+```
+
+Allowed category prefixes:
+
+| Prefix | Store category |
+|---|---|
+| `App_Game...` | Games |
+| `App_Sport...` | Sports |
+| `App_Productivity...` | Productivity |
+| `App_Social...` | Social |
+| `App_Entertainment...` | Entertainment |
+
+Examples:
+
+```text
+App_GameCircleChess.html
+App_ProductivityGrocery.html
+App_SportPadelAcademy.html
+App_EntertainmentCinema.html
+```
+
+The filename category wins over the manifest category. Renaming the file can change
+where the app appears in the Store.
+
+## 3. Manifest Header
+
+Place this once in `<head>`, right after `<title>`.
 
 ```html
 <script type="application/kinetik-app+json">
 {
   "appId": "code-clash",
   "name": "Code Clash",
-  "shortName": "CodeClash",
-  "icon": "⚡",
-  "gradient": ["#7dd3fc", "#a78bfa"],
+  "shortName": "Clash",
+  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M25 18L13 32l12 14M39 18l12 14-12 14'/><path d='M35 14l-8 36'/></svg>",
+  "gradient": ["#ec4899", "#8b5cf6"],
   "category": "games",
-  "tagline": "Race to crack the code.",
-  "about": "A fast head-to-head puzzle game for the circle. Quick rounds, pass-and-play, live leaderboard.",
+  "tagline": "Crack the hidden code.",
+  "about": "A quick logic duel for the circle. Guess, learn from feedback, and climb the local leaderboard.",
   "audience": "all",
   "circleTypes": ["family", "friends"],
-  "worksWith": ["standalone"],
+  "worksWith": ["offline", "standalone"],
   "status": "live",
-  "minMembers": 2
+  "minMembers": 1
 }
 </script>
 ```
 
-### Field rules
-| Field | Required | Rule |
-|-------|----------|------|
-| `appId` | ✅ | kebab-case, globally unique, stable forever (used as install key). |
-| `name` | ✅ | Display name. |
-| `shortName` | – | ≤12 chars; defaults to `name`. Shown under the home-grid icon. |
-| `icon` | ✅ | A single emoji **or** an inline `<svg>…</svg>` string. **Embedded in the app — never an external file.** |
-| `gradient` | ✅ | `[from, to]` hex pair — the icon tile + featured banner. |
-| `category` | ✅ | exactly one id from **§6**. |
-| `tagline` | ✅ | ≤40 chars, one line. |
-| `about` | ✅ | 1–3 sentences for the product page. |
-| `audience` | – | `all` \| `kids` \| `adults` (default `all`). |
-| `circleTypes` | ✅ | array of `family` and/or `friends` — who may install. |
-| `worksWith` | ✅ | array of `calendar` \| `moments` \| `media` \| `offline` \| `standalone`. |
-| `status` | – | `live` \| `soon` (default `live`). |
-| `minMembers` | – | integer; for apps needing players (default 1). |
+Field rules:
 
-**Do NOT include `rating` or `version`** — Kinetik does not use them.
+| Field | Rule |
+|---|---|
+| `appId` | Required. Kebab-case. Stable forever. Used for installs and app data. |
+| `name` | Required. Human display name. |
+| `shortName` | Recommended. 14 characters or fewer for the Apps grid. |
+| `icon` | Required. Inline SVG only. No emoji, no letters, no external image. |
+| `gradient` | Required. Two hex colors for the app tile and Store surfaces. |
+| `category` | Required. `games`, `sports`, `productivity`, `social`, or `entertainment`. |
+| `tagline` | Required. Short, human, one line. |
+| `about` | Required. One to three sentences for the Store page. |
+| `audience` | `all`, `kids`, or `adults`. Default should be `all`. |
+| `circleTypes` | `family`, `friends`, or both. |
+| `worksWith` | Any of `calendar`, `moments`, `media`, `offline`, `standalone`. |
+| `status` | `live` or `soon`. |
+| `minMembers` | Number. Use `1` unless the app truly needs multiple players. |
 
-## §3. Register the file (zero hand-editing — no apps.json)
-A browser can't list a folder at runtime, so the catalog is generated at build time.
-`node build_app_catalog.mjs` scans every `App_*.html`, validates its manifest, and rewrites
-the embedded `BUILTIN_APP_CATALOG` inside `index.html` (between the `KINETIK_APPS`
-markers). The script fails if any app is missing a manifest, has invalid JSON, reuses an
-`appId`, or uses unsupported manifest values.
+Do not include `rating`, `version`, `manifestUrl`, `iconUrl`, or external asset paths.
 
-**Add an app:** drop `App_<Name>.html` → run `npm run build` or
-`node build_app_catalog.mjs`. It appears in the Store, fully categorized. Nothing else
-to edit.
+## 4. Icon Standard
 
-**Check catalog freshness:** run `npm run check` or `node build_app_catalog.mjs --check`.
-The GitHub Action runs this check on push/PR, and Vercel can run `npm run build` before
-deploying the static files.
+Kinetik app icons are foreground marks placed on shell-painted gradient tiles.
 
-## §4. Embedded vs standalone
-The shell loads the app in an iframe. Detect it and adapt:
+Rules:
+
+- Use inline SVG in the manifest.
+- Use a transparent SVG background for app icons.
+- Use simple symbolic shapes, not text initials.
+- Use white as the main stroke/fill so the mark works on the tile gradient.
+- Keep the viewBox `0 0 64 64`.
+- Do not include external images, base64 PNGs, or icon font references.
+
+The Kinetik shell owns the premium PWA icon and loading icon. App files only own
+their own Store/app-grid mark.
+
+## 5. Standalone And Embedded Modes
+
+Every app must run in two modes:
+
 ```js
-if (window.self !== window.top) document.body.classList.add('embedded');
+const embedded = window.self !== window.top;
+if (embedded) document.body.classList.add("embedded");
 ```
-- **Embedded:** fill the iframe (`100%`/`100dvh`), no fake phone frame, no app-level
-  bottom tab bar that competes with the shell. The shell already provides the
-  back/Done chrome.
-- **Standalone:** may show its own framing.
 
-## §5. AppBridge — talk to the shell via postMessage (optional but standard)
-On load the shell posts an init message; listen for it:
+Standalone mode:
+
+- Useful for building externally.
+- Can show a simple app header.
+- Can use local sample data.
+
+Embedded mode:
+
+- Fill the iframe.
+- No fake phone frame.
+- No competing global tab bar.
+- Respect the Kinetik theme and safe areas.
+- Let the shell provide the back/done chrome.
+
+## 6. Kinetik Bridge
+
+When the app opens in Kinetik, the shell sends context:
+
 ```js
-addEventListener('message', (e) => {
-  const m = e.data || {};
-  if (m.type === 'INIT_APP') {
-    const ctx = m.payload; // {circleId, circleType, personId, role, theme,
-                           //  appId, backendMode, apiUrl, people:[{id,name,color}]}
-    applyTheme(ctx.theme);            // 'light' | 'dark' — honor it
-    // seed players from ctx.people, etc.
+addEventListener("message", (event) => {
+  const message = event.data || {};
+  if (message.type !== "INIT_APP") return;
+  const ctx = message.payload;
+  // ctx includes:
+  // userId, userName, username
+  // personId, personName
+  // circleId, circleName, circleType
+  // role, roleLabel, permission
+  // isLeader, isCoLeader, isAdult, isKid, age
+  // theme, appId, backendMode, apiUrl
+  // people: [{id, name, color, birthYear}]
+});
+```
+
+Use this helper in every app:
+
+```js
+const Bridge = {
+  embedded: window.self !== window.top,
+  pending: {},
+  seq: 0,
+  send(type, payload = {}) {
+    if (!this.embedded) return;
+    window.parent.postMessage({ type, ...payload }, "*");
+  },
+  request(type, payload = {}) {
+    if (!this.embedded) return Promise.resolve({ items: [] });
+    const reqId = "req_" + (++this.seq);
+    return new Promise(resolve => {
+      this.pending[reqId] = resolve;
+      window.parent.postMessage({ type, reqId, ...payload }, "*");
+    });
+  }
+};
+
+addEventListener("message", (event) => {
+  const message = event.data || {};
+  if (message.type === "DATA_RESULT" && Bridge.pending[message.reqId]) {
+    Bridge.pending[message.reqId](message);
+    delete Bridge.pending[message.reqId];
   }
 });
 ```
-Messages the app may POST back to `window.parent` (all optional):
-| type | purpose |
-|------|---------|
-| `SHOW_TOAST` `{message}` | toast in the shell |
-| `CLOSE_APP` | ask the shell to close the app |
-| `ADD_TO_CALENDAR` `{payload:{title,date,startTime,endTime,participantPersonIds,preparation}}` | create a calendar event in the circle |
-| `DATA_LIST/DATA_CREATE/DATA_UPDATE/DATA_REMOVE` `{reqId,appId,collection,payload,id}` | persist app data in the circle's `AppRecords`; shell replies `DATA_RESULT {reqId,items}` |
 
-If the app stores nothing in the circle (pure game), it can ignore the bridge and
-just use `localStorage` keyed by a unique prefix.
+Supported messages:
 
-### Required local data convention
-- Define one `const storagePrefix = "kinetik_<appId>_"` and key **all** localStorage
-  under it. Keep data structures simple and flat so a future Circle/DB sync is trivial.
-- Provide a tiny helper:
-  ```js
-  const Bridge = {
-    embedded: window.self !== window.top,
-    send(type, payload){ if(this.embedded) parent.postMessage({type, payload}, "*"); }
-  };
-  ```
-- Show clear **states**: empty · active · success · mistake · completed. Surface local
-  progress (score, streak, reps, saved items, history).
+| Message | Purpose |
+|---|---|
+| `SHOW_TOAST` | Show a shell toast. |
+| `CLOSE_APP` | Ask the shell to close the app. |
+| `ADD_TO_CALENDAR` | Create a circle calendar event. |
+| `DATA_LIST` | Load this app's records from the shell. |
+| `DATA_CREATE` | Save a new app record. |
+| `DATA_UPDATE` | Update an existing app record. |
+| `DATA_REMOVE` | Soft-remove an app record. |
+| `KINETIK_EVENT` | Emit a Buddy/diamond/progress event. The shell has a local KinEngine POC; build against this contract now. |
 
-## §6. Categories — exactly FIVE, set by the filename
-The category comes from the **filename prefix**: `App_<Category><Name>.html`.
-Allowed: **Game · Sport · Productivity · Social · Entertainment**
-(ids `games` · `sports` · `productivity` · `social` · `entertainment`).
-Examples: `App_GameCircleChess.html` → games · `App_SportPadel.html` → sports ·
-`App_ProductivityPoll.html` → productivity. The filename prefix **overrides** the
-manifest `category`, so renaming a file reclassifies it. Anything unrecognized
-falls back to `productivity`.
+## 7. Data Storage Flow Today
 
-## §7. Look & feel (so it feels native to Kinetik)
-- **Light mode is the default**; support dark via the `theme` from INIT_APP (and/or a
-  toggle). Use CSS variables for colors.
-- Respect safe areas: `env(safe-area-inset-top/bottom)`; root height `100dvh`.
-- Mobile-first, fluid up to ~560px content width; touch targets ≥44px.
-- Calm, glassy, rounded (radius 16–28). Gradient accents from the app's own palette.
-- No external trackers, no ads, no network calls except the shell bridge / declared CDN.
+Current backend: Kinetik shell -> Google Apps Script -> Google Sheets.
 
-## §8. Pre-submit checklist
-- [ ] Single `App_<Name>.html`, opens with no server.
-- [ ] Valid manifest header in `<head>` (no rating/version).
-- [ ] `appId` unique + stable; `category` from §6; `icon`, `gradient`, `tagline`, `about` set.
-- [ ] Ran `npm run build` / `node build_app_catalog.mjs`.
-- [ ] Detects `embedded` and fills the iframe cleanly.
-- [ ] Honors `theme` from INIT_APP; light default; safe-area aware.
-- [ ] Works offline (or degrades gracefully); no ads/trackers.
+Apps should not call Google Sheets directly. They talk to the shell.
 
----
+```text
+App interaction
+  -> Bridge DATA_CREATE / DATA_UPDATE / DATA_REMOVE
+  -> shell DataAPI
+  -> local cache in DB.d
+  -> SyncEngine queue
+  -> Apps Script generic CRUD
+  -> Google Sheet row
+```
 
-## §10. Batch DNA architecture (build many apps, consistently)
+On load:
 
-Every app belongs to a reusable **DNA family**: same layout logic, component system,
-interaction pattern, local-progress system, manifest structure, and visual quality —
-only the *content* (lessons, drills, questions, formulas, scenarios) changes. Pick the
-family first, then swap content. This is how the catalog scales fast while staying
-consistent. **Build one app at a time** unless explicitly asked for a batch.
+```text
+Google Sheets
+  -> Apps Script list
+  -> shell DB.load()
+  -> DB.d.appRecords
+  -> app asks DATA_LIST
+  -> shell returns DATA_RESULT
+```
 
-| # | DNA family | Core loop | Pattern refs |
-|---|-----------|-----------|--------------|
-| 1 | **Store / Shell** | browse → app detail → install/open/uninstall → launch | App Store, iOS Home, TestFlight |
-| 2 | **Game** | start round → move/guess → feedback → score/streak → rematch | Chess.com, Wordle, Mastermind, Jackbox |
-| 3 | **Kids Quest** | tiny lesson → question → instant feedback → streak → next | Duolingo, Khan Kids, Brilliant, ScratchJr |
-| 4 | **Sports Technique** | choose skill → visual cue → drill → mark rep → streak | Nike Training, HomeCourt, SwingVision |
-| 5 | **Workout Coach** | pick workout → timer rounds → work/rest → finish summary | Apple Fitness, F45, Seconds Timer |
-| 6 | **Music Coach** | pick skill → visual pattern → practice rep → confidence → streak | Yousician, Simply Guitar, Fender Play |
-| 7 | **Life Utility** | preset/list → add/edit/check off → save → repeat | AnyList, Bring!, Tasty, Reminders |
-| 8 | **Social Circle** | create prompt → options → vote/respond → result → share | Doodle, StrawPoll, Slido, Jackbox |
-| 9 | **Professional Learning** | micro lesson → scenario → quiz/decision → explain → path | Coursera, Brilliant, DataCamp |
-| 10 | **Scenario Coach** | principle → realistic scenario → choose response → feedback → next | Orai, Speeko, ELSA, MasterClass |
-| 11 | **Founder / Wisdom** | principle card → business scenario → decision → reflection → saved insight | Blinkist, Headway, MasterClass |
-| 12 | **Engineering Calculator** | choose calc → inputs+units → result → explanation → save case | Engineering Toolbox, PetroWiki |
+Current generic app record shape:
 
-Engineering calculators: **label as educational/planning tools** unless the formulas
-and units are professionally verified.
+```js
+AppRecord {
+  id,
+  circleId,
+  appId,
+  collection,
+  ownerPersonId,
+  payload,
+  deleted,
+  createdAt,
+  updatedAt
+}
+```
 
-## §11. Premium design direction (App-Store quality)
+In Google Sheets, `payload` becomes `payloadJson`. Keep payloads plain JSON:
 
-Feel: iPhone-native, premium, calm-but-fancy, Ultrahuman-grade polish. More product
-than website. Minimal but not plain. Do NOT copy brand assets — clone the *interaction
-quality, hierarchy, and product feel*.
+```js
+{
+  title: "Serve practice",
+  status: "done",
+  score: 8,
+  streak: 3,
+  date: "2026-06-18"
+}
+```
 
-- Compact iOS-style header (icon + name + circle/status subtitle).
-- Premium gradient app tiles; inline-SVG icon marks (no emoji-only where polish matters).
-- Rounded panels used sparingly — not nested cards everywhere. Subtle shadows, glass,
-  borders, depth. Strong, consistent spacing rhythm. Large tap targets.
-- Components to reach for: status chips, metric cards, progress rings, segmented
-  controls, bottom action bars, and an inline-SVG visual for *every* app.
-- States are mandatory: empty · active · success · warning · completed.
-- Fit everything on a 390px phone: clamp, line-clamp, overflow handling. No squeeze,
-  no overflow, no overlap, no broken empty states.
-- Light default + dark template. Hidden scrollbars, scrolling still works.
+Do not store functions, DOM, blobs, cyclic objects, or huge base64 files in payload.
+Media belongs in the shell media flow, not inside app payload JSON.
 
-## §12. Per-app build process & output
-1. Identify the DNA family. 2. Concise build plan. 3. Define the core loop.
-4. Minimum useful 80-20 feature set. 5. Future scalability points. 6. Design UI first.
-7. Implement the complete standalone HTML. 8. Include sample data so it works instantly.
-9. Mentally test at 390px. 10. No overflow/squeeze/broken states. 11. End with: app
-loop, storage keys, future scalability path.
+## 8. Data Storage Flow Later
 
-Output order: build plan → DNA family → core loop → complete HTML (one block) →
-scalability notes.
+Future backend: Kinetik shell -> Supabase.
+
+The same app bridge should survive. The app should not care whether the shell writes
+to Google Sheets or Supabase.
+
+```text
+App
+  -> Bridge DATA_*
+  -> shell AppData service
+  -> Supabase app_records table
+```
+
+Expected Supabase table:
+
+```sql
+app_records (
+  id uuid primary key,
+  circle_id uuid,
+  app_id text,
+  collection text,
+  owner_person_id uuid,
+  payload jsonb,
+  deleted_at timestamptz,
+  created_at timestamptz,
+  updated_at timestamptz
+)
+```
+
+Build apps so this future move is boring.
+
+## 9. Collection Naming
+
+Each app can use multiple collections. Keep them short and stable:
+
+```text
+sessions
+scores
+quests
+items
+lists
+attempts
+settings
+```
+
+Examples:
+
+```js
+Bridge.request("DATA_LIST", {
+  appId: "times-table-quest",
+  collection: "attempts",
+  scope: "person"
+});
+
+Bridge.request("DATA_CREATE", {
+  appId: "times-table-quest",
+  collection: "attempts",
+  ownerPersonId: true,
+  payload: { fact: "7x8", correct: true, ms: 2400 }
+});
+```
+
+Use `scope: "person"` for personal progress. Use circle-wide records only for shared
+objects like grocery lists, match results, or circle leaderboards.
+
+## 10. Buddy And Diamonds
+
+Apps do not directly mutate Buddy. Apps emit events. The complete deterministic
+agent map lives in `KINETIK_AGENT_SYSTEM.md`; this section is the app-author
+contract.
+
+```js
+Bridge.send("KINETIK_EVENT", {
+  payload: {
+    eventType: "practice.completed",
+    appId: "times-table-quest",
+    personId: ctx.personId,
+    amount: 3,
+    sourceRecordId: attempt.id,
+    metadata: { skill: "7x8", streak: 4 }
+  }
+});
+```
+
+Approved event types:
+
+| Event | Use |
+|---|---|
+| `task.completed` | Household task, grocery run, cooking step. |
+| `task.approved` | Adult-approved task reward. |
+| `practice.completed` | Drill, lesson, rehearsal, sport rep. |
+| `mastery.unlocked` | Skill level, crown, objective completion. |
+| `game.round.completed` | Casual game round finished. |
+| `game.win` | Competitive win, capped. |
+| `calendar.created` | Useful plan created. |
+| `reflection.saved` | Coaching/wisdom note saved. |
+| `buddy.quest.completed` | Buddy quest completed. |
+
+Rules:
+
+- Chores and child rewards need adult approval.
+- Randomizers should not mint large rewards.
+- Specialized sidecars like World Cup, Strata, and Cinema should not drive the main
+  diamond economy unless explicitly designed as seasonal side quests.
+- The shell will cap repeat rewards by app, person, and day.
+
+## 11. Cross-App Intents
+
+If an app wants another app to do something, do not hardwire file names. Emit an intent:
+
+```js
+Bridge.send("KINETIK_EVENT", {
+  payload: {
+    eventType: "calendar.created",
+    appId: "kitchen-buddy",
+    metadata: {
+      intent: "send_to_grocery",
+      ingredients: ["eggs", "milk", "rice"]
+    }
+  }
+});
+```
+
+For now the shell can interpret these deterministically. Later Supabase/agents can use
+the same records. Any new intent family should also be added to
+`KINETIK_AGENT_SYSTEM.md`.
+
+## 12. UI Quality Bar
+
+Every external app should feel like it belongs inside Kinetik.
+
+- Mobile first at 390px.
+- Light mode default.
+- Dark mode support via `INIT_APP.theme`.
+- Safe-area aware.
+- Hidden scrollbars, scrolling still works.
+- Clear states: empty, active, success, mistake, completed.
+- No layout squeeze, overlap, clipped buttons, or unreadable labels.
+- Use icons for tools where possible.
+- No visible technical instructions inside the app.
+- No ads, trackers, analytics, or surprise network calls.
+
+## 13. DNA Families
+
+Pick one before building:
+
+| Family | Core loop |
+|---|---|
+| Game | Start round -> action -> feedback -> score -> rematch. |
+| Kids Quest | Tiny lesson -> question -> feedback -> streak -> next. |
+| Sport Coach | Choose skill -> cue -> drill -> mark rep -> progress. |
+| Life Utility | List/preset -> add/edit/check -> save -> repeat. |
+| Social Circle | Prompt -> respond/vote -> result -> share. |
+| Scenario Coach | Principle -> scenario -> choice -> feedback -> reflection. |
+| Learning Lab | Micro lesson -> case -> quiz -> explanation -> mastery. |
+
+## 14. External Build Handoff
+
+When an app is built outside Kinetik, the builder must deliver:
+
+1. One complete `App_<Category><Name>.html`.
+2. Manifest block in the head.
+3. Inline SVG icon in the manifest.
+4. Standalone sample data.
+5. Embedded-mode bridge handling.
+6. Storage collections used.
+7. Buddy/diamond events emitted.
+8. Any network dependency disclosed.
+9. A short test note: mobile width, standalone, embedded, empty state, saved state.
+
+## 15. Port-Back Checklist
+
+To bring an external app back into Kinetik:
+
+1. Put the file in the repo root.
+2. Confirm the filename starts with `App_`.
+3. Run:
+
+```bash
+node build_app_catalog.mjs
+node build_app_catalog.mjs --check
+```
+
+On Windows PowerShell, if `npm` is blocked by execution policy, use:
+
+```powershell
+npm.cmd run build
+npm.cmd run check
+```
+
+4. Open Kinetik.
+5. Check Store card, GET, OPEN, Remove.
+6. Launch the app.
+7. Confirm `INIT_APP` context arrives.
+8. Confirm `DATA_*` records save and reload.
+9. Confirm any `KINETIK_EVENT` creates a shell Buddy pulse and local ledger entry.
+
+## 16. Pre-Submit Checklist
+
+- [ ] One HTML file only.
+- [ ] Correct `App_<Category><Name>.html` filename.
+- [ ] Manifest is valid JSON.
+- [ ] Icon is inline SVG, no text/initials.
+- [ ] No external manifest/icon files.
+- [ ] Opens standalone.
+- [ ] Works embedded.
+- [ ] Uses Bridge for shared/circle data.
+- [ ] Uses localStorage only for temporary standalone state.
+- [ ] Emits Buddy/diamond events only through `KINETIK_EVENT`.
+- [ ] Has empty, active, success, mistake, and completed states.
+- [ ] Looks good at 390px.
+- [ ] Catalog build/check passes.
