@@ -203,9 +203,10 @@ action, each renders a specific card, and **nothing is written without a tap**.
   shows "Pinged @X — it's your call / they or a Leader can confirm"; if the viewer is the
   tagged person OR a Leader they get a live **Accept**, otherwise a disabled **"Waiting on
   @X"**. `mentionize()` also highlights `@kin` and `@member` in chat text.
-- **Chat suggestion pills (2026-06-15)** — `#chatSuggest` strip above the composer
-  (`Chat.renderSuggest`/`suggest`, `Chat.SUGGEST` per circle type). Tap a pill → sends
-  `@kin <prompt>`. Composer placeholder also hints "try @kin to coordinate".
+- **Chat suggestion pills (2026-06-18 update)** — `#chatSuggest` is now a two-row
+  command bar above the composer: option pills (`Free`, `Plan`, `Cover`, `Today`)
+  switch the prompt set, and prompt pills prepare `@kin <prompt>` in the composer for
+  the user to review/send. Composer placeholder also hints "try @kin to coordinate".
 - Verified (DOM/eval): all 3 intents, clarify chips, full commit loop (event created with
   correct fields, then removed in test), Chat `@kin` thread rendering, RSVP card states,
   suggestion pills end-to-end, mention highlighting. No console errors.
