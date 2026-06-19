@@ -1235,38 +1235,140 @@ Recipes the family has cooked, rated by circle members (1–5 hearts). Family fa
 
 ---
 
-### S-91 · Padel Matchday
+### S-91 · Matchday
 
-**Route**: `/apps/padel-matchday`
+**Route**: `/apps/matchday`
 
 **Energy**: Move 🔵  
-**Economy events**: `game.win` (match won), `practice.completed` (training session logged), `mastery.unlocked` (personal best: most games won in a week, first competitive win, etc.)
+**Economy events**: `game.win` (match won), `practice.completed` (training session logged), `mastery.unlocked` (personal best: most wins in a week, first competitive win, new distance PB, etc.)
 
-**Design principle**: Full padel companion for tracking matches, stats, and improvement. Works for recreational family play AND competitive play. Doubles-aware (padel is always 2v2).
+**Design principle**: The circle's universal sports tracker. Not a padel app, not a running app — a sport-agnostic layer that adapts to whatever sport the circle actually plays. When the circle picks up tennis, adds football to their rotation, or someone starts running, Matchday accommodates it without a new app. Each sport has its own scoring format, training focus areas, and stat model — but the shell, economy, and Kin integration are shared.
 
-**Screen A — My Padel Hub**  
-Stats header: Win/Loss record this month · Total matches · Current streak · Court hours. Quick action buttons: "Log a match" / "Log training" / "Find partner" (invite circle member).
+**Sport Registration**: Before logging anything, the circle adds the sports they play. Each sport is configured once by a co-leader/owner and then available to all circle members.
 
-Recent matches timeline below.
+**Built-in sport templates** (zero-config, just activate):
 
-**Screen B — Log a Match**  
-Date + venue (text or map location). My partner selector (circle member or manual name). Opponent names (2 text fields). Set scores (up to 3 sets, standard padel scoring: 6-4, 7-5, 7-6, super tiebreak). "We won / We lost" toggle. Optional notes.
+| Sport | Format | Scoring |
+|---|---|---|
+| Padel | 2v2 | Sets (6-4 / 7-5 / 7-6 / super tiebreak) |
+| Tennis | 1v1 or 2v2 | Sets (same as padel) |
+| Football / Soccer | Teams | Goals (e.g. 3–1) |
+| Basketball | Teams | Points (e.g. 24–18) |
+| Badminton | 1v1 or 2v2 | Points to 21, best of 3 |
+| Squash | 1v1 or 2v2 | Points to 11, best of 5 |
+| Running | Individual | Distance + time → auto-calculates pace |
+| Swimming | Individual | Distance + time |
+| Cycling | Individual | Distance + time + elevation |
+| Golf | 1–4 players | Strokes (lower = better), optional handicap |
+| Cricket | Teams | Runs / wickets |
+| Volleyball | Teams | Points per set, best of 5 |
+| Custom | Any | Fully configurable: name, icon, format, scoring unit |
 
-Submit → `game.win` emitted if won. Winner's partner also gets a `game.win` event.
+Circle selects 1–5 active sports. Each appears as a card on the home screen. More can be activated later.
 
-**Screen C — Match Detail**  
-Set-by-set score breakdown. Map link to venue. Players (4 names). Notes. "Share to Moments" button. Rematch button (pre-fills same opponent names).
+---
 
-**Screen D — Training Log**  
-Log a practice session: date + duration + focus area chips (Serve / Volley / Smash / Movement / Strategy / Fitness). Optional notes on what improved. Submit → `practice.completed`.
+**Screen A — My Sports Hub**
 
-Progress view: training hours over time chart. Focus area balance pie chart.
+Home screen. Active sport cards in a 2-column grid. Each card: sport icon + name + your record this month (e.g. "4W · 2L") + last session date. "Move energy" ring at the top shows combined activity across all sports this week.
 
-**Screen E — My Stats**  
-Win rate over time (line chart). Matches per month (bar chart). Best winning streak. Favourite partners (most wins with). Worst matchup (for fun). Time of day distribution.
+Quick strip: "All activity" (combined timeline) · "All sports stats".
 
-**Screen F — Circuit / Season Tracker** (optional setup)  
-Set up a mini league within the circle. Round-robin table. Track rankings. Season winner gets leader gift + Buddy moment.
+FAB: **"+ Add a sport"** → goes to Screen G.
+
+---
+
+**Screen B — Sport Home** (per sport, e.g. tapping "Padel")
+
+**Route**: `/apps/matchday/{sportId}`
+
+Header: sport name + icon + your record this month. Three quick-action buttons: **Log a match** / **Log training** / **Find partner** (invite circle member for next session).
+
+Recent matches timeline: match card per entry — date, opponents, score, W/L badge.
+
+Switch between members: avatar tab strip — tap any circle member to see their record for this sport.
+
+---
+
+**Screen C — Log a Match** (adaptive to sport format)
+
+**Route**: `/apps/matchday/{sportId}/log-match`
+
+Form adapts based on the sport's registered format:
+
+*Set-based (Padel, Tennis, Badminton, Squash)*: Date + venue. Partner picker (if doubles). Opponent names. Set score inputs (auto-adds next set row as you fill). "We won / We lost" auto-detected from scores if complete, otherwise manual toggle. Optional notes.
+
+*Goals-based (Football, Basketball, Volleyball)*: Date + venue. Team builder (circle members + manual names for two teams). Score input (two number fields). Optional: match duration, competition name.
+
+*Individual / Time-based (Running, Swimming, Cycling)*: Date + route/location. Distance (with unit selector: km / miles / m). Time (hh:mm:ss). Elevation (optional). Pace auto-calculated and shown. Target vs actual comparison if a target was set.
+
+*Strokes (Golf)*: Date + course name. Number of holes (9 or 18). Stroke count. Optional: handicap, versus par. Other players in the group (optional).
+
+Submit → `game.win` emitted if won / PB if individual. In doubles formats, partner gets a shared `game.win` event.
+
+---
+
+**Screen D — Log a Training Session**
+
+**Route**: `/apps/matchday/{sportId}/log-training`
+
+Universal training log, adapted by sport:
+
+Date + duration. Sport-specific focus area chips (pre-set by template — e.g. Padel: Serve / Volley / Smash / Movement / Strategy; Running: Intervals / Long run / Recovery; Football: Passing / Shooting / Conditioning).
+
+Intensity: Easy / Moderate / Hard / Max. Free-text notes. Optional: link to a Coach Hub session.
+
+Submit → `practice.completed` event.
+
+Progress chart: weekly training hours by sport, stacked bars.
+
+---
+
+**Screen E — My Stats** (per sport)
+
+**Route**: `/apps/matchday/{sportId}/stats`
+
+Adapts to sport format:
+
+*Match sports*: Win rate over time (line chart). Matches per month (bar). Best streak. Top partners (most wins with). Head-to-head vs specific opponents (fun, not harsh).
+
+*Individual sports*: Distance / sessions per month. Personal bests table (best 5K time, longest run, fastest pace). Monthly volume chart.
+
+All-sports combined: "Move energy" breakdown — which sports, how often, total hours this month.
+
+---
+
+**Screen F — Circuit / Season Tracker**
+
+**Route**: `/apps/matchday/{sportId}/circuit`
+
+Optional mini-league within the circle for any sport. A co-leader sets up a season:
+- Season name + sport + start/end dates
+- Format: Round-robin / Knockout / Mixed
+- Points system (e.g. 3 for win, 1 for draw, 0 for loss — or auto from wins only)
+
+Live leaderboard table. All recorded matches for that sport in the season date range auto-count. Season winner gets a leader-gifted diamond reward + Buddy celebration moment.
+
+Works for any circle sport — a padel season, a family golf challenge, a running monthly challenge (most km wins).
+
+---
+
+**Screen G — Add a Sport**
+
+**Route**: `/apps/matchday/add`
+
+Step 1 — Sport picker: grid of built-in templates. "Custom sport" card at the end.
+
+Step 2 — Configure (for custom, or to tweak a template):
+- Sport name + emoji icon
+- Format: Individual / 1v1 / 2v2 / Teams
+- Scoring unit: Sets / Goals / Points / Time / Distance / Strokes
+- Training focus areas (freeform chips, up to 8)
+- Optional: season tracking enabled yes/no
+
+Step 3 — Who plays it? (circle member selector — pre-selects everyone, leaders can deselect)
+
+Confirm → sport added to home screen for selected members. Co-leader/owner only.
 
 ---
 
@@ -1296,12 +1398,12 @@ Goal: clarity, balance, habits, emotional wellbeing, life decisions.
 - **Screen D1 — Reflection Journal**: Prompted journal. Kin offers a daily reflection question (customised to recent check-in data). Free-text response. Private to the person (not visible to circle). `reflection.saved` event on submit.
 - **Screen E1 — Decision Coach**: Structured tool for big decisions. Kin walks through: define the decision → list options → identify values at stake → stress-test each option → choose. Uses the Socratic method (questions, not answers). Preview card for any output written to calendar/goals.
 
-**Track 2: Sport Coach (Padel + Physical)**  
+**Track 2: Sport Coach (Matchday + Physical)**  
 Goal: performance, training discipline, physical goals.
 
-- **Screen A2 — Training Dashboard**: This week's training plan vs. actual. KPIs: sessions/week, hours, focus areas. Buddy energy ring for Move.
-- **Screen B2 — Session Planner**: Kin suggests a training session based on recent logs and goals. Session cards: warmup / drills / main set / cool-down. Each drill has sets/reps/duration. "Start session" → live timer per drill.
-- **Screen C2 — Performance Trends**: Charts: session frequency, training load, focus area balance, win rate (Padel cross-link). Kin commentary: "You've had 3 strong training weeks — consider a lighter week next."
+- **Screen A2 — Training Dashboard**: This week's training plan vs. actual. KPIs: sessions/week, hours, focus areas. Buddy energy ring for Move. Data pulled from Matchday — all sports combined or filtered by sport.
+- **Screen B2 — Session Planner**: Kin suggests a training session based on recent Matchday logs and goals. Session cards: warmup / drills / main set / cool-down. Each drill has sets/reps/duration. "Start session" → live timer per drill.
+- **Screen C2 — Performance Trends**: Charts: session frequency, training load, focus area balance, win rate (Matchday cross-link — shows per sport). Kin commentary: "You've had 3 strong training weeks — consider a lighter week next."
 - **Screen D2 — Video Analysis** (future): Upload a clip → Kin annotates key moments. For v1: text-based self-assessment form with body position, technique notes.
 
 **Track 3: Professional Coach**  
@@ -1658,33 +1760,38 @@ readable:
 
 ---
 
-#### Padel Matchday — Agent Profile
+#### Matchday — Agent Profile
 
 ```
 monitors:
-  - win/loss trends (encourage after losing streak)
-  - training frequency (flag if no training in 5 days)
+  - win/loss trends per sport (encourage after losing streak)
+  - training frequency (flag if no sessions logged in 5 days for any active sport)
   - upcoming matches (calendar cross-link)
+  - personal best proximity (individual sports — flag if within 2% of a PB)
 
 proactive triggers:
-  - "You've lost 3 in a row — Coach Hub has a tactics session for you 🎾"
-  - "No padel training logged this week — want to schedule a session?"
+  - "You've lost 3 in a row in padel — Coach Hub has a tactics session ready 🏸"
+  - "No training logged this week — want to schedule a session?"
   - "Your match against {opponent} is tomorrow at {time}" (calendar cross-link)
   - After a win: "Great win! That's your {n}th win this month 🏆"
+  - Individual sports: "Your 5K time is 2% off your PB — another run this week?"
 
 commands:
-  - "Log a padel win/loss" → match log preview card
+  - "Log a [sport] match" → adaptive match log preview card for that sport
   - "Log a training session" → training log preview card
-  - "What's my win rate this month?" → text reply
-  - "Schedule a padel match for {date}" → calendar event preview card
-  - "Who's my best doubles partner?" → stats reply from match history
+  - "What's my win rate in [sport] this month?" → text reply
+  - "Schedule a [sport] session for {date}" → calendar event preview card
+  - "Who's my best doubles partner in padel?" → stats reply from match history
+  - "Add football to our sports" → register_sport preview card
+  - "What sports does our circle play?" → list_sports reply
 
 readable:
-  - all match results (date, score, opponent, partner)
-  - training sessions (date, duration, focus)
-  - win/loss/draw counts
-  - best partner stats
-  - training frequency over time
+  - all match results per sport (date, score, opponents, partners)
+  - training sessions (date, duration, sport, focus areas)
+  - win/loss/draw/PB counts per sport
+  - best partner stats (doubles sports)
+  - training frequency per sport over time
+  - active seasons / circuit standings
 ```
 
 ---
@@ -1710,7 +1817,7 @@ commands:
   - "Help me make a decision about {topic}" → decision coach flow
   - "Prep me for my presentation on {date}" → presentation prep wizard
   - "What are my active goals?" → text reply
-  - "Log a training session" → sport coaching session log (cross-links Padel)
+  - "Log a training session" → sport coaching session log (cross-links Matchday)
   - "I need a mindfulness moment" → navigates to Health Advisor mind space
   - "How am I doing vs. my goals?" → progress summary across all tracks
 
@@ -1825,14 +1932,14 @@ readable:
 
 ### Agent Capability Matrix
 
-| Capability | Home Quest | Math Quest | Primary Quest | Grocery Run | Kitchen Buddy | Padel | Coach Hub | Health Advisor | Cinema | Family Album |
+| Capability | Home Quest | Math Quest | Primary Quest | Grocery Run | Kitchen Buddy | Matchday | Coach Hub | Health Advisor | Cinema | Family Album |
 |---|---|---|---|---|---|---|---|---|---|---|
 | **Read app data** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 🔒 private | ✓ | ✓ |
 | **Create records** | ✓ | — | — | ✓ | ✓ | ✓ | ✓ | ✓ | — | — |
 | **Modify records** | ✓ | ✓(level) | ✓(stage) | ✓ | ✓ | ✓ | ✓ | ✓ | — | — |
 | **Trigger economy** | ✓ approval | ✓ indirect | ✓ indirect | ✓ approval | ✓ task | ✓ direct | ✓ indirect | ✓ indirect | ✓ direct | ✓ direct |
 | **Proactive nudges** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ (gentle) | ✓ | ✓ |
-| **Cross-app context** | Calendar | Buddy/xp | Buddy/xp | Kitchen Buddy | Grocery Run | Calendar/Coach | Calendar/Health/Padel | Coach Hub | Moments | Moments |
+| **Cross-app context** | Calendar | Buddy/xp | Buddy/xp | Kitchen Buddy | Grocery Run | Calendar/Coach | Calendar/Health/Matchday | Coach Hub | Moments | Moments |
 | **Circle-visible** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ private | ✓ | ✓ |
 | **Preview card required** | always | always | always | always | always | always | always | always | always | always |
 
@@ -1878,6 +1985,502 @@ interface AppAgentProfile {
 ```
 
 Any app that registers this profile gets full Kin integration automatically. No custom Kin code per app. The agent reads the profiles and routes accordingly.
+
+---
+
+---
+
+## Part 18 — Family Vault (Documents & Finance)
+
+---
+
+### S-96 · Family Vault — Overview
+
+**Route**: `/apps/family-vault`
+
+**Energy**: Circle 🟣 (connection through shared responsibility)  
+**Economy events**: none — this is a serious utility app, not gamified  
+**Privacy model**: Document files and metadata are encrypted at rest in Supabase Storage. Leader-controlled sharing — personal docs default to owner + leaders only; finance data is leader-only by default unless owner enables broader access.
+
+**Design principle**: The family's single source of truth for important documents and shared finances. Not a bank app, not a scanner. A secure, organised home for the things that matter when they matter — renewals, emergencies, travel, school.
+
+**Two permanent tabs**:
+- **Vault** — Documents (left tab, default)
+- **Finance** — Budget & expenses (right tab)
+
+---
+
+### S-96-A · Vault Tab (Document Store)
+
+**Document categories**:
+
+| Category | Icon | What goes here |
+|---|---|---|
+| Identity | 🪪 | Passports, national IDs, driving licences |
+| Residence | 🏠 | Lease agreements, title deeds, utility account numbers |
+| Medical | 🏥 | Vaccine records, blood types, health insurance cards |
+| Legal | ⚖️ | Birth certificates, marriage certificates, wills, powers of attorney |
+| Financial | 💰 | Bank statements, tax returns, insurance policies |
+| Travel | ✈️ | Visas, booking confirmations, travel insurance |
+| Education | 🎓 | School records, diplomas, transcripts, report cards |
+| Other | 📁 | Anything that doesn't fit above |
+
+**Screen A — Vault Home**  
+Category grid (2×4). Each category card shows: icon + name + document count + urgency indicator (red dot if any doc in this category expires within 30 days).
+
+Quick-access strip at top: "Expiring soon" (shows count and first expiry). "Recently added" (last 3 uploads).
+
+Kin integration strip: "Your passport expires in 18 days — [Set reminder]".
+
+**Screen B — Category View**  
+List of documents in the selected category. Each document card:
+- Document name (e.g. "Aldyth — Qatar Residence Visa")
+- Person it belongs to (avatar chip)
+- Expiry date (green/amber/red based on proximity)
+- "View" button
+
+Filters: All members / Me only / Expiring soon.
+
+FAB: "+ Add document".
+
+**Screen C — Document Detail**  
+Full document view:
+- Document name, category, belonging person
+- Expiry date (large, color-coded)
+- Issue date, issuing country/authority
+- Notes (freeform — e.g. visa number, reference codes)
+- Attached files (thumbnail grid — up to 3 files per document: front, back, full scan)
+- "Download" / "Share" buttons
+- Kin suggestion: "This expires in 47 days — want me to add a 90-day reminder to the calendar?"
+
+**Screen D — Add Document**  
+Step 1 — Category + name selector  
+Step 2 — Person selector (which circle member does this belong to?)  
+Step 3 — Expiry date input (calendar picker — optional but strongly encouraged)  
+Step 4 — File upload (camera / gallery / file picker). Upload goes to Supabase Storage, encrypted at rest.  
+Step 5 — Notes (optional)  
+Review card → Confirm → Document saved.
+
+**No economy event fires** — adding a document is treated as routine admin, not a reward-worthy action.
+
+**Privacy rules**:
+- Members can see their own documents
+- Co-leaders and owners can see all documents
+- Viewers can see zero documents
+- Files require a signed Supabase Storage URL to access (short TTL — 1 hour)
+
+---
+
+### S-96-B · Finance Tab
+
+**Design principle**: Budget planning and expense tracking at the family level. Not investment advice, not tax preparation — just "where is the money going?" in a clear, private view.
+
+**Access**: Owner can choose to enable Finance for co-leaders only (default) or open it to all members. Members who cannot access Finance see a locked state with an explanation.
+
+**Sub-tabs within Finance**: Overview / Budget / Expenses / Subscriptions
+
+---
+
+**Finance — Overview Sub-tab**
+
+Month summary card:
+- Total budgeted for this month (set by owner)
+- Total spent so far
+- Amount remaining
+- Visual progress bar (colour shifts from green → amber → red as budget is consumed)
+
+Top 3 categories by spend (small bar chart).
+
+Subscription alert: "2 subscriptions renew this week — QAR 180 total."
+
+Quick actions: "+ Log expense" / "View full report".
+
+---
+
+**Finance — Budget Sub-tab**
+
+Category budget table. Default categories (all editable):
+
+| Category | Monthly Budget | Spent | Remaining |
+|---|---|---|---|
+| Groceries | QAR 2,000 | QAR 1,240 | QAR 760 |
+| School & Education | QAR 1,500 | QAR 900 | QAR 600 |
+| Utilities | QAR 600 | QAR 480 | QAR 120 |
+| Dining & Takeaway | QAR 800 | QAR 1,020 | ⚠️ Over |
+| Transport | QAR 500 | QAR 320 | QAR 180 |
+| Sport & Fitness | QAR 400 | QAR 390 | QAR 10 |
+| Health | QAR 300 | QAR 0 | QAR 300 |
+| Entertainment | QAR 200 | QAR 90 | QAR 110 |
+| Travel | QAR 0 | QAR 0 | — |
+| Other | QAR 500 | QAR 270 | QAR 230 |
+
+Editable inline (owner only). Add custom category. Monthly carry-over toggle per category.
+
+---
+
+**Finance — Expenses Sub-tab**
+
+Expense log, reverse-chronological. Each entry:
+- Date, description, category (colour-coded), amount, person/payer
+
+Filters: date range / category / person.
+
+"+ Log expense" → modal:
+- Date (default: today)
+- Description
+- Category selector
+- Amount + currency
+- Who paid (member selector — useful when someone else paid and needs to be reimbursed)
+- Receipt photo (optional)
+
+No approval flow for expenses — logging is immediate. Economy events: none.
+
+---
+
+**Finance — Subscriptions Sub-tab**
+
+Recurring commitment tracker. Not linked to a bank — manually entered.
+
+Each subscription card:
+- Service name + logo (auto-detected from common services)
+- Monthly or annual amount
+- Billing date
+- Status: Active / Paused / Flagged for review
+- "Last expense logged" date (auto-linked if description matches subscription name)
+
+"+ Add subscription" button.
+
+Kin integration: "3 subscriptions haven't had a matching expense in 45 days — they might be unused. [Review]"
+
+Flagged subscriptions appear with a yellow border. Owner can mark as "cancelled" → removed from active list.
+
+---
+
+### S-96-C · Kin Integration for Family Vault
+
+Kin is the primary interface for vault tasks. Users should rarely need to dig through the UI manually.
+
+**Voice/text commands Kin handles**:
+
+| User says | Kin does |
+|---|---|
+| "When does my passport expire?" | `get_document_metadata` → plain text reply with expiry date |
+| "What documents expire this year?" | `get_expiry_alerts(days: 365)` → formatted list |
+| "Set a reminder for my visa renewal" | `get_document_metadata` + preview card → `set_expiry_reminder` |
+| "Add Mia's vaccination record" | Navigate to S-96-A Screen D (Add Document), pre-filled with Mia + Medical |
+| "How much have we spent on food this month?" | `get_budget_summary` → plain text answer |
+| "We just paid QAR 420 at Lulu" | Preview card → `add_expense` (category: Groceries, amount: 420) |
+| "Show me this month's budget" | `get_budget_summary` → navigate to Finance — Overview |
+| "Which subscriptions are we not using?" | `list_subscriptions` → filter for no recent expense → formatted list + offer to flag |
+| "Add Netflix to subscriptions" | Preview card → add_subscription (QAR amount prompt if not known) |
+
+**Proactive triggers from Family Vault** (mapped to PT-06 and PT-07 in the Kin agent spec):
+
+```
+monitors:
+  - documents expiring within 90 days
+  - subscriptions with no matching expense in 45 days
+  - budget categories over limit by 20%
+
+proactive triggers:
+  - PT-06: "Aldyth's passport expires in 28 days. [Set calendar reminder]"
+  - PT-07: "Mia's school visa expires in 6 days — urgent action needed. [View document]"
+  - PT-10: "Dining & Takeaway is 28% over budget this month."
+  - PT-11: "Disney+ hasn't had a matching expense in 2 months — still using it? [Flag for review]"
+
+commands (Kin tools):
+  list_documents, get_document_metadata, add_document, get_expiry_alerts,
+  set_expiry_reminder, list_expenses, add_expense, get_budget_summary,
+  get_finance_report, list_subscriptions, flag_subscription
+```
+
+---
+
+### Family Vault — Economy Contract
+
+| Field | Value |
+|---|---|
+| Economy events | None — not gamified |
+| Energy type | n/a |
+| Diamonds earned | 0 |
+| Reward policy | This app is about serious utility. Adding diamonds for document uploads would feel trivial. |
+| Circle-visible | No (Vault is private; Finance is leader-controlled) |
+| Farming risk | None |
+
+---
+
+### Screen Inventory Addendum (Family Vault)
+
+| ID | Screen | Route | Priority |
+|---|---|---|---|
+| S-96 | Family Vault | `/apps/family-vault` | P1 |
+| S-96-A | Vault — Category View | `/apps/family-vault/vault/{category}` | P1 |
+| S-96-B | Vault — Document Detail | `/apps/family-vault/vault/doc/{id}` | P1 |
+| S-96-C | Vault — Add Document | `/apps/family-vault/vault/new` | P1 |
+| S-96-D | Finance — Overview | `/apps/family-vault/finance` | P1 |
+| S-96-E | Finance — Budget | `/apps/family-vault/finance/budget` | P1 |
+| S-96-F | Finance — Expenses | `/apps/family-vault/finance/expenses` | P1 |
+| S-96-G | Finance — Subscriptions | `/apps/family-vault/finance/subscriptions` | P2 |
+
+---
+
+---
+
+## Part 19 — Travel Planner
+
+---
+
+### S-97 · Travel Planner — Overview
+
+**Route**: `/apps/travel-planner`
+
+**Energy**: Circle 🟣 + Story 🟡 (shared adventure, lasting memories)  
+**Economy events**:
+- `task.completed` (+15 💎) — full packing checklist ticked off by all travelers
+- `moment.created` (+8 💎) — trip recap film or album generated after return
+
+**Design principle**: Trip Advisor meets travel management. One app that handles discovery ("what should we do in Bali?"), preparation ("what do we pack?"), and on-trip logistics ("what's on today?") — all enriched by Kin. Learning about the destination is a first-class feature, not a tab buried in settings.
+
+**Three permanent tabs**:
+- **Trips** — All trips (upcoming + past)
+- **Discover** — Places, food, activities at any destination
+- **Learn** — Cultural intelligence about any place
+
+---
+
+### S-97-A · Trips Tab — Trips Hub
+
+Landing screen. Upcoming trips shown as large cards with a hero image (auto-selected from Unsplash based on destination name), destination, date range, and a traveler avatar stack.
+
+**Card states**:
+- **Planning** — trip created, itinerary not started (grey progress ring)
+- **Ready** — packing ≥90% done, documents valid (green ring)
+- **In Progress** — travel dates are today or ongoing (pulsing ring)
+- **Completed** — past trip, shows moment count and whether a recap was made
+
+Past trips in a compact list below the upcoming cards. Tap any to see the full trip dashboard.
+
+FAB: **"+ New trip"** — opens a 3-step wizard:
+1. Destination + dates
+2. Who's coming (circle member picker)
+3. Trip type (Beach / City Break / Adventure / Family / Business) — drives default packing templates
+
+---
+
+### S-97-B · Trip Dashboard (specific trip)
+
+**Route**: `/apps/travel-planner/trips/{tripId}`
+
+Full-width destination hero image at top. Destination name + dates + traveler avatars. Progress ring: "Packing 3/4 ready · Docs ✓ all valid · Itinerary 5 days planned".
+
+Five sub-tabs within the dashboard:
+
+**Overview** — Map card (static, destination pin), key trip facts (timezone, currency, language, weather forecast if dates are near), trip notes (freeform).
+
+**Itinerary** — See S-97-C.
+
+**Packing** — See S-97-D.
+
+**Docs** — See S-97-G (document check).
+
+**Budget** — Trip-specific expense log (separate from Family Vault's general finance, but can optionally sync). Categories auto-set to: Flights / Accommodation / Food / Transport / Activities / Shopping / Other. Totals shown in trip currency with QAR conversion.
+
+---
+
+### S-97-C · Itinerary Builder
+
+**Route**: `/apps/travel-planner/trips/{tripId}/itinerary`
+
+Day-by-day plan. Each day is a vertical timeline with three slots: **Morning**, **Afternoon**, **Evening**. Each slot is a card with: activity name, place (from Discover), duration, estimated cost, notes.
+
+"+ Add activity" taps open a half-sheet: type an activity name, or pick from Discover results for this destination (pre-filtered to this trip's destination). Drag to reorder within a day.
+
+Day header shows: date, day-of-week, total estimated cost for that day.
+
+**Overview mode**: Tap the calendar icon → compressed view showing all days as a horizontal scroll. Each day shows a colored dot per slot (filled = planned, empty = open).
+
+Kin shortcut: "Kin, plan day 3 in Paris" → Kin reads the destination guide + your preferences + unbooked slots → generates a suggested day plan as a preview card.
+
+---
+
+### S-97-D · Packing Checklist
+
+**Route**: `/apps/travel-planner/trips/{tripId}/packing`
+
+Smart per-person packing list. Each traveler on the trip has their own tab (avatar + name).
+
+Default categories (auto-populated by Kin based on trip type + destination + duration):
+
+| Category | Examples |
+|---|---|
+| Documents | Passport, visa, insurance, booking confirmations |
+| Clothing | Clothes count by days + weather, shoes, swimwear |
+| Toiletries | Sunscreen, medications, basics |
+| Electronics | Phone, charger, adapter, camera |
+| Kids | School activities, snacks, comfort items |
+| Health | Prescription meds, first aid, allergy meds |
+| Other | Custom items |
+
+Each item: checkbox + item name + optional note. Checked = struck through, moves to bottom. Progress shown as `12/20 packed`.
+
+**Smart generation**: Kin generates the list. User confirms via preview card. User can then add, edit, remove items freely.
+
+**"All packed" action**: When every item for all travelers is checked → confetti micro-animation → `task.completed` economy event (+15 💎) fires.
+
+**Share list**: Generates a clean printable/shareable list per person. Useful for handing to a spouse: "Here's what Mia needs to pack."
+
+---
+
+### S-97-E · Discover Tab
+
+**Route**: `/apps/travel-planner/discover`
+
+Trip Advisor-style destination browser — not live web scraping, but Kin-generated and curated knowledge enriched by user-added places.
+
+**Destination search bar** at top (auto-fills with upcoming trip destinations as chips).
+
+Category filter row: **Things to Do** · **Eat & Drink** · **Attractions** · **Nature** · **Culture** · **With Kids** · **Hidden Gems**
+
+Each place card:
+- Place name + type tag (e.g. "Restaurant", "Museum", "Beach")
+- One-line Kin description: "A local favourite for grilled seafood — outdoor tables, no reservations needed"
+- Energy type tag (Play / Move / Circle / Story)
+- "Add to itinerary" button (prompts which trip + which day/slot)
+- "Save" button (adds to a Wishlist for this destination)
+
+**Wishlist panel**: Saved places for this destination. Can bulk-add to itinerary.
+
+**Kin integration**: "What's good to do in Bali with kids?" → Kin filters Discover results for kid-friendly + With Kids category, presents top 5 as a list in the chat, each with a "Add to itinerary" button.
+
+---
+
+### S-97-F · Learn Tab
+
+**Route**: `/apps/travel-planner/learn`
+
+Cultural intelligence. Not a Wikipedia dump — a family-friendly, action-ready brief that tells you what you actually need to know before arriving.
+
+**Destination selector** at top (defaults to next upcoming trip destination).
+
+Sections:
+
+**Quick Facts** (always visible, above the fold)
+- Capital, currency, language(s), timezone vs. Qatar, plug type, emergency number
+
+**Culture & Etiquette**
+- Do's and don'ts (local customs, dress code, religious sensitivity)
+- Kid-friendly explanation toggle ("Mia mode" — simplified language for children)
+
+**Language Basics**
+- 10 essential phrases in the local language, each with pronunciation guide and phonetic spelling
+- Grouped: Greetings / Numbers / Food / Transport / Help
+- "Practice mode" — Kin quizzes the family on the phrases before departure. Correct answer → +2 💎 per phrase (capped at 20 💎 per trip, to avoid farming)
+
+**Money & Costs**
+- Currency name + symbol + approximate QAR exchange rate
+- Tipping customs (expected / optional / not common)
+- Cash vs card usage norms
+- Rough cost benchmarks: "Budget lunch ~QR 20–35", "Taxi from airport ~QR 60"
+
+**Weather**
+- Typical weather for the travel month: temperature range, rainfall, what to expect
+- Packing implication: "Pack light layers — evenings cool quickly in December"
+
+**Getting Around**
+- Airport to city centre options (taxi / metro / bus / walk — with typical cost)
+- Local transport notes (Grab, Bolt, local apps, etc.)
+
+**Safety & Health**
+- General safety rating (based on travel advisories — static, not live)
+- Vaccination recommendations (informational only — "Check with your doctor for personalised advice")
+- Water safety: tap water drinkable yes/no
+- Common traveller ailments and how to avoid them
+
+**Kin integration**: "Tell me 5 words in Japanese" → opens Language Basics section + starts a mini practice session. "What's the tipping culture in Morocco?" → direct text answer from destination guide.
+
+---
+
+### S-97-G · Document Check (inside Trip Dashboard)
+
+Cross-references **Family Vault** with the trip's traveler list. No manual input needed — Kin reads the passports and visas already stored.
+
+**Per traveler row**:
+- Avatar + name
+- Passport expiry: ✅ valid (>6 months past trip return) / ⚠️ borderline (3–6 months) / ❌ expires before or within 3 months of return
+- Visa: ✅ valid visa stored / ⚠️ may need visa (Kin flags based on destination + stored nationality) / ❌ no visa found for this destination
+- Travel insurance: ✅ uploaded / ➕ missing
+
+**Kin actions from this screen**:
+- If passport borderline: "Set a reminder to check renewal eligibility?" → preview card → `set_expiry_reminder`
+- If visa may be needed: "Kin, do I need a visa for Morocco with a Qatar residence?" → Kin answers based on nationality in profile + destination
+- If insurance missing: "Add travel insurance to the Vault" → navigates to Family Vault → Add Document, pre-filled with Travel category
+
+---
+
+### Travel Planner — Kin Integration
+
+**Voice/text commands Kin handles**:
+
+| User says | Kin does |
+|---|---|
+| "Plan a trip to Bali for the family in August" | `create_trip` preview card (destination, dates, all circle members) |
+| "What should we pack for 5 days in Japan in December?" | `generate_packing_list` preview card (per-person, winter city template) |
+| "Plan day 2 in Paris for us" | `search_places` + `update_itinerary` preview card with suggested day |
+| "What should we do with kids in Dubai?" | `search_places` filtered kid-friendly → reply list with add-to-itinerary buttons |
+| "Are our passports valid for the Thailand trip?" | `check_travel_documents` → plain text report per traveler |
+| "Teach me 5 words in Italian" | `get_destination_guide` (language section) → practice mini-session |
+| "What's the culture like in Morocco?" | `get_destination_guide` (culture section) → plain text summary |
+| "What are our upcoming trips?" | `list_trips` → plain text list |
+| "How's the packing going for Bali?" | `get_packing_list` → "3 of 4 travelers ready — Mia is still missing 6 items" |
+
+**Proactive triggers from Travel Planner** (PT-19 to PT-21 in the Kin agent spec):
+
+```
+monitors:
+  - trips with start date within 14 days
+  - packing lists <80% complete with trip < 3 days away
+  - travelers whose passport expires within 6 months of a trip return date
+
+proactive triggers:
+  - PT-19: "Your Bali trip is in 7 days — packing is 40% done. [Open packing list]"
+  - PT-20: "2 days to Bali — Mia still has 8 items to pack. [Open Mia's list]"
+  - PT-21: "Mia's passport expires 3 months after your Japan trip return. That may not meet Japan's 6-month rule. [Check document]"
+
+commands (Kin tools):
+  list_trips, get_trip_detail, create_trip, update_itinerary,
+  get_packing_list, generate_packing_list, update_packing_item,
+  search_places, add_place_to_itinerary,
+  get_destination_guide, check_travel_documents
+```
+
+---
+
+### Travel Planner — Economy Contract
+
+| Field | Value |
+|---|---|
+| Economy events | `task.completed` (+15 💎 packing done), `moment.created` (+8 💎 recap generated) |
+| Energy type | Circle 🟣 (planning together), Story 🟡 (the memories) |
+| Language practice | +2 💎 per correct phrase answer, capped at 20 💎 per trip |
+| Diamonds earned | Max ~43 per trip (packing + language cap + recap) |
+| Reward policy | Diamonds reward preparation effort and memory creation — not passive browsing |
+| Circle-visible | Trips visible to all travelers on the trip. Private trips (owner only) allowed. |
+| Farming risk | Low — language practice capped per trip, packing is once-per-trip |
+
+---
+
+### Screen Inventory Addendum (Travel Planner)
+
+| ID | Screen | Route | Priority |
+|---|---|---|---|
+| S-97 | Travel Planner | `/apps/travel-planner` | P1 |
+| S-97-A | Trips Hub | `/apps/travel-planner/trips` | P1 |
+| S-97-B | Trip Dashboard | `/apps/travel-planner/trips/{tripId}` | P1 |
+| S-97-C | Itinerary Builder | `/apps/travel-planner/trips/{tripId}/itinerary` | P1 |
+| S-97-D | Packing Checklist | `/apps/travel-planner/trips/{tripId}/packing` | P1 |
+| S-97-E | Discover | `/apps/travel-planner/discover` | P2 |
+| S-97-F | Learn | `/apps/travel-planner/learn` | P2 |
+| S-97-G | Document Check | `/apps/travel-planner/trips/{tripId}/docs` | P1 |
 
 ---
 
