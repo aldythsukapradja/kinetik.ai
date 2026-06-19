@@ -861,6 +861,7 @@ function reportGameResult(ranked,win,tie){
   const sourceRecordId='emoji_'+(G.startedAt||Date.now())+'_'+G.mode+'_'+total;
   Bridge.send('DATA_CREATE',{collection:'leaderboard',ownerPersonId:false,payload:{...payload,appId:APP.appId,createdAt:new Date().toISOString()}});
   Bridge.send('KINETIK_EVENT',{eventType:'game.round.completed',personId:Bridge.ctx.personId,sourceRecordId,amount:2,metadata:payload});
+  if(!tie)Bridge.send('KINETIK_EVENT',{eventType:'game.win',personId:Bridge.ctx.personId,sourceRecordId:sourceRecordId+'-win',amount:5,metadata:{title:'Emoji Party win',mode:G.mode,winner:win.name,score:win.score}});
 }
 function playAgain(){ const saved=JSON.parse(JSON.stringify(CFG)); startGame(); }
 function goSetup(){ showScr('scr-setup'); }

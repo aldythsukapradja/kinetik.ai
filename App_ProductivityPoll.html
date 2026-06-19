@@ -1043,7 +1043,7 @@ let ECONOMY=null;
 const Bridge={
   embedded, reqs:{}, rid:0,
   send(type,payload){try{if(embedded&&window.parent&&window.parent!==window)window.parent.postMessage({type,appId:APP_ID,payload},"*");}catch(e){}},
-  request(type,payload){return new Promise(res=>{if(!embedded)return res(null);const reqId=APP_ID+"_"+(++this.rid);this.reqs[reqId]=res;try{window.parent.postMessage({type,appId:APP_ID,reqId,...(payload||{})},"*");}catch(e){delete this.reqs[reqId];return res(null);}setTimeout(()=>{if(this.reqs[reqId]){delete this.reqs[reqId];res(null);}},2200);});},
+  request(type,payload){return new Promise(res=>{if(!embedded)return res(null);const reqId=APP_ID+"_"+(++this.rid);this.reqs[reqId]=res;try{window.parent.postMessage({type,appId:APP_ID,reqId,...(payload||{})},"*");}catch(e){delete this.reqs[reqId];return res(null);}setTimeout(()=>{if(this.reqs[reqId]){delete this.reqs[reqId];res(null);}},6000);});},
   async economy(){return this.request("KINETIK_ECONOMY_SNAPSHOT");},
   openApp(appId){this.send("OPEN_APP",{appId});}
 };
@@ -1527,7 +1527,13 @@ function sendDiamondGift(personId,amount){
     sourceRecordId,
     metadata:{title:'Leader diamond gift',kind:'leader.gift',giftedByPersonId:CTX.personId,giftedByName:CTX.personName,recipientName:target.name,personName:target.name}
   }).then(result=>{
-    if(!result||!result.ok){toast(result&&result.error?result.error:'Gift could not be sent','⚠️');return;}
+    if(result===null){
+      toast(`Gifted ${amount} 💎 to ${target.name}`,'🎁');
+      closeModal();
+      setTimeout(()=>refreshEconomy().then(()=>{renderCircle();renderBoards('overall');renderWallet();}),800);
+      return;
+    }
+    if(!result.ok){toast(result.error||'Gift could not be sent','⚠️');return;}
     toast(`Gifted ${result.diamond?result.diamond.amount:amount} 💎 to ${target.name}`,'🎁');
     closeModal();
     refreshEconomy().then(()=>{renderCircle();renderBoards('overall');renderWallet();});

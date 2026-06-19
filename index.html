@@ -2132,7 +2132,18 @@ const DB={KEY:"kinetik_live_cache_v1",d:null,error:null,
     try{const live=await SheetsAPI.loadAll();this.d=mergeLocalOnly(live,cached);this.error=null;this.save();}
     catch(e){this.error=e.message||String(e);console.error(e);if(!cached)this.d=EMPTY_DATA();}
   },
-  save(){localStorage.setItem(this.KEY,JSON.stringify(this.d));},
+  save(){
+    try{localStorage.setItem(this.KEY,JSON.stringify(this.d));}
+    catch(e){
+      if(/QuotaExceeded|quota/i.test(e.name||e.message||String(e))){
+        if(Array.isArray(this.d.diamondEvents))this.d.diamondEvents=this.d.diamondEvents.slice(0,50);
+        if(Array.isArray(this.d.agentActions))this.d.agentActions=this.d.agentActions.slice(0,20);
+        if(Array.isArray(this.d.appRecords))this.d.appRecords=this.d.appRecords.slice(0,150);
+        try{localStorage.setItem(this.KEY,JSON.stringify(this.d));}
+        catch(e2){console.warn("[DB] localStorage full even after pruning, save skipped");}
+      }
+    }
+  },
   async refresh(){await this.load();},
   clearCache(){localStorage.removeItem(this.KEY);this.d=EMPTY_DATA();}
 };
@@ -2472,10 +2483,7 @@ const KinEngine={
         const result=await EconomyAPI.record(raw);
         return this.applyResult(result,raw);
       }catch(e){
-        const msg=e&&e.message?e.message:String(e);
-        const canFallback=/Unknown POST action|Sheet missing|Failed to fetch|NetworkError|Load failed|fetch|offline/i.test(msg);
-        console.warn("Economy backend unavailable",e);
-        if(!canFallback)return {ok:false,error:msg};
+        console.warn("Economy backend unavailable, using local:",e&&e.message||e);
       }
     }
     return this.localHandle(raw);
