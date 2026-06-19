@@ -1,0 +1,7 @@
+{
+  "buildCommand": "node build_app_catalog.mjs",
+  "outputDirectory": ".",
+  "framework": null,
+  "cleanUrls": true,
+  "trailingSlash": false
+}
