@@ -194,7 +194,7 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:60;display:none}
     <div class="topbar">
       <div class="brand"><span class="logo"></span> Lucky Spin</div>
       <div class="kinctx" id="kinCtx">Standalone</div>
-      <div class="wallet"><span class="point">$</span><span id="walletHome">0</span></div>
+      <div class="wallet"><span class="point">★</span><span id="walletHome">0</span></div>
     </div>
     <div class="scroll">
       <div class="hero">
@@ -269,6 +269,7 @@ addEventListener('message',e=>{const m=e.data||{};if(m.type==='INIT_APP'){Bridge
 function load(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))||{}}catch(e){return{}}}
 function store(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save))}catch(e){}}
 let save=Object.assign({points:0,spins:0,correct:0,bestStreak:0,sound:true,name:'',lastDaily:''},load());
+if(save.coins&&!save.points){save.points=save.coins;delete save.coins;store();}
 function addPoints(n){save.points+=n;store();renderWallet()}
 function renderWallet(){document.getElementById('walletHome').textContent=save.points.toLocaleString()}
 
