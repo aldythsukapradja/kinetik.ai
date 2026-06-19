@@ -383,10 +383,14 @@ nav{
       <div class="field"><label>Destination</label><input id="wz-dest" placeholder="e.g. Bali, Indonesia" autocomplete="off"></div>
       <div class="field"><label>Nickname (optional)</label><input id="wz-nick" placeholder="e.g. Family Summer 2025"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="field"><label>Departure</label><input id="wz-start" type="date"></div>
-        <div class="field"><label>Return</label><input id="wz-end" type="date"></div>
+        <div class="field"><label>Departure Date</label><input id="wz-start" type="date"></div>
+        <div class="field"><label>Return Date</label><input id="wz-end" type="date"></div>
       </div>
-      <button class="btn primary full" id="wzNext0">Next</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="field"><label>Departure Time</label><input id="wz-dep-time" type="time" value="08:00"></div>
+        <div class="field"><label>Arrival Time (return)</label><input id="wz-arr-time" type="time" value="20:00"></div>
+      </div>
+      <button class="btn primary full" id="wzNext0">Next →</button>
     </div>
     <!-- Step 1: Travelers -->
     <div id="wzp-1" style="display:none">
@@ -616,6 +620,21 @@ const Bridge = (()=>{
   return {send};
 })();
 
+function syncTripToCalendar(t,ids){
+  const pIds=ids&&ids.length?ids:[state.ctx.personId];
+  if(t.startDate) Bridge.send('ADD_TO_CALENDAR',{payload:{
+    title:'✈️ Depart – '+(t.nickname||t.destination),
+    date:t.startDate,startTime:t.depTime||'08:00',endTime:'23:59',
+    participantPersonIds:pIds,
+    preparation:['Check-in online','Confirm passport','Pack bags']
+  }});
+  if(t.endDate) Bridge.send('ADD_TO_CALENDAR',{payload:{
+    title:'🏠 Return – '+(t.nickname||t.destination),
+    date:t.endDate,startTime:'00:00',endTime:t.arrTime||'20:00',
+    participantPersonIds:pIds,
+    preparation:[]
+  }});
+}
 function emitEvent(event,amount,meta={}){
   Bridge.send("KINETIK_EVENT",{event,amount,personId:state.ctx.personId,personName:state.ctx.personName,...meta});
   state.gems+=amount;
@@ -728,6 +747,7 @@ function renderOverview(t){
       <div style="font-size:22px;font-weight:900;letter-spacing:-.03em">${esc(t.destination)}</div>
       ${t.nickname?`<div style="font-size:13px;opacity:.75;margin-top:2px">${esc(t.nickname)}</div>`:""}
       <div style="font-size:12px;opacity:.8;margin-top:8px">📅 ${dateStr(t.startDate)} – ${dateStr(t.endDate)} · ${n} day${n!==1?"s":""}</div>
+      ${t.depTime?`<div style="font-size:11px;opacity:.7;margin-top:3px">🛫 ${t.depTime} &nbsp;·&nbsp; 🛬 ${t.arrTime||"—"}</div>`:""}
       <div style="margin-top:6px"><span style="background:rgba(255,255,255,.2);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:800">${st.label}</span></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
@@ -741,8 +761,14 @@ function renderOverview(t){
       ${(t.travelers||[]).map(tr=>`<div style="display:flex;align-items:center;gap:7px;background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:7px 11px"><div class="avatar" style="background:${personColor(tr)};width:26px;height:26px;font-size:10px">${initials(tr)}</div><span style="font-size:13px;font-weight:700">${esc(tr)}</span></div>`).join("")}
     </div>
     ${(t.packing||[]).length?`<div class="pack-bar"><div class="pack-label"><span>Packing progress</span><span>${pct}%</span></div><div class="pack-bar-track"><div class="pack-bar-fill" style="width:${pct}%"></div></div></div>`:""}
-    <button class="btn danger full" style="margin-top:14px" id="deleteTrip">Delete Trip</button>
+    <button class="btn full" style="margin-top:10px" id="syncCalBtn">📅 Sync Departure & Return to Calendar</button>
+    <button class="btn danger full" style="margin-top:8px" id="deleteTrip">Delete Trip</button>
   `;
+  document.getElementById("syncCalBtn").onclick=()=>{
+    const ids=state.ctx.people.filter(p=>t.travelers.includes(p.name)).map(p=>p.id);
+    syncTripToCalendar(t,ids);
+    toast("📅 Departure & return added to Calendar");
+  };
   document.getElementById("deleteTrip").onclick=()=>{
     if(!confirm("Delete this trip?"))return;
     state.trips=state.trips.filter(x=>x.id!==t.id);
@@ -1042,7 +1068,7 @@ document.getElementById("wzNext0").onclick=()=>{
   if(!dest){toast("Enter a destination");return;}
   if(!start||!end){toast("Select travel dates");return;}
   if(new Date(end)<new Date(start)){toast("Return must be after departure");return;}
-  state.wizData={destination:dest,nickname:document.getElementById("wz-nick").value.trim(),startDate:start,endDate:end};
+  state.wizData={destination:dest,nickname:document.getElementById("wz-nick").value.trim(),startDate:start,endDate:end,depTime:document.getElementById("wz-dep-time").value||"08:00",arrTime:document.getElementById("wz-arr-time").value||"20:00"};
   state.wizTravelers=[state.ctx.personName||"Me"];
   state.ctx.people.forEach(p=>{if(p.id!==state.ctx.personId&&!state.wizTravelers.includes(p.name))state.wizTravelers.push(p.name);});
   renderWzTravelers();wzGo(1);
@@ -1080,12 +1106,16 @@ document.getElementById("wzCreate").onclick=()=>{
   const trip={
     id:uid("trip"),destination:state.wizData.destination,nickname:state.wizData.nickname||"",
     startDate:state.wizData.startDate,endDate:state.wizData.endDate,
+    depTime:state.wizData.depTime||"08:00",arrTime:state.wizData.arrTime||"20:00",
     travelers:state.wizTravelers,tripType:type,budget:Number(budget)||0,
     color:c1,color2:c2,createdAt:Date.now(),itinerary:null,packing:null,expenses:[]
   };
   state.trips.push(trip);save();
   hideSheet("newTripSheet");state.activeTrip=trip;state.activeSt="overview";
-  renderTrips();toast(`✈️ <b>${esc(trip.nickname||trip.destination)}</b> created!`);
+  // Add departure + return to Kinetik Calendar
+  const allIds=state.ctx.people.filter(p=>trip.travelers.includes(p.name)).map(p=>p.id);
+  syncTripToCalendar(trip,allIds);
+  renderTrips();toast(`✈️ <b>${esc(trip.nickname||trip.destination)}</b> created & added to Calendar!`);
 };
 
 /* ═══════════════════════ ADD ACTIVITY ═══════════════════════ */
