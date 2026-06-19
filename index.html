@@ -2024,19 +2024,21 @@ const AppRegistry={
     const m=String(html).match(/<script[^>]*type=["']application\/kinetik-app\+json["'][^>]*>([\s\S]*?)<\/script>/i);
     if(!m)return null;try{return JSON.parse(m[1].trim());}catch(e){return null;}
   },
-  /* fetch OR XHR, raced against a 700ms timeout so file:// can't hang the boot */
-  requestText(url){
+  /* fetch OR XHR, raced against a timeout. listFiles uses 700ms (index.html is tiny);
+     individual App_*.html fetches use 5000ms — 28 concurrent CDN cold-start requests
+     can legitimately take 1-3s on first load. */
+  requestText(url,ms=5000){
     const req=(typeof fetch==="function")
       ?fetch(url,{cache:"no-store"}).then(r=>r.ok?r.text():Promise.reject(new Error("HTTP "+r.status)))
       :new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open("GET",url,true);
         x.onload=()=>x.status>=200&&x.status<300?res(x.responseText):rej(new Error("HTTP "+x.status));
         x.onerror=()=>rej(new Error("net"));x.send();});
-    return Promise.race([req,new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),700))]);
+    return Promise.race([req,new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),ms))]);
   },
   async listFiles(){
     let names=[];
     /* live directory listing — works when the folder isn't index-shadowed (e.g. /apps/) */
-    try{const html=await this.requestText("./?_="+Date.now());
+    try{const html=await this.requestText("./?_="+Date.now(),700);
       names=[...html.matchAll(/href="[^"]*?(App_[^"\/?#]+\.html)"/gi)].map(m=>decodeURIComponent(m[1]));}catch(e){}
     names=[...new Set(names)].filter(f=>/^App_.*\.html$/i.test(f));
     /* otherwise use SEED_FILES generated into this file */
@@ -2058,7 +2060,13 @@ const AppRegistry={
       try{const html=await this.requestText(f+"?_="+Date.now());
         const j=this.manifestOf(html);
         cat.push(j&&j.appId?manifestToCatalog(j,f):fallbackApp(f,html));
-      }catch(e){if(served)return;const b=this.byFile(f);cat.push(b?{...b}:fallbackApp(f,""));}
+      }catch(e){
+        /* HTTP 4xx = file truly removed from server; skip to avoid ghost entries.
+           timeout / network error = CDN cold-start; use baked-in catalog entry. */
+        if(served&&/HTTP 4\d\d/.test(String(e&&e.message||e)))return;
+        const b=this.byFile(f);
+        cat.push(b?{...b,gradient:[...b.gradient],allowed:[...(b.allowed||["family","friends"])]}:fallbackApp(f,""));
+      }
     }));
     const seen={},uniq=cat.filter(a=>a&&a.id&&(seen[a.id]?false:(seen[a.id]=1)));
     DB.d.appCatalog=uniq.length?uniq:BUILTIN_APP_CATALOG.map(a=>({...a,gradient:[...a.gradient],allowed:[...(a.allowed||["family","friends"])]}));
