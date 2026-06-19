@@ -758,7 +758,7 @@ function logTool(id){
   save();
   closeSheet();
   renderAll();
-  Bridge.send("EARN_GEMS", {amount:1});
+  Bridge.send("KINETIK_EVENT",{eventType:"practice.completed",amount:1,sourceRecordId:appId+"-rep-"+Date.now(),metadata:{title:"Coach rep"}});
   toast(badge ? `Badge: ${badge.name}` : "Tool rep logged");
 }
 function markHabit(id){
@@ -773,7 +773,7 @@ function markHabit(id){
   const badge = checkBadges();
   save();
   renderAll();
-  Bridge.send("EARN_GEMS", {amount:1});
+  Bridge.send("KINETIK_EVENT",{eventType:"practice.completed",amount:1,sourceRecordId:appId+"-rep-"+Date.now(),metadata:{title:"Coach rep"}});
   toast(badge ? `Badge: ${badge.name}` : "Habit marked");
 }
 
@@ -878,7 +878,7 @@ function finishDeck(){
   save();
   renderAll();
   Bridge.send("SHOW_TOAST", {message:"Behaviour rep complete"});
-  Bridge.send("EARN_GEMS", {amount:Deck.single ? 1 : 3});
+  Bridge.send("KINETIK_EVENT",{eventType:"practice.completed",amount:Deck.single?1:3,sourceRecordId:appId+"-session-"+Date.now(),metadata:{title:"Coach session"}});
   $("#deckBody").innerHTML = `<article class="deck-card" style="justify-content:center;text-align:center"><div class="big-loop">${icon("spark")}</div><div class="kind">Complete</div><h2>Loop strengthened</h2><p>Your behaviour score moved because you practiced a smaller, clearer next action.</p><div class="stats" style="margin-top:18px;text-align:left"><div class="stat"><b>+${Math.round(Deck.gains.score)}</b><span>Loop</span></div><div class="stat"><b>+${Deck.gains.xp}</b><span>XP</span></div><div class="stat"><b>${S.streak}</b><span>Streak</span></div></div>${badge ? `<p style="font-weight:850;color:var(--acc)">Badge unlocked: ${esc(badge.name)}</p>` : ""}<button class="primary ghost" style="margin-top:16px" data-share-summary>Copy summary</button></article>`;
   const next = $("#deckNext");
   next.disabled = false;

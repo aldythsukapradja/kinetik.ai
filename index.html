@@ -663,7 +663,7 @@ html[data-theme="dark"] #splash{background:linear-gradient(180deg,rgba(5,7,15,.9
 #appHostTitle{font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .appHostActions{margin-left:auto;display:flex;align-items:center;gap:8px;flex:0 0 auto}
 #appEcoBadge{display:flex;align-items:center;gap:5px;min-height:34px;border-radius:999px;padding:6px 10px;background:color-mix(in srgb,var(--acc) 11%,var(--glass2));border:1px solid color-mix(in srgb,var(--acc) 22%,var(--brd2));box-shadow:inset 0 1px 0 rgba(255,255,255,.32),0 8px 20px rgba(30,80,130,.13);font-size:12px;font-weight:900;color:var(--text);transition:transform var(--dur1),background var(--dur1),opacity var(--dur1)}
-#appEcoBadge .gem{font-size:15px;filter:drop-shadow(0 2px 5px rgba(38,198,255,.38))}
+#appEcoBadge .diamond{font-size:15px;filter:drop-shadow(0 2px 5px rgba(38,198,255,.38))}
 #appEcoBadge small{font-size:9px;line-height:1;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:900}
 #appEcoBadge.synced small{color:var(--acc)}
 #appEcoBadge.unsynced{opacity:.72}
@@ -896,7 +896,7 @@ html[data-theme="dark"] #splash{background:linear-gradient(180deg,rgba(5,7,15,.9
   </div>
 </div>
 
-<div id="appHost"><div id="appHostBar"><b id="appHostTitle">App</b><div class="appHostActions"><div id="appEcoBadge" class="unsynced" title="Buddy economy ready"><span class="gem">💎</span><b id="appEcoCount">0</b><small id="appEcoState">Ready</small></div><button class="btn ghost" style="padding:7px 16px" id="appHostDone">Done</button></div></div><iframe id="appFrame" title="app"></iframe></div>
+<div id="appHost"><div id="appHostBar"><b id="appHostTitle">App</b><div class="appHostActions"><div id="appEcoBadge" class="unsynced" title="Buddy economy ready"><span class="diamond">💎</span><b id="appEcoCount">0</b><small id="appEcoState">Ready</small></div><button class="btn ghost" style="padding:7px 16px" id="appHostDone">Done</button></div></div><iframe id="appFrame" title="app"></iframe></div>
 <div id="sheetLayer"><div id="scrim"></div><div id="sheet" class="glass"><div class="grab"></div><h3 id="sheetTitle"></h3><div id="sheetBody"></div></div></div>
 <div id="toasts"></div>
 
@@ -1081,7 +1081,7 @@ const BUILTIN_APP_CATALOG=[
       "#f59e0b"
     ],
     "category": "games",
-    "tagline": "Turn home jobs into gems.",
+    "tagline": "Turn home jobs into diamonds.",
     "status": "live",
     "allowed": [
       "family"
@@ -1616,7 +1616,10 @@ const BUILTIN_APP_CATALOG=[
       "standalone",
       "moments"
     ],
-    "emits": [],
+    "emits": [
+      "buddy.quest.completed",
+      "diamond.gift"
+    ],
     "minMembers": 1,
     "desc": "A pet-first avatar, diamond economy, circle leaderboard, and app companion layer for Kinetik."
   },
@@ -1964,7 +1967,7 @@ function parseAppFile(file){
   const name=(rest.join(" ")||words.join(" ")||"App").trim();
   return {category,name};
 }
-const guessIcon=name=>{const map={Cinema:"🎬",Chess:"♟️",Clash:"⚔️",Emoji:"😄",Ladder:"🎲",Lucky:"🎡",Strata:"⛰️",Padel:"🎾",Tennis:"🎾",Basket:"🏀",Football:"⚽",Golf:"⛳",Swim:"🏊",Guitar:"🎸",Piano:"🎹",Times:"✖️",Table:"✖️",Philosophy:"🧩",Data:"🔎",Grocery:"🛒",Cook:"🍳",Meal:"🍽️",Poll:"🐣",Buddy:"🐣",Movie:"🎬",Quiz:"❓",Charisma:"🌟",Presence:"🌟",Present:"🎤",Wisdom:"🧭",Decision:"🧭",Clock:"🕒",Habit:"🌱",Read:"📚",Primary:"📚",Money:"💰",Agent:"🤖",Voice:"🎙️",Loop:"🔁",Code:"👾",Chore:"🧹",Home:"🧹",World:"🏆"};const k=Object.keys(map).find(w=>new RegExp(w,"i").test(name));return map[k]||"✦";};
+const guessIcon=name=>{const map={Cinema:"🎬",Chess:"♟️",Clash:"⚔️",Emoji:"😄",Ladder:"🎲",Lucky:"🎡",Strata:"⛰️",Padel:"🎾",Tennis:"🎾",Basket:"🏀",Football:"⚽",Golf:"⛳",Swim:"🏊",Guitar:"🎸",Piano:"🎹",Times:"✖️",Table:"✖️",Philosophy:"🧩",Data:"🔎",Grocery:"🛒",Cook:"🍳",Meal:"🍽️",Poll:"🐣",Buddy:"🐣",Movie:"🎬",Quiz:"❓",Charisma:"🌟",Presence:"🌟",Present:"🎤",Wisdom:"🧭",Decision:"🧭",Clock:"🕒",Habit:"🌱",Read:"📚",Primary:"📚",Money:"💎",Agent:"🤖",Voice:"🎙️",Loop:"🔁",Code:"👾",Chore:"🧹",Home:"🧹",World:"🏆"};const k=Object.keys(map).find(w=>new RegExp(w,"i").test(name));return map[k]||"✦";};
 /* catalog id is FILE-based (unique per App_*.html) so duplicate manifest appIds in
    copied files can't collide/hide each other. appId is kept only as a reference. */
 const fileId=file=>String(file).replace(/^App[_-]?/i,"").replace(/\.html?$/i,"")

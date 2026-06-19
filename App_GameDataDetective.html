@@ -188,13 +188,13 @@ const PRACTICE={
  stats:[['Outlier Tap','Tap unusual points and explain why.','stats'],['Middle Value','Mean, median, mode, and distributions.','stats'],['Correlation Check','Separate clues from causes.','lie']],
  ba:[['A/B Test Desk','Rates, lift, and careful conclusions.','ba'],['Funnel Clinic','Find the biggest business leak.','ba'],['Model Intuition','Overfitting, features, and ML judgment.','ml']]
 };
-const DEFAULT={xp:0,gems:0,streak:0,lastDay:'',hearts:5,wins:0,answered:0,theme:'light',seenIntro:false,badges:{chart:0,lie:0,stats:0,ba:0,ml:0,case:0},history:[],wrong:[]};
+const DEFAULT={xp:0,points:0,streak:0,lastDay:'',hearts:5,wins:0,answered:0,theme:'light',seenIntro:false,badges:{chart:0,lie:0,stats:0,ba:0,ml:0,case:0},history:[],wrong:[]};
 let R=load();
 let currentTab='today',practiceMode='bi',session=[],stepIndex=0,selected=null,answered=false,activeSkill='mixed',caseMode=false;
 function load(){try{return {...DEFAULT,...JSON.parse(localStorage.getItem(PREFIX+'state')||'{}')}}catch(e){return {...DEFAULT}}}
-function save(){localStorage.setItem(PREFIX+'state',JSON.stringify(R));emit('DATA_UPDATE',{appId:MANIFEST.appId,xp:R.xp,gems:R.gems,streak:R.streak,answered:R.answered,wins:R.wins,badges:R.badges})}
+function save(){localStorage.setItem(PREFIX+'state',JSON.stringify(R));emit('DATA_UPDATE',{appId:MANIFEST.appId,xp:R.xp,points:R.points,streak:R.streak,answered:R.answered,wins:R.wins,badges:R.badges})}
 function emit(type,payload){try{window.parent&&window.parent.postMessage({type,payload},'*')}catch(e){}}
-function earn(n,reason){R.gems+=n;save();emit('EARN_GEMS',{appId:MANIFEST.appId,amount:n,reason});toast('+'+n+' gems')}
+function earn(n,reason){R.points+=n;save();toast('+'+n+' points')}
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),1600)}
 function icon(id){return '<svg class="icon"><use href="#'+id+'"/></svg>'}
 function pct(a,b){return Math.max(0,Math.min(100,Math.round((a/b)*100)))}
@@ -202,7 +202,7 @@ function sample(arr,n){return [...arr].sort(()=>Math.random()-.5).slice(0,n)}
 function seed(){return new Date(DAY+'T00:00:00').getTime()/86400000}
 function render(){document.documentElement.dataset.theme=R.theme||'light';renderStats();renderDaily();renderBrief();renderCases();renderPractice();renderProgress()}
 function renderStats(){
- $('#stats').innerHTML=[['XP',R.xp],['Gems',R.gems],['Streak',R.streak],['Solved',R.wins]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('');
+ $('#stats').innerHTML=[['XP',R.xp],['Points',R.points],['Streak',R.streak],['Solved',R.wins]].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('');
 }
 function renderDaily(){
  const q=QUESTIONS[Math.floor(seed())%QUESTIONS.length];
@@ -291,7 +291,7 @@ function finishSession(outOfHearts){
 }
 function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000)}
 function copySummary(){
- const text='Kinetik Data Detective summary\\nXP: '+R.xp+'\\nGems: '+R.gems+'\\nStreak: '+R.streak+'\\nClues answered: '+R.answered+'\\nCases solved: '+R.wins;
+ const text='Kinetik Data Detective summary\\nXP: '+R.xp+'\\nPoints: '+R.points+'\\nStreak: '+R.streak+'\\nClues answered: '+R.answered+'\\nCases solved: '+R.wins;
  if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>toast('Summary copied')).catch(()=>fallbackCopy(text))}else fallbackCopy(text);
 }
 function fallbackCopy(text){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('Summary copied')}

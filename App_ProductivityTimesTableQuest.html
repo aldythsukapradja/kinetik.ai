@@ -310,7 +310,7 @@ h1,h2,h3,p{margin:0}
 .tile{border-radius:18px;border:1px solid var(--line);background:var(--panel);padding:13px;text-align:left}
 .tile .k{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
 .tile .v{font-size:24px;font-weight:950;margin-top:5px;letter-spacing:-.02em}
-.tile.xp .v{color:var(--a)}.tile.gem .v{color:#3aa0ff}.tile.acc .v{color:var(--good)}.tile.str .v{color:var(--b)}
+.tile.xp .v{color:var(--a)}.tile.diamond .v{color:#3aa0ff}.tile.acc .v{color:var(--good)}.tile.str .v{color:var(--b)}
 .done-foot{width:100%;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:9px}
 
 /* ---------- sheets (league / shop) ---------- */
@@ -409,7 +409,7 @@ h1,h2,h3,p{margin:0}
     </header>
     <div class="stats">
       <span class="chip"><span>🔥</span><b id="cStreak">0</b></span>
-      <span class="chip tap" id="goShop"><span>💎</span><b id="cGems">0</b></span>
+      <span class="chip tap" id="goShop"><span>💎</span><b id="cDiamonds">0</b></span>
       <span class="chip"><span>⭐</span><b id="cXp">0</b></span>
     </div>
     <div class="scroll">
@@ -501,7 +501,7 @@ h1,h2,h3,p{margin:0}
   <!-- SHOP -->
   <section class="screen" id="s-shop">
     <div class="safetop"></div>
-    <header class="sheethead"><button class="iconbtn" id="shopBack">‹</button><h2>Shop</h2><span class="chip"><span>💎</span><b id="shopGems">0</b></span></header>
+    <header class="sheethead"><button class="iconbtn" id="shopBack">‹</button><h2>Shop</h2><span class="chip"><span>💎</span><b id="shopDiamonds">0</b></span></header>
     <div class="scroll" id="shopBody"></div>
   </section>
 
@@ -555,16 +555,17 @@ const Bridge={
   update(id,payload){return this.request("DATA_UPDATE",{id,payload});},
   event(eventType,opts){
     const o=opts||{};
-    this.send("KINETIK_EVENT",{eventType,appId:APP_ID,circleId:CTX.circleId,personId:CTX.personId,amount:o.amount,sourceRecordId:o.sourceRecordId||"",metadata:Object.assign({personName:CTX.personName},o.metadata||{})});
+    return this.request("KINETIK_EVENT",{eventType,appId:APP_ID,circleId:CTX.circleId,personId:CTX.personId,amount:o.amount,sourceRecordId:o.sourceRecordId||"",metadata:Object.assign({personName:CTX.personName},o.metadata||{})});
   }
 };
 addEventListener("message",e=>{
   const m=e.data||{}; if(m.type==="INIT_APP"&&m.payload)applyCtx(m.payload);
   if(m.type==="DATA_RESULT"&&m.reqId&&Bridge.reqs[m.reqId]){const f=Bridge.reqs[m.reqId];delete Bridge.reqs[m.reqId];f(m.items||[]);}
+  if(m.type==="KINETIK_EVENT_RESULT"&&m.reqId&&Bridge.reqs[m.reqId]){const f=Bridge.reqs[m.reqId];delete Bridge.reqs[m.reqId];f(m.result);}
 });
 
 /* ===================== STATE ===================== */
-const DEFAULT={theme:"light",xp:0,gems:50,starterGemsGranted:false,streak:0,lastDay:"",day:"",dayXp:0,crowns:{},facts:{},sessions:[],questClaims:{},lastLessonAt:"",sound:true,freeze:0,boost:0,owned:{classic:1,spark:1,sunny:1,bounce:1},equipped:{outfit:"classic",effect:"spark",room:"sunny",dance:"bounce"}};
+const DEFAULT={theme:"light",xp:0,diamonds:0,streak:0,lastDay:"",day:"",dayXp:0,crowns:{},facts:{},sessions:[],questClaims:{},lastLessonAt:"",sound:true,freeze:0,boost:0,owned:{classic:1,spark:1,sunny:1,bounce:1},equipped:{outfit:"classic",effect:"spark",room:"sunny",dance:"bounce"}};
 const STATE_COLLECTION="times_state";
 let remoteStateId="", remoteSaveTimer=null, hydratingRemote=false;
 let remoteCatalogId="";
@@ -572,7 +573,6 @@ let S=load();
 S.owned=Object.assign({},DEFAULT.owned,S.owned||{});
 S.equipped=Object.assign({},DEFAULT.equipped,S.equipped||{});
 S.questClaims=Object.assign({},S.questClaims||{});
-if(!S.starterGemsGranted){S.gems=Math.max(Number(S.gems)||0,50);S.starterGemsGranted=true;save();}
 function load(){try{return Object.assign({},DEFAULT,JSON.parse(localStorage.getItem(PREFIX+"_state")||"{}"));}catch(e){return Object.assign({},DEFAULT);}}
 function save(){try{localStorage.setItem(PREFIX+"_state",JSON.stringify(S));}catch(e){} scheduleRemoteSave();}
 function statePayload(){return Object.assign({},S,{_savedAt:new Date().toISOString()});}
@@ -608,6 +608,9 @@ async function syncShopCatalog(){
   if($("#s-shop").classList.contains("on"))renderShop();
 }
 let CTX={userId:"",userName:"",circleId:"standalone",circleName:"",circleType:"family",personId:"me",personName:"You",role:"member",roleLabel:"Member",isLeader:false,isCoLeader:false,isCircleAdmin:false,isAdult:false,isKid:true,people:[]};
+function refreshDiamondLabels(){if($("#cDiamonds"))$("#cDiamonds").textContent=S.diamonds;if($("#shopDiamonds"))$("#shopDiamonds").textContent=S.diamonds;}
+function syncEconomyDiamonds(){const eco=CTX&&CTX.economy;if(!eco)return;const v=Number(eco.personDiamonds??eco.circleDiamonds);if(Number.isFinite(v)){S.diamonds=v;save();refreshDiamondLabels();}}
+function applyDiamondResult(result,fallback){const gained=result&&result.diamond?Number(result.diamond.amount||0):0;const byPerson=result&&result.buddy&&result.buddy.byPerson;const dyn=byPerson&&byPerson[CTX.personId]!=null?Number(byPerson[CTX.personId]):NaN;if(Number.isFinite(dyn))S.diamonds=dyn;else S.diamonds+=gained||fallback||0;save();refreshDiamondLabels();return gained||fallback||0}
 function applyCtx(p){
   CTX=Object.assign({},CTX,p||{});
   CTX.circleId=p.circleId||CTX.circleId; CTX.circleType=p.circleType||CTX.circleType;
@@ -615,6 +618,7 @@ function applyCtx(p){
   CTX.people=Array.isArray(p.people)?p.people:[];
   const me=CTX.people.find(x=>x.id===CTX.personId); CTX.personName=(me&&me.name)||p.personName||"You";
   if(p.theme)setTheme(p.theme);
+  syncEconomyDiamonds();
   $("#homeSub").textContent=(CTX.circleName?CTX.circleName+" · ":"")+cap(CTX.circleType)+" circle";
   hydrateRemoteState();syncShopCatalog();loadLeague();
 }
@@ -721,7 +725,7 @@ function renderHome(){
   rolloverDay();
   renderAvatarMounts();
   $("#cStreak").textContent=S.streak;
-  $("#cGems").textContent=S.gems;
+  $("#cDiamonds").textContent=S.diamonds;
   $("#cXp").textContent=S.xp;
   const fluent=allFacts().filter(fc=>isFluent(fget(fc[0],fc[1]))).length;
   $("#coachLine").textContent="Hello, "+(CTX.personName||"friend");
@@ -806,7 +810,7 @@ function renderQuests(){
   const fast=sessions.reduce((n,s)=>n+(s.events||[]).filter(e=>e.correct&&e.elapsedMs<=3000).length,0);
   const bestAcc=sessions.reduce((m,s)=>Math.max(m,s.acc||0),0);
   const quests=[
-    {ic:"🔥",title:"Keep the flame",desc:"Earn 30 XP today.",cur:Math.min(S.dayXp,GOAL_XP),max:GOAL_XP,done:S.dayXp>=GOAL_XP,reward:"+5 gems"},
+    {ic:"🔥",title:"Keep the flame",desc:"Earn 30 XP today.",cur:Math.min(S.dayXp,GOAL_XP),max:GOAL_XP,done:S.dayXp>=GOAL_XP,reward:"+5 diamonds"},
     {ic:"👑",title:"Crown builder",desc:"Finish one lesson.",cur:Math.min(passed,1),max:1,done:passed>=1,reward:"+1 chest key"},
     {ic:"⚡",title:"Speed sparks",desc:"Answer 5 facts in under 3 seconds.",cur:Math.min(fast,5),max:5,done:fast>=5,reward:"Kiki dance"}
   ];
@@ -821,12 +825,17 @@ function renderQuests(){
   </div>`).join("")+`<div class="chest"><div><b>${claim?"You found "+claim.label:done===3?"Daily chest unlocked":"Daily chest"}</b><p>${claim?"Saved to your Kiki account.":done===3?"Open it for surprise diamonds or a shop item.":"Complete all three quests to light it up."}</p>${done===3&&!claim?'<button class="mini-btn" id="claimQuest">Open chest</button>':""}</div><div class="box">${claim?"💎":done===3?"🎉":"🎁"}</div></div>`;
   const cq=$("#claimQuest");if(cq)cq.onclick=claimDailyReward;
 }
-function claimDailyReward(){
+async function claimDailyReward(){
   const d=today(); if(S.questClaims&&S.questClaims[d])return;
   const unowned=SHOP.filter(it=>it.kind!=="power"&&!it.free&&!S.owned[shopKey(it)]);
   let reward;
   if(unowned.length&&Math.random()<.35){const it=pick(unowned);S.owned[shopKey(it)]=1;reward={type:"item",itemId:shopKey(it),label:it.name};}
-  else{const amount=5+Math.floor(Math.random()*11);S.gems+=amount;reward={type:"gems",amount,label:amount+" diamonds"};}
+  else{
+    const amount=5+Math.floor(Math.random()*11);
+    const result=await Bridge.event("buddy.quest.completed",{amount,sourceRecordId:"times-quest-daily-"+d,metadata:{title:"Times Quest daily chest",kind:"daily.chest",diamonds:amount}});
+    const awarded=applyDiamondResult(result,Bridge.embedded?0:amount);
+    reward={type:"diamonds",amount:awarded,label:(awarded||amount)+" diamonds"};
+  }
   S.questClaims=S.questClaims||{};S.questClaims[d]=Object.assign({claimedAt:new Date().toISOString()},reward);
   save();Snd.win();UI.toast("Surprise: "+reward.label+"!");renderQuests();renderHome();
 }
@@ -992,31 +1001,37 @@ function startTimer(durationMs,strict){const bar=$("#timer i");L.timerMs=duratio
 function stopTimer(){if(L.timerId){clearTimeout(L.timerId);L.timerId=null;}const bar=$("#timer i");if(bar){const w=getComputedStyle(bar).width;bar.style.transition="none";bar.style.width=w;}}
 
 /* ===================== FINISH + REWARDS ===================== */
-function finishLesson(reachedEnd){
+async function finishLesson(reachedEnd){
   stopTimer();
   const passed=L.hearts>0&&reachedEnd;
   const acc=Math.round(L.correct/Math.max(1,L.total)*100);
   const perfect=L.wrong===0&&passed;
   let xp=L.correct*2+(L.node.boss?6:4); if(perfect)xp+=5; if(S.boost>0){xp*=2;S.boost--;}
-  let gems=passed?(1+(perfect?2:0)+(L.node.boss?2:0)):0;
+  let diamonds=passed?(1+(perfect?2:0)+(L.node.boss?2:0)):0;
   const prevCrown=passed?crownOf(L.node.id):0;
   if(passed){if(prevCrown<5)S.crowns[L.node.id]=prevCrown+1;}
   const nextCrown=crownOf(L.node.id);
-  S.xp+=xp; S.gems+=gems; rolloverDay(); S.dayXp+=xp;
+  S.xp+=xp; rolloverDay(); S.dayXp+=xp;
   const endedAt=Date.now(), durationMs=Math.max(0,endedAt-(L.sessionStart||endedAt));
   const avgMs=L.events.length?Math.round(L.events.reduce((sum,e)=>sum+(e.elapsedMs||0),0)/L.events.length):0;
   S.lastLessonAt=new Date(endedAt).toISOString();
-  S.sessions=[...(S.sessions||[]),{id:L.sessionId,nodeId:L.node.id,label:L.node.label,startedAt:new Date(L.sessionStart||endedAt).toISOString(),endedAt:S.lastLessonAt,durationMs,avgMs,correct:L.correct,total:L.total,wrong:L.wrong,acc,passed,xp,gems,events:L.events.slice()}].slice(-60);
+  S.sessions=[...(S.sessions||[]),{id:L.sessionId,nodeId:L.node.id,label:L.node.label,startedAt:new Date(L.sessionStart||endedAt).toISOString(),endedAt:S.lastLessonAt,durationMs,avgMs,correct:L.correct,total:L.total,wrong:L.wrong,acc,passed,xp,diamonds,events:L.events.slice()}].slice(-60);
   if(passed)bumpStreak();
   save(); loadLeague();
   Bridge.create("xp_events",{personId:CTX.personId,name:CTX.personName,xp,app:APP_ID,date:today(),durationMs,avgMs,nodeId:L.node.id});
   if(passed)Bridge.send("SHOW_TOAST",{message:"+"+xp+" XP in Times Table Quest"});
   if(passed){
     const sourceId="times-quest-"+L.sessionId;
-    Bridge.event("practice.completed",{amount:Math.min(12,Math.max(3,gems||3)),sourceRecordId:sourceId,metadata:{title:"Times Quest lesson",nodeId:L.node.id,nodeLabel:L.node.label,accuracy:acc,xp,gems,perfect,durationMs,avgMs}});
-    if(nextCrown>=5&&prevCrown<5)Bridge.event("mastery.unlocked",{amount:15,sourceRecordId:"times-quest-mastery-"+L.node.id,metadata:{title:L.node.label+" mastered",nodeId:L.node.id,nodeLabel:L.node.label,crown:nextCrown}});
+    let awarded=0;
+    const practice=await Bridge.event("practice.completed",{amount:Math.min(12,Math.max(3,diamonds||3)),sourceRecordId:sourceId,metadata:{title:"Times Quest lesson",nodeId:L.node.id,nodeLabel:L.node.label,accuracy:acc,xp,diamonds,perfect,durationMs,avgMs}});
+    awarded+=applyDiamondResult(practice,Bridge.embedded?0:diamonds);
+    if(nextCrown>=5&&prevCrown<5){
+      const mastery=await Bridge.event("mastery.unlocked",{amount:15,sourceRecordId:"times-quest-mastery-"+L.node.id,metadata:{title:L.node.label+" mastered",nodeId:L.node.id,nodeLabel:L.node.label,crown:nextCrown,diamonds:15}});
+      awarded+=applyDiamondResult(mastery,Bridge.embedded?0:15);
+    }
+    diamonds=awarded||diamonds;
   }
-  showComplete({xp,gems,acc,perfect,passed});
+  showComplete({xp,diamonds,acc,perfect,passed});
 }
 function bumpStreak(){
   const d=today(); if(S.lastDay===d)return;
@@ -1033,7 +1048,7 @@ function showComplete(r){
   $("#doneTiles").innerHTML=`
     <div class="tile xp"><div class="k">XP earned</div><div class="v">+${r.xp}</div></div>
     <div class="tile acc"><div class="k">Accuracy</div><div class="v">${r.acc}%</div></div>
-    <div class="tile gem"><div class="k">Gems</div><div class="v">+${r.gems}</div></div>
+    <div class="tile diamond"><div class="k">Diamonds</div><div class="v">+${r.diamonds}</div></div>
     <div class="tile str"><div class="k">Day streak</div><div class="v">${S.streak} 🔥</div></div>`;
   const cont=$("#doneCont");cont.textContent=r.passed?"Continue":"Try again";
   cont.onclick=()=>{ if(!r.passed){startLesson(NODES.indexOf(L.node));return;} openTab("home"); };
@@ -1098,7 +1113,7 @@ const SHOP_CATS=[
 ];
 let shopCat="outfit";
 function renderShop(){
-  $("#shopGems").textContent=S.gems;
+  $("#shopDiamonds").textContent=S.diamonds;
   const items=SHOP.filter(it=>it.kind===shopCat);
   $("#shopBody").innerHTML=avatarStageHTML()+`<div class="shop-tabs">${SHOP_CATS.map(c=>`<button class="shop-tab ${c.id===shopCat?"on":""}" data-shop-cat="${c.id}">${c.label}</button>`).join("")}</div>`+
     `<p style="font-size:13px;color:var(--muted);font-weight:650;margin:2px 2px 14px">Earn 💎 by finishing lessons. Spend them on Kiki outfits, happy effects, room themes, dances, and a few useful boosts.</p>`+
@@ -1106,7 +1121,7 @@ function renderShop(){
       const key=shopKey(it), owned=it.free?true:it.kind==="power"?(it.id==="freeze"?S.freeze:it.id==="boost"?S.boost:0):S.owned[key];
       const equipped=isEquipped(it), maxed=it.max&&owned>=it.max;
       const label=it.free&&it.kind==="power"?"Built in":equipped?"Equipped":owned&&it.kind!=="power"?"Equip":maxed?"Max":it.cost+" 💎";
-      const disabled=(it.free&&it.kind==="power")||equipped||(!owned&&S.gems<it.cost)||maxed;
+      const disabled=(it.free&&it.kind==="power")||equipped||(!owned&&S.diamonds<it.cost)||maxed;
       const btn=it.free&&it.kind==="power"?`<span class="cost owned">${label}</span>`:`<button class="cost ${owned&&it.kind!=="power"?"owned":""}" data-buy="${it.id}" ${disabled?"disabled":""}>${label}</button>`;
       const sub=it.id==="freeze"&&S.freeze?` · you have ${S.freeze}`:it.id==="boost"&&S.boost?` · ${S.boost} ready`:equipped?" · wearing now":"";
       return `<div class="shopitem ${equipped?"equipped":owned?"":"locked"}"><div class="si">${it.ic}</div><div class="sd"><b>${it.name}${sub}</b><p>${it.desc}</p></div>${btn}</div>`;
@@ -1150,21 +1165,21 @@ function resetLook(){
 }
 function buy(id){const it=SHOP.find(x=>x.id===id);if(!it)return;
   const key=shopKey(it);
-  if(it.kind==="power"&&S.gems<it.cost)return;
-  if(it.kind!=="power"&&!S.owned[key]&&S.gems<it.cost)return;
+  if(it.kind==="power"&&S.diamonds<it.cost)return;
+  if(it.kind!=="power"&&!S.owned[key]&&S.diamonds<it.cost)return;
   if(it.kind==="power"){
     if(id==="freeze"){if(S.freeze>=it.max)return;S.freeze++;}
     if(id==="boost"){if(S.boost>=it.max)return;S.boost++;}
-    S.gems-=it.cost;
+    S.diamonds-=it.cost;
   }else{
-    if(!S.owned[key]){S.gems-=it.cost;S.owned[key]=1;}
+    if(!S.owned[key]){S.diamonds-=it.cost;S.owned[key]=1;}
     if(it.kind==="outfit")S.equipped.outfit=it.id;
     if(it.kind==="effect")S.equipped.effect=it.id;
     if(it.kind==="room")S.equipped.room=key;
     if(it.kind==="dance")S.equipped.dance=it.id;
     applyCosmetics();
   }
-  save();Snd.init();Snd.beep(880,0,.12,"triangle");renderAvatarMounts();UI.toast((it.kind==="power"?"Purchased ":"Kiki equipped ")+it.name+"!");renderShop();$("#cGems").textContent=S.gems;
+  save();Snd.init();Snd.beep(880,0,.12,"triangle");renderAvatarMounts();UI.toast((it.kind==="power"?"Purchased ":"Kiki equipped ")+it.name+"!");renderShop();$("#cDiamonds").textContent=S.diamonds;
 }
 
 /* ===================== UI util ===================== */

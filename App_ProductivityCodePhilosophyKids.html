@@ -182,13 +182,13 @@ const LABS={
  logic:[['Condition Gate','Practice true, false, if, and else.','cond'],['Function Builder','Bundle steps and reuse ideas.','func'],['Algorithm Race','Pick the plan with less waste.','data']],
  boss:[['The Robot Boss','Sequence a robot through a five-step maze.','boss'],['Mixed Crown Run','A longer run that ends with the robot maze.','mixed']]
 };
-const DEFAULT={xp:0,gems:0,streak:0,lastDay:'',hearts:5,wins:0,answered:0,theme:'light',seenIntro:false,crowns:{seq:0,loop:0,cond:0,func:0,data:0,boss:0},history:[],wrong:[]};
+const DEFAULT={xp:0,points:0,streak:0,lastDay:'',hearts:5,wins:0,answered:0,theme:'light',seenIntro:false,crowns:{seq:0,loop:0,cond:0,func:0,data:0,boss:0},history:[],wrong:[]};
 let R=load();
 let currentTab='today',labMode='quick',session=[],stepIndex=0,selected=null,bossMoves=[],answered=false,activeSkill='mixed';
 function load(){try{return {...DEFAULT,...JSON.parse(localStorage.getItem(PREFIX+'state')||'{}')}}catch(e){return {...DEFAULT}}}
-function save(){localStorage.setItem(PREFIX+'state',JSON.stringify(R));emit('DATA_UPDATE',{appId:MANIFEST.appId,xp:R.xp,gems:R.gems,streak:R.streak,answered:R.answered,wins:R.wins,crowns:R.crowns})}
+function save(){localStorage.setItem(PREFIX+'state',JSON.stringify(R));emit('DATA_UPDATE',{appId:MANIFEST.appId,xp:R.xp,points:R.points,streak:R.streak,answered:R.answered,wins:R.wins,crowns:R.crowns})}
 function emit(type,payload){try{window.parent&&window.parent.postMessage({type,payload},'*')}catch(e){}}
-function earn(n,reason){R.gems+=n;save();emit('EARN_GEMS',{appId:MANIFEST.appId,amount:n,reason});toast('+'+n+' gems')}
+function earn(n,reason){R.points+=n;save();toast('+'+n+' points')}
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),1600)}
 function icon(id){return '<svg class="icon"><use href="#'+id+'"/></svg>'}
 function pct(a,b){return Math.max(0,Math.min(100,Math.round((a/b)*100)))}
@@ -200,7 +200,7 @@ function render(){
 }
 function renderStats(){
  $('#stats').innerHTML=[
-  ['XP',R.xp],['Gems',R.gems],['Streak',R.streak],['Crowns',Object.values(R.crowns).reduce((a,b)=>a+b,0)]
+  ['XP',R.xp],['Points',R.points],['Streak',R.streak],['Crowns',Object.values(R.crowns).reduce((a,b)=>a+b,0)]
  ].map(x=>'<div class="stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('');
 }
 function renderDaily(){
@@ -323,7 +323,7 @@ function finishSession(outOfHearts){
 }
 function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000)}
 function copySummary(){
- const text='Kinetik Code Philosophy Kids summary\\nXP: '+R.xp+'\\nGems: '+R.gems+'\\nStreak: '+R.streak+'\\nQuestions answered: '+R.answered+'\\nRobot wins: '+R.wins;
+ const text='Kinetik Code Philosophy Kids summary\\nXP: '+R.xp+'\\nPoints: '+R.points+'\\nStreak: '+R.streak+'\\nQuestions answered: '+R.answered+'\\nRobot wins: '+R.wins;
  if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>toast('Summary copied')).catch(()=>fallbackCopy(text))}else fallbackCopy(text);
 }
 function fallbackCopy(text){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('Summary copied')}

@@ -79,6 +79,7 @@ Apps should emit only these core event types unless the economy doc is updated.
 | `moment.created` | family memory posted | Story Energy; usually no core diamonds |
 | `moment.styled` | album/card/recap/theme created | Story Energy; optional tiny reward |
 | `buddy.quest.completed` | Buddy-generated quest finished | quest-specific reward |
+| `diamond.gift` | leader sends a diamond gift to a circle member | leader-only Circle diamonds |
 
 Deprecated / migration-only:
 
@@ -86,7 +87,7 @@ Deprecated / migration-only:
 |---|---|
 | `EARN_GEMS` | `KINETIK_EVENT` with a specific event type |
 | `diamonds.earned` | `task.approved`, `practice.completed`, etc. |
-| app-local `gems` as authority | app-local UI only; shell ledger is authority |
+| app-local `gems` as authority | local `points` only, or migrate to shell `KINETIK_EVENT` |
 
 ## 6. Reward Policy
 
@@ -105,6 +106,7 @@ These values are the first real economy baseline. They can be tuned after usage.
 | `moment.created` | 0 | 3 | 10 | Story Energy first; tiny reward optional |
 | `moment.styled` | 0 | 5 | 10 | reward creation, not repeated filters |
 | `buddy.quest.completed` | 12 | 35 | 80 | depends on quest difficulty |
+| `diamond.gift` | 10 | 100 | 500 | leader-only gift to another member |
 
 XP baseline:
 
@@ -142,30 +144,30 @@ level = floor(total_xp / 120) + 1
 
 | App | Role | Energy | Events | Reward | Wiring |
 |---|---|---|---|---|---|
-| Kinetik Buddy | economy home | all | `buddy.quest.completed` | quest-specific; displays wallet/boards | must consume shell `buddyState` |
-| Home Quest | core chore app | Care | `task.completed`, `task.approved` | approval-gated medium rewards | partially wired; migrate old bus to `KINETIK_EVENT` only |
-| Times Quest | core kids learning | Growth | `practice.completed`, `mastery.unlocked` | small practice, larger mastery | high priority; replace local gems with shell events |
-| Primary Quest | core kids curriculum | Growth | `practice.completed`, `mastery.unlocked` | objective/mastery rewards | high priority; add event bridge |
-| Code Quest Kids | core kids logic | Growth | `practice.completed`, `mastery.unlocked` | lesson/boss rewards | high priority; migrate `EARN_GEMS` |
-| Clock Quest | core kids learning | Growth | `practice.completed`, `mastery.unlocked` | crown rewards | high priority; migrate `EARN_GEMS` |
+| Kinetik Buddy | economy home | all | `buddy.quest.completed`, `diamond.gift` | quest-specific; displays wallet/boards; leaders can gift members | wired to shell `buddyState`; spend ledger still next |
+| Home Quest | core chore app | Care | `task.completed`, `task.approved` | approval-gated medium rewards | emits `KINETIK_EVENT`; removed legacy pending wallet; next map app kids to real Circle people |
+| Times Quest | core kids learning | Growth | `practice.completed`, `mastery.unlocked`, `buddy.quest.completed` | small practice, larger mastery, daily chests | wired to shell events and dynamic wallet snapshot |
+| Primary Quest | core kids curriculum | Growth | `practice.completed`, `mastery.unlocked` | objective/mastery rewards | wired to shell events and dynamic wallet snapshot |
+| Code Quest Kids | core kids logic | Growth | none yet | local points only until full event bridge | old gems renamed to points |
+| Clock Quest | core kids learning | Growth | `practice.completed`, `mastery.unlocked` | crown rewards | emits shell event; local per-answer diamonds removed |
 | Grocery Run | household utility | Care | `task.completed`, `task.approved` optional | small completion, approval if child-owned | add run completion event |
 | Kitchen Buddy | household utility | Care / Circle | `task.completed`, `calendar.created` | meal prep small, calendar tiny | connect Cook -> Grocery and Calendar |
-| Loop Coach | habit coach | Growth | `practice.completed`, `reflection.saved` | small streak/reflection rewards | migrate `EARN_GEMS` |
+| Loop Coach | habit coach | Growth | `practice.completed`, `reflection.saved` | small streak/reflection rewards | emits `practice.completed`; reflection event still next |
 | Decision Coach | reflection coach | Growth | `reflection.saved`, `practice.completed` | note-based, small rewards | migrate `EARN_GEMS` |
-| Agent Lab | learning coach | Growth | `practice.completed`, `mastery.unlocked` | session/drill rewards | migrate `EARN_GEMS` |
-| Voice Coach | speaking coach | Growth | `practice.completed`, `mastery.unlocked` | rehearsal/streak rewards | migrate `EARN_GEMS` |
+| Agent Lab | learning coach | Growth | `practice.completed`, `mastery.unlocked` | session/drill rewards | emits `practice.completed`; mastery still next |
+| Voice Coach | speaking coach | Growth | `practice.completed`, `mastery.unlocked` | rehearsal/streak rewards | emits `practice.completed`; mastery still next |
 | Presence Coach | social skill coach | Growth / Circle | `practice.completed`, `reflection.saved` | scenario completion, reflection | add event bridge |
-| Presenter Coach | speaking coach | Growth | `practice.completed`, `mastery.unlocked` | rehearsal/streak rewards | migrate `EARN_GEMS` |
+| Presenter Coach | speaking coach | Growth | `practice.completed`, `mastery.unlocked` | rehearsal/streak rewards | emits `practice.completed`; mastery still next |
 | Padel Matchday | sport scoring | Move / Circle | `game.round.completed`, `game.win`, `calendar.created` | small rounds, capped wins | add result events |
 | Padel Academy | sport learning | Move | `practice.completed`, `mastery.unlocked` | drills and mastery | add event bridge |
-| Basketball Coach | sport practice | Move | `practice.completed`, `mastery.unlocked` | practice completion | migrate `EARN_GEMS` |
-| Tennis Coach | sport practice | Move | `practice.completed`, `mastery.unlocked` | practice completion | migrate `EARN_GEMS` |
-| Guitar Coach | performance practice | Growth / Move | `practice.completed`, `mastery.unlocked` | practice completion | migrate `EARN_GEMS` |
-| Circle Chess | thinking game | Play / Growth | `game.round.completed`, `game.win`, `mastery.unlocked` | small play; mastery for lessons | add bridge persistence/events |
+| Basketball Coach | sport practice | Move | none yet | local points only until full sport event bridge | old gems renamed to points |
+| Tennis Coach | sport practice | Move | none yet | local points only until full sport event bridge | old gems renamed to points |
+| Guitar Coach | performance practice | Growth / Move | none yet | local points only until full sport event bridge | old gems renamed to points |
+| Circle Chess | thinking game | Play / Growth | `game.round.completed`, `game.win`, `practice.completed`, `mastery.unlocked` | small play; mastery for lessons | wired to shell events and dynamic wallet snapshot |
 | Code Clash | logic game | Play | `game.round.completed`, `game.win` | capped rounds/wins | currently records data; add `KINETIK_EVENT` |
-| Data Detective | reasoning game | Growth | `practice.completed`, `mastery.unlocked` | case completion/mastery | migrate `EARN_GEMS` |
+| Data Detective | reasoning game | Growth | none yet | local points only until full event bridge | old gems renamed to points |
 | Emoji Party | party game | Play / Circle | `game.round.completed` | tiny capped party reward | migrate `EARN_GEMS` |
-| Ladder & Snake / Choice Trail | board/reflection game | Play / Growth | `game.round.completed`, `reflection.saved`, `practice.completed` | tiny round reward; small reflection reward only when a real answer/note is saved | add event bridge; file is `App_GameLadderRush.html` |
+| Ladder & Snake / Choice Trail | board/reflection game | Play / Growth | `game.round.completed`, `game.win` | tiny round reward; small win reward | wired to shell events and dynamic wallet snapshot; file is `App_GameLadderRush.html` |
 | Fortune Wheel / Circle Spinner | randomizer and decision wheel | Circle | optional `task.completed` or `reflection.saved` only if the spin creates a real action | no direct diamonds from spins | keep reward-neutral; file is `App_GameLuckySpin.html` |
 | Cinema | story/media sidecar | Story | `moment.styled` future | no core diamonds by default | future Story badges |
 | World Cup Arena | specialized seasonal sidecar | Circle / Play | sidecar predictions only | seasonal badges, no core diamonds by default | keep outside core economy |
@@ -179,9 +181,9 @@ Wire these first:
 
 1. Kinetik Buddy reads shell `buddyState` and `diamondEvents`.
 2. Home Quest emits only `KINETIK_EVENT`.
-3. Times Quest emits `practice.completed` and `mastery.unlocked`.
+3. Times Quest emits `practice.completed`, `mastery.unlocked`, and daily quest events.
 4. Primary Quest emits `practice.completed` and `mastery.unlocked`.
-5. Code Quest Kids and Clock Quest migrate from `EARN_GEMS`.
+5. Circle Chess, Choice Trail, and Clock Quest emit official Kinetik events; Code Quest Kids remains local points until its bridge is upgraded.
 
 Why:
 
@@ -522,7 +524,7 @@ Do not sell:
 
 - Make `KinEngine.rules` use this economy policy table.
 - Accept `KINETIK_EVENT` only for approved event types.
-- Convert old `EARN_GEMS` bridge messages into warnings or migration shims.
+- Keep old `EARN_GEMS` removed from the real economy path.
 - Persist `KinetikEvents`, `DiamondEvents`, and `BuddyState` through Apps Script.
 - Add a Buddy economy panel in the shell or Buddy app.
 
@@ -536,7 +538,8 @@ Each app must declare:
 - amount proposal
 - metadata title and skill/category
 
-Each app must stop treating local gems as the authority.
+Each app must stop treating local counters as the authority for diamonds. If an
+app is not wired to Buddy yet, call its local counter `points`, not diamonds.
 
 ### Buddy
 
@@ -563,12 +566,19 @@ Current shell:
 - `diamondEvents`, `agentActions`, and `buddyState` still exist locally as cache
   and offline fallback.
 - `KinSpine` can already emit `calendar.created`.
-- Home Quest partially emits legacy diamond/chore events.
-- Many apps still use old `EARN_GEMS` or local gems.
+- Home Quest emits official chore events and no longer uses the legacy
+  pending-diamond wallet. Next step: map its kid picker to real Circle people.
+- Primary Quest, Times Quest, Circle Chess, Choice Trail, and Clock Quest are on
+  the diamond path.
+- Agent Lab, Voice Coach, Presenter Coach, Wisdom Coach, and Loop Coach emit
+  `practice.completed`; mastery/reflection events are still next.
+- Data Detective, Code Quest Kids, Basketball, Tennis, and Guitar now use local
+  points until their full event bridge is built.
 
 This means the economy is now on the Apps Script path without redesigning the
-whole app. The main work left is standardizing app emissions, migrating legacy
-local gems, and adding server-side spend/inventory sinks.
+whole app. The main work left is mapping every app to real Circle people,
+standardizing remaining app emissions, and adding server-side spend/inventory
+sinks.
 
 ## 16. Decision
 

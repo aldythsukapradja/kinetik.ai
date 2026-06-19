@@ -415,7 +415,6 @@ function rollDay(){
 /* =========================================================
    KINETIK DIAMOND BUS  ← the link to Buddy World
    Same-origin contract shared by every Kinetik app:
-     localStorage 'kbw_pending_diamonds' : unclaimed diamonds Buddy will absorb
      localStorage 'kinetik_events'        : rolling event log
      BroadcastChannel('kinetik')          : live cross-tab updates
      localStorage 'kbw_state'             : Buddy's own state (read-only here)
@@ -444,17 +443,14 @@ function busSend(type,payload){
   // 3) main Kinetik shell economy (iframe/AppHost)
   shellEconomyEvent(type,payload||{},ev.ts);
 }
-/* credit diamonds to the Buddy: increments the pending pool Buddy claims on open */
+/* Diamond awards are minted by the Kinetik shell / backend only. */
 function creditBuddy(amount,meta){
-  try{ const cur=parseInt(localStorage.getItem('kbw_pending_diamonds')||'0',10)||0;
-       localStorage.setItem('kbw_pending_diamonds', String(cur+amount)); }catch(e){}
-  busSend('diamonds.earned',{amount, person:S.active, chore:meta&&meta.name, energy:meta&&meta.energy});
+  try{ bus&&bus.postMessage({type:'diamond.award.preview',ts:Date.now(),source:'chore-quest',amount,person:S.active,chore:meta&&meta.name,energy:meta&&meta.energy}); }catch(e){}
 }
-/* read Buddy's live balance for the link strip (pending counts as incoming) */
+/* read Buddy's live balance for the link strip */
 function readBuddy(){
   let bal=0,name='Nova',emoji='🐣';
   try{ const raw=localStorage.getItem('kbw_state'); if(raw){const bs=JSON.parse(raw); bal=bs.diamonds||0; const sp={nova:'Nova',bento:'Bento',bolt:'Bolt',lumi:'Lumi',tempo:'Tempo',sora:'Sora'}; name=sp[bs.species]||'Nova';} }catch(e){}
-  try{ const pend=parseInt(localStorage.getItem('kbw_pending_diamonds')||'0',10)||0; bal+=pend; }catch(e){}
   return {bal,name,emoji};
 }
 </script>
@@ -469,9 +465,9 @@ function init(){
   buildGem();
   bindNav(); bindWho(); bindSeg(); bindBuddyLink();
   renderAll();
-  // claim direction: listen for Buddy confirming claim (optional), and refresh balance live
+  // Refresh Buddy strip when another Kinetik screen updates the shared state.
   if(bus) bus.onmessage=(e)=>{ if(e.data&&e.data.type){ renderBuddyLink(); } };
-  window.addEventListener('storage',e=>{ if(e.key==='kbw_state'||e.key==='kbw_pending_diamonds') renderBuddyLink(); });
+  window.addEventListener('storage',e=>{ if(e.key==='kbw_state') renderBuddyLink(); });
 }
 
 function renderAll(){ renderWho(); renderHero(); renderBuddyLink(); renderChores(); renderRewards(); renderGrownups(); renderBadge(); }
