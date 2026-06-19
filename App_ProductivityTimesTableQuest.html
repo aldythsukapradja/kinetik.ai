@@ -23,7 +23,8 @@ DATA_CREATE bridge and reads the circle league via DATA_LIST.
   "appId": "times-table-quest",
   "name": "Times Quest",
   "shortName": "Times",
-  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><rect x='14' y='14' width='36' height='36' rx='8'/><path d='M24 24l16 16M40 24L24 40'/><path d='M22 50v5M42 50v5M50 22h5M50 42h5M9 22h5M9 42h5'/></svg>",
+  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><rect x='14' y='14' width='36' height='36' rx='8'/><path d='M24 24l16 16M40 24L24 40'/><path d='M22 50v5M42 50v5M50 22h5M50 42h5M9 22h5M9 42h5'/><\/svg>",
+  "homeIcon": "✖️",
   "gradient": [
     "#ffb545",
     "#ff5d8f"
@@ -39,6 +40,10 @@ DATA_CREATE bridge and reads the circle league via DATA_LIST.
   "worksWith": [
     "offline",
     "standalone"
+  ],
+  "emits": [
+    "practice.completed",
+    "mastery.unlocked"
   ],
   "status": "live",
   "minMembers": 1
@@ -547,7 +552,11 @@ const Bridge={
       setTimeout(()=>{if(this.reqs[reqId]){delete this.reqs[reqId];res(null);}},2500); }); },
   list(collection,opts){return this.request("DATA_LIST",Object.assign({collection},opts||{}));},
   create(collection,payload,opts){return this.request("DATA_CREATE",Object.assign({collection,payload},opts||{}));},
-  update(id,payload){return this.request("DATA_UPDATE",{id,payload});}
+  update(id,payload){return this.request("DATA_UPDATE",{id,payload});},
+  event(eventType,opts){
+    const o=opts||{};
+    this.send("KINETIK_EVENT",{eventType,appId:APP_ID,circleId:CTX.circleId,personId:CTX.personId,amount:o.amount,sourceRecordId:o.sourceRecordId||"",metadata:Object.assign({personName:CTX.personName},o.metadata||{})});
+  }
 };
 addEventListener("message",e=>{
   const m=e.data||{}; if(m.type==="INIT_APP"&&m.payload)applyCtx(m.payload);
@@ -990,7 +999,9 @@ function finishLesson(reachedEnd){
   const perfect=L.wrong===0&&passed;
   let xp=L.correct*2+(L.node.boss?6:4); if(perfect)xp+=5; if(S.boost>0){xp*=2;S.boost--;}
   let gems=passed?(1+(perfect?2:0)+(L.node.boss?2:0)):0;
-  if(passed){const c=crownOf(L.node.id);if(c<5)S.crowns[L.node.id]=c+1;}
+  const prevCrown=passed?crownOf(L.node.id):0;
+  if(passed){if(prevCrown<5)S.crowns[L.node.id]=prevCrown+1;}
+  const nextCrown=crownOf(L.node.id);
   S.xp+=xp; S.gems+=gems; rolloverDay(); S.dayXp+=xp;
   const endedAt=Date.now(), durationMs=Math.max(0,endedAt-(L.sessionStart||endedAt));
   const avgMs=L.events.length?Math.round(L.events.reduce((sum,e)=>sum+(e.elapsedMs||0),0)/L.events.length):0;
@@ -1000,6 +1011,11 @@ function finishLesson(reachedEnd){
   save(); loadLeague();
   Bridge.create("xp_events",{personId:CTX.personId,name:CTX.personName,xp,app:APP_ID,date:today(),durationMs,avgMs,nodeId:L.node.id});
   if(passed)Bridge.send("SHOW_TOAST",{message:"+"+xp+" XP in Times Table Quest"});
+  if(passed){
+    const sourceId="times-quest-"+L.sessionId;
+    Bridge.event("practice.completed",{amount:Math.min(12,Math.max(3,gems||3)),sourceRecordId:sourceId,metadata:{title:"Times Quest lesson",nodeId:L.node.id,nodeLabel:L.node.label,accuracy:acc,xp,gems,perfect,durationMs,avgMs}});
+    if(nextCrown>=5&&prevCrown<5)Bridge.event("mastery.unlocked",{amount:15,sourceRecordId:"times-quest-mastery-"+L.node.id,metadata:{title:L.node.label+" mastered",nodeId:L.node.id,nodeLabel:L.node.label,crown:nextCrown}});
+  }
   showComplete({xp,gems,acc,perfect,passed});
 }
 function bumpStreak(){

@@ -8,6 +8,7 @@ BACKEND: Google Sheets via this Apps Script web app. Generic CRUD, JSON response
 CORE SHEETS (run setupKinetik() once to create them):
 Users People Circles CircleMembers Relationships Calendar_Routines Calendar_Events
 Calendar_Exceptions AppCatalog CircleApps AppRecords AgentLogs Settings AuditLog
+KinetikEvents DiamondEvents BuddyState
 
 RULES:
 1. Generic CRUD endpoints only. 2. circleId, never familyId. 3. personId, never memberId.
@@ -34,6 +35,7 @@ All responses: {ok:true, items:[...]} or {ok:false, error:"..."}
 MOMENTS MEDIA PIPELINE (v2):
 POST actions: uploadMedia, createMemoryLine, listMemoryLines,
               createMomentStory, listMomentStories, ensureSetup, healthCheck
+ECONOMY actions: recordKinetikEvent, getEconomyState, listDiamondEvents
 - Files live in Google Drive: Kinetik_Media/circles/{circleId}/{memory-lines|moment-stories}
 - Metadata lives in sheets: MediaAssets, MemoryLines, MomentStories
 - Uploaded files are set to "anyone with link can VIEW" — PROTOTYPE PRIVACY ONLY.
@@ -50,6 +52,7 @@ var SHEETS = [
   "Users","People","Circles","CircleMembers","Relationships",
   "Calendar_Routines","Calendar_Events","Calendar_Exceptions",
   "AppCatalog","CircleApps","AppRecords","AgentLogs","Settings","AuditLog",
+  "KinetikEvents","DiamondEvents","BuddyState",
   "MediaAssets","MemoryLines","MomentStories","Comments","Messages","Reactions"
 ];
 
@@ -57,6 +60,20 @@ var SHEETS = [
 var MEDIA_ROOT = "Kinetik_Media";
 var STORY_MIN_TITLE = 3, STORY_MAX_TITLE = 40, MEMORY_MIN_CAPTION = 1;
 var MEMORY_MIN_TITLE = 2, MEMORY_MAX_TITLE = 60, COMMENT_MAX = 300;
+var ECONOMY_RULES = {
+  "task.completed":{energy:"Care",defaultAmount:0,maxPerEvent:0,dailyCap:0,mood:"waiting"},
+  "task.approved":{energy:"Care",defaultAmount:8,maxPerEvent:30,dailyCap:80,mood:"proud"},
+  "practice.completed":{energy:"Growth",defaultAmount:3,maxPerEvent:12,dailyCap:45,mood:"focused"},
+  "mastery.unlocked":{energy:"Growth",defaultAmount:15,maxPerEvent:40,dailyCap:80,mood:"amazed"},
+  "game.round.completed":{energy:"Play",defaultAmount:2,maxPerEvent:8,dailyCap:30,mood:"playful"},
+  "game.win":{energy:"Play",defaultAmount:5,maxPerEvent:15,dailyCap:35,mood:"hyped"},
+  "calendar.created":{energy:"Circle",defaultAmount:2,maxPerEvent:5,dailyCap:15,mood:"organized"},
+  "reflection.saved":{energy:"Growth",defaultAmount:2,maxPerEvent:8,dailyCap:25,mood:"thoughtful"},
+  "moment.created":{energy:"Story",defaultAmount:3,maxPerEvent:10,dailyCap:25,mood:"glowing"},
+  "moment.styled":{energy:"Story",defaultAmount:2,maxPerEvent:8,dailyCap:20,mood:"sparkly"},
+  "buddy.quest.completed":{energy:"Care",defaultAmount:12,maxPerEvent:35,dailyCap:80,mood:"celebrating"},
+  "diamond.gift":{energy:"Circle",defaultAmount:10,maxPerEvent:100,dailyCap:500,mood:"generous"}
+};
 
 var HEADERS = {
   Users:["id","username","displayName","email","passwordDemo","avatar","defaultPersonId","createdAt","updatedAt","active"],
@@ -73,6 +90,9 @@ var HEADERS = {
   AgentLogs:["id","circleId","userId","personId","prompt","intent","responseType","artifactJson","actionJson","createdAt"],
   Settings:["id","scope","scopeId","key","valueJson","updatedAt"],
   AuditLog:["id","circleId","userId","action","targetCollection","targetId","detailJson","createdAt"],
+  KinetikEvents:["id","circleId","personId","userId","appId","eventType","sourceRecordId","proposedAmount","metadataJson","status","reason","createdAt"],
+  DiamondEvents:["id","kinetikEventId","circleId","personId","userId","appId","eventType","energy","amount","capApplied","reason","sourceRecordId","metadataJson","createdAt"],
+  BuddyState:["circleId","diamonds","xp","level","mood","energyJson","byPersonJson","lastReaction","updatedAt"],
   /* --- Moments media pipeline (v2) --- */
   MediaAssets:["mediaId","circleId","ownerUserId","type","mimeType","driveFileId","driveUrl","viewUrl","fileName","fileSize","createdAt","status"],
   MemoryLines:["postId","circleId","authorUserId","caption","mediaIdsJson","createdAt","status","title"],
@@ -227,6 +247,9 @@ function doPost(e) {
     if (action === "listReactions") return out(listReactions(b));
     if (action === "listMessages") return out(listMessages(b));
     if (action === "createMessage") return out(createMessage(b));
+    if (action === "recordKinetikEvent") return out(recordKinetikEvent(b));
+    if (action === "getEconomyState") return out(getEconomyState(b));
+    if (action === "listDiamondEvents") return out(listDiamondEvents(b));
     /* shell sends "create"/"update"/"remove"; collection names map 1:1 where needed */
     var map = { routines: "Calendar_Routines", events: "Calendar_Events", exceptions: "Calendar_Exceptions",
                 circleApps: "CircleApps", appRecords: "AppRecords", circles: "Circles",
@@ -250,6 +273,270 @@ function normalize(collection, payload) {
   if (p.accent) { p.color = JSON.stringify(p.accent); delete p.accent; }
   delete p._row;
   return p;
+}
+
+/* =================================================================
+   DIAMOND ECONOMY
+   Apps propose KinetikEvents. Apps Script validates, caps, dedupes,
+   writes DiamondEvents, then updates BuddyState per circle.
+================================================================= */
+
+function active_(v) {
+  return v === true || v === "" || v == null || String(v).toLowerCase() === "true";
+}
+function jsonParse_(v, fallback) {
+  if (v && typeof v === "object") return v;
+  if (v === "" || v == null) return fallback;
+  try { return JSON.parse(v); } catch (e) { return fallback; }
+}
+function economyError_(msg) {
+  throw new Error("Economy: " + msg);
+}
+function circleMembers_(circleId) {
+  return readSheet_("CircleMembers").rows.filter(function (m) {
+    return String(m.circleId) === String(circleId) && active_(m.active);
+  });
+}
+function assertCircleUser_(circleId, userId) {
+  if (!circleId) economyError_("circleId required");
+  if (!userId) economyError_("userId required");
+  var rows = circleMembers_(circleId);
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].userId) === String(userId)) return rows[i];
+  }
+  economyError_("user is not a member of this circle");
+}
+function assertEconomyAccess_(circleId, personId, userId) {
+  var actor = assertCircleUser_(circleId, userId);
+  if (!personId) economyError_("personId required");
+  var rows = circleMembers_(circleId);
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].personId) === String(personId)) {
+      if (String(actor.personId) !== String(personId) && !isLeaderRole_(actor.role)) economyError_("only circle leaders can reward another member");
+      return { actor: actor, subject: rows[i] };
+    }
+  }
+  economyError_("person is not a member of this circle");
+}
+function isLeaderRole_(role) {
+  return ["owner", "leader", "co-leader", "admin"].indexOf(String(role || "").toLowerCase()) !== -1;
+}
+function economyDay_(iso) {
+  return String(iso || new Date().toISOString()).slice(0, 10);
+}
+function economyEventPayload_(row) {
+  if (!row) return null;
+  var out = {};
+  for (var k in row) if (k !== "_row") out[k] = row[k];
+  out.metadata = jsonParse_(row.metadataJson, {});
+  out.amount = Number(row.amount || row.proposedAmount || 0);
+  out.at = row.createdAt;
+  delete out.metadataJson;
+  return out;
+}
+function buddyDefault_(circleId) {
+  return {
+    circleId: circleId,
+    diamonds: 0,
+    xp: 0,
+    level: 1,
+    mood: "curious",
+    energy: { Care: 0, Growth: 0, Play: 0, Move: 0, Circle: 0, Story: 0 },
+    byPerson: {},
+    lastReaction: "",
+    updatedAt: ""
+  };
+}
+function buddyFromRow_(row, circleId) {
+  var st = buddyDefault_(circleId || (row && row.circleId) || "");
+  if (!row) return st;
+  st.diamonds = Number(row.diamonds || 0);
+  st.xp = Number(row.xp || 0);
+  st.level = Number(row.level || 1);
+  st.mood = row.mood || "curious";
+  st.energy = jsonParse_(row.energyJson, st.energy);
+  st.byPerson = jsonParse_(row.byPersonJson, {});
+  st.lastReaction = row.lastReaction || "";
+  st.updatedAt = row.updatedAt || "";
+  return st;
+}
+function getBuddyState_(circleId) {
+  var rows = readSheet_("BuddyState").rows;
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].circleId) === String(circleId)) return buddyFromRow_(rows[i], circleId);
+  }
+  return buddyDefault_(circleId);
+}
+function saveBuddyState_(st) {
+  var row = {
+    circleId: st.circleId,
+    diamonds: st.diamonds,
+    xp: st.xp,
+    level: st.level,
+    mood: st.mood,
+    energyJson: JSON.stringify(st.energy || {}),
+    byPersonJson: JSON.stringify(st.byPerson || {}),
+    lastReaction: st.lastReaction || "",
+    updatedAt: st.updatedAt || new Date().toISOString()
+  };
+  var rows = readSheet_("BuddyState").rows;
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].circleId) === String(st.circleId)) {
+      updateRowById_("BuddyState", "circleId", st.circleId, row);
+      return st;
+    }
+  }
+  appendRow_("BuddyState", row);
+  return st;
+}
+function duplicateDiamond_(evt) {
+  if (!evt.sourceRecordId) return null;
+  var rows = readSheet_("DiamondEvents").rows;
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (String(r.circleId) === String(evt.circleId) &&
+        String(r.personId) === String(evt.personId) &&
+        String(r.appId) === String(evt.appId) &&
+        String(r.eventType) === String(evt.eventType) &&
+        String(r.sourceRecordId) === String(evt.sourceRecordId)) return r;
+  }
+  return null;
+}
+function duplicateKinetikEvent_(evt) {
+  if (!evt.sourceRecordId) return null;
+  var rows = readSheet_("KinetikEvents").rows;
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (String(r.circleId) === String(evt.circleId) &&
+        String(r.personId) === String(evt.personId) &&
+        String(r.appId) === String(evt.appId) &&
+        String(r.eventType) === String(evt.eventType) &&
+        String(r.sourceRecordId) === String(evt.sourceRecordId)) return r;
+  }
+  return null;
+}
+function usedToday_(evt) {
+  var day = economyDay_(evt.createdAt), rows = readSheet_("DiamondEvents").rows, total = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (String(r.circleId) === String(evt.circleId) &&
+        String(r.personId) === String(evt.personId) &&
+        String(r.eventType) === String(evt.eventType) &&
+        economyDay_(r.createdAt) === day) total += Number(r.amount || 0);
+  }
+  return total;
+}
+function listDiamondEvents(b) {
+  assertCircleUser_(b.circleId, b.userId);
+  var limit = Math.max(1, Math.min(Number(b.limit || 300), 500));
+  var rows = readSheet_("DiamondEvents").rows.filter(function (r) {
+    return String(r.circleId) === String(b.circleId) && (!b.personId || String(r.personId) === String(b.personId));
+  });
+  rows.sort(function (a, c) { return String(c.createdAt).localeCompare(String(a.createdAt)); });
+  return { ok: true, items: rows.slice(0, limit).map(economyEventPayload_) };
+}
+function getEconomyState(b) {
+  assertCircleUser_(b.circleId, b.userId);
+  var events = listDiamondEvents({ circleId: b.circleId, userId: b.userId, limit: b.limit || 300 }).items;
+  return { ok: true, buddy: getBuddyState_(b.circleId), diamondEvents: events, rules: ECONOMY_RULES };
+}
+function recordKinetikEvent(b) {
+  var eventType = String(b.eventType || "").trim();
+  var rule = ECONOMY_RULES[eventType];
+  if (!rule) economyError_("unsupported event type");
+  var circleId = String(b.circleId || "");
+  var personId = String(b.personId || "");
+  var userId = String(b.userId || "");
+  var access = assertEconomyAccess_(circleId, personId, userId);
+  if (eventType === "diamond.gift" && !isLeaderRole_(access.actor.role)) economyError_("only circle leaders can send diamond gifts");
+  var metadata = jsonParse_(b.metadata, {});
+  var appId = String(b.appId || metadata.appId || "unknown-app");
+  var now = new Date().toISOString();
+  var sourceRecordId = String(b.sourceRecordId || metadata.sourceRecordId || "");
+  if (!sourceRecordId) {
+    sourceRecordId = [appId, eventType, personId, economyDay_(now), String(metadata.title || "untitled").slice(0, 80)].join(":");
+  }
+  var proposedAmount = Number(b.amount != null ? b.amount : (b.diamonds != null ? b.diamonds : rule.defaultAmount));
+  if (isNaN(proposedAmount)) proposedAmount = 0;
+  var evt = {
+    id: "ke_" + Utilities.getUuid().slice(0, 10),
+    circleId: circleId,
+    personId: personId,
+    userId: userId,
+    appId: appId,
+    eventType: eventType,
+    sourceRecordId: sourceRecordId,
+    proposedAmount: proposedAmount,
+    metadataJson: JSON.stringify(metadata),
+    status: "accepted",
+    reason: "",
+    createdAt: now
+  };
+
+  var existingDiamond = duplicateDiamond_(evt);
+  if (existingDiamond) {
+    return { ok: true, duplicate: true, event: economyEventPayload_(duplicateKinetikEvent_(evt) || evt),
+             diamond: economyEventPayload_(existingDiamond), buddy: getBuddyState_(circleId) };
+  }
+  var existingEvent = duplicateKinetikEvent_(evt);
+  if (existingEvent && eventType === "task.completed") {
+    return { ok: true, duplicate: true, event: economyEventPayload_(existingEvent), buddy: getBuddyState_(circleId) };
+  }
+
+  if (eventType === "task.completed" && (metadata.approvalRequired || metadata.status === "pending")) {
+    evt.status = "pending_approval";
+    evt.reason = "waiting for approval";
+    appendRow_("KinetikEvents", evt);
+    var action = { id: "aa_" + Utilities.getUuid().slice(0, 10), type: "approval.waiting",
+      circleId: circleId, personId: personId, userId: userId, appId: appId, eventId: evt.id,
+      title: metadata.title || "Task", status: "waiting", createdAt: now };
+    return { ok: true, event: economyEventPayload_(evt), action: action, buddy: getBuddyState_(circleId) };
+  }
+
+  var wanted = Math.max(0, Math.round(proposedAmount || rule.defaultAmount || 0));
+  var remaining = Math.max(0, Number(rule.dailyCap || 0) - usedToday_(evt));
+  var amount = Math.min(wanted, Number(rule.maxPerEvent || wanted), remaining);
+  var capApplied = amount < wanted;
+  if (amount <= 0) {
+    evt.status = "capped";
+    evt.reason = "daily cap reached";
+    appendRow_("KinetikEvents", evt);
+    return { ok: true, capped: true, event: economyEventPayload_(evt), buddy: getBuddyState_(circleId) };
+  }
+
+  appendRow_("KinetikEvents", evt);
+  var diamond = {
+    id: "de_" + Utilities.getUuid().slice(0, 10),
+    kinetikEventId: evt.id,
+    circleId: circleId,
+    personId: personId,
+    userId: userId,
+    appId: appId,
+    eventType: eventType,
+    energy: rule.energy,
+    amount: amount,
+    capApplied: capApplied,
+    reason: metadata.title || eventType,
+    sourceRecordId: sourceRecordId,
+    metadataJson: JSON.stringify(metadata),
+    createdAt: now
+  };
+  appendRow_("DiamondEvents", diamond);
+
+  var st = getBuddyState_(circleId);
+  st.diamonds = Number(st.diamonds || 0) + amount;
+  st.xp = Number(st.xp || 0) + amount * 4;
+  st.level = Math.max(1, Math.floor(st.xp / 120) + 1);
+  st.mood = rule.mood;
+  st.energy = st.energy || {};
+  st.energy[rule.energy] = Number(st.energy[rule.energy] || 0) + amount;
+  st.byPerson = st.byPerson || {};
+  st.byPerson[personId] = Number(st.byPerson[personId] || 0) + amount;
+  st.lastReaction = "Added " + rule.energy + " energy.";
+  st.updatedAt = now;
+  saveBuddyState_(st);
+
+  return { ok: true, event: economyEventPayload_(evt), diamond: economyEventPayload_(diamond), buddy: st };
 }
 
 /* =================================================================

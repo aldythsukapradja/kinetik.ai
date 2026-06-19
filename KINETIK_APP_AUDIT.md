@@ -30,6 +30,8 @@ movement.
 The diamond system should be a deterministic event ledger, not a loose score.
 The detailed deterministic model for Buddy, diamonds, `@kin`, cross-app actions,
 Moment Studio, and future LLM behavior lives in `KINETIK_AGENT_SYSTEM.md`.
+The concrete economy map, reward caps, app wiring waves, and schema live in
+`KINETIK_DIAMOND_ECONOMY.md`.
 
 ```text
 App action
@@ -50,8 +52,8 @@ App action
 | 5 | `App_GameCodeClash.html` | Code Clash | Logic/code duel | Capped game rewards | Add diamond caps and persisted rounds |
 | 6 | `App_GameDataDetective.html` | Data Detective | Data reasoning cases | Practice/mastery | Add progress schema |
 | 7 | `App_GameEmojiParty.html` | Emoji Party | Group guessing game | Capped party rewards | Add Buddy reactions after sessions |
-| 8 | `App_GameLadderRush.html` | Choice Trail | Choice/reflection ladder | Reflection/practice | Clarify split from Decision Coach |
-| 9 | `App_GameLuckySpin.html` | Circle Spinner | Decision/random prompt tool | Mostly utility | Prevent reward farming |
+| 8 | `App_GameLadderRush.html` | Ladder & Snake / Choice Trail | Board-style choice/reflection ladder | Tiny Play + reflection practice | Add capped round/reflection events; clarify split from Decision Coach |
+| 9 | `App_GameLuckySpin.html` | Fortune Wheel / Circle Spinner | Decision/random prompt wheel | Mostly utility | No direct spin rewards; only real follow-up tasks can enter economy |
 | 10 | `App_GameStrata.html` | Strata | Specialized science app | Sidecar | Keep outside core diamonds |
 | 11 | `App_ProductivityAgenticAI.html` | Agent Lab | AI-agent learning drills | Practice/mastery | Add deterministic agent-action records |
 | 12 | `App_ProductivityArticulation.html` | Voice Coach | Speaking clarity practice | Practice/streak | Store rehearsal sessions |

@@ -4,6 +4,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Kinetik Learn</title>
+<script type="application/kinetik-app+json">
+{
+  "appId": "cambridge-primary",
+  "name": "Primary Quest",
+  "shortName": "Primary",
+  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M14 17h16c5 0 8 3 8 8v26H22c-5 0-8-3-8-8z'/><path d='M50 17H38v34h12z'/><path d='M23 28h8M23 37h8'/><path d='M47 11c-2 4-5 7-9 8 4 2 7 5 9 9 2-4 5-7 9-9-4-1-7-4-9-8z' fill='white' stroke='none'/><\/svg>",
+  "homeIcon": "📚",
+  "gradient": [
+    "#7c3aed",
+    "#26c6ff"
+  ],
+  "category": "productivity",
+  "tagline": "Primary learning adventure.",
+  "about": "A Cambridge-style primary learning world for English, math, science, computing, and social studies. Children move through subject zones, answer short questions, and build visible mastery.",
+  "audience": "kids",
+  "circleTypes": [
+    "family"
+  ],
+  "worksWith": [
+    "offline",
+    "standalone"
+  ],
+  "emits": [
+    "practice.completed",
+    "mastery.unlocked"
+  ],
+  "status": "live",
+  "minMembers": 1
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -64,10 +94,11 @@ input{font-family:inherit}
 .scroll::-webkit-scrollbar{display:none}
 
 /* ===== TOPBAR ===== */
-.topbar{position:relative;z-index:10;display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 12px) 14px 8px}
+.topbar{position:relative;z-index:10;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:calc(env(safe-area-inset-top) + 12px) 14px 8px}
 .tb-who{display:flex;align-items:center;gap:8px;padding:6px 13px 6px 6px;border-radius:18px;background:var(--pill);backdrop-filter:blur(16px);box-shadow:var(--shadow-sm);border:1px solid var(--line)}
 .tb-who .av{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:17px}
 .tb-who .nm{font-family:var(--fd);font-weight:600;font-size:14px;white-space:nowrap}
+.kinctx{order:6;flex:0 0 100%;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px;border-radius:16px;background:var(--pill);backdrop-filter:blur(16px);box-shadow:var(--shadow-sm);border:1px solid var(--line);font-family:var(--fd);font-weight:600;font-size:11px;color:var(--ink-soft)}
 .tb-stat{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:16px;background:var(--pill);backdrop-filter:blur(16px);box-shadow:var(--shadow-sm);border:1px solid var(--line);font-family:var(--fd);font-weight:600;font-size:14px}
 .tb-stat .ic{font-size:15px}
 .tb-stat.streak{color:var(--gold-deep)} .tb-stat.hearts{color:var(--heart)} .tb-stat.dia{color:var(--dia-deep)}
@@ -446,6 +477,7 @@ input{font-family:inherit}
   <!-- TOPBAR -->
   <div class="topbar" id="topbar">
     <button class="tb-who" id="whoBtn"><span class="av" id="tbAv">⚡</span><span class="nm" id="tbName">Baginda</span></button>
+    <div class="kinctx" id="kinCtx">Standalone</div>
     <div class="tb-spacer"></div>
     <div class="tb-stat streak"><span class="ic">🔥</span><span id="tbStreak">7</span></div>
     <div class="tb-stat hearts"><span class="ic">❤️</span><span id="tbHearts">5</span></div>
@@ -609,7 +641,7 @@ input{font-family:inherit}
     <div class="ho-t">Out of hearts!</div>
     <div class="ho-d" id="hoDesc">We were so close! Refill to keep going, or practice with unlimited hearts.</div>
     <div class="ho-opts">
-      <button class="ho-opt dia" onclick="refillHearts()">💎 Refill 5 hearts · 40</button>
+      <button class="ho-opt dia" onclick="refillHearts()">💎 Refill 5 hearts</button>
       <button class="ho-opt rev" onclick="quitLesson()">🔄 Maybe later</button>
     </div>
   </div>
@@ -631,6 +663,24 @@ input{font-family:inherit}
 <script>
 /* ============ KINETIK LEARN — data ============ */
 const KIDS={ baginda:{name:'Baginda',av:'⚡',buddy:'Nova'}, keyla:{name:'Keyla',av:'🌸',buddy:'Lumi'}, aldyth:{name:'Aldyth',av:'🐣',buddy:'Nova'} };
+const APP_ID='cambridge-primary';
+const Bridge={embedded:window.self!==window.top,ctx:{},reqs:{},rid:0,
+  send(type,payload){if(this.embedded)parent.postMessage({type,appId:APP_ID,...(payload||{})},'*')},
+  request(type,payload){return new Promise(res=>{if(!this.embedded)return res(null);const reqId=APP_ID+'_'+(++this.rid);this.reqs[reqId]=res;parent.postMessage({type,appId:APP_ID,reqId,...(payload||{})},'*');setTimeout(()=>{if(this.reqs[reqId]){delete this.reqs[reqId];res(null);}},2200);});}
+};
+if(Bridge.embedded)document.body.classList.add('embedded');
+function kinetikContextLabel(){const c=Bridge.ctx||{},who=c.personName||c.userName||'Standalone',circle=c.circleName||'';return c.circleId?[who,circle].filter(Boolean).join(' · '):'Standalone'}
+function kidKey(name,id){return String(id||name||'kinetik').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'kinetik'}
+function ensureKinetikKid(){const c=Bridge.ctx||{},name=(c.personName||'').trim();if(!name||typeof S==='undefined')return;let key=Object.keys(KIDS).find(k=>KIDS[k].name.toLowerCase()===name.toLowerCase());if(!key){key=kidKey(name,c.personId);KIDS[key]={name,av:name[0].toUpperCase(),buddy:'Nova'};}if(S._kinetikPersonId!==c.personId||S.active!==key){S.active=key;S._kinetikPersonId=c.personId||'';S.league=S.league||{};S.league[key]=S.league[key]||0;save();}}
+function currentPerson(){const c=Bridge.ctx||{},kid=KIDS[S.active]||{};return {id:c.personId||S.active||'local-learner',name:(c.personName||kid.name||'Learner').slice(0,32)}}
+function scopedPayload(payload){const c=Bridge.ctx||{},p=currentPerson();return Object.assign({appId:APP_ID,circleId:c.circleId||'standalone',circleName:c.circleName||'',personId:p.id,personName:p.name,createdAt:new Date().toISOString()},payload||{})}
+function recordKinetik(collection,payload){Bridge.send('DATA_CREATE',{collection,ownerPersonId:true,payload:scopedPayload(payload)})}
+function emitKinetik(eventType,amount,metadata,sourceRecordId){const c=Bridge.ctx||{},p=currentPerson();return Bridge.request('KINETIK_EVENT',{eventType,amount,sourceRecordId:sourceRecordId||'',circleId:c.circleId||'',personId:p.id,metadata:Object.assign({personName:p.name},metadata||{})})}
+function syncEconomyDiamonds(){const eco=Bridge.ctx&&Bridge.ctx.economy;if(!eco||typeof S==='undefined')return;const v=Number(eco.personDiamonds??eco.circleDiamonds);if(Number.isFinite(v)){S.diamonds=v;save();refreshDiamondLabels();}}
+function refreshDiamondLabels(){['tbDia','zoneDia'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=S.diamonds;});const sp=document.getElementById('spChips');if(sp)sp.innerHTML=`<div class="sp-chip">🔥 ${S.streak}-day streak</div><div class="sp-chip">💎 ${S.diamonds}</div>`;}
+function applyDiamondResult(result,fallback){const gained=result&&result.diamond?Number(result.diamond.amount||0):0;const person=currentPerson();const byPerson=result&&result.buddy&&result.buddy.byPerson;const dyn=byPerson&&byPerson[person.id]!=null?Number(byPerson[person.id]):NaN;if(Number.isFinite(dyn))S.diamonds=dyn;else S.diamonds+=gained||fallback||0;save();refreshDiamondLabels();return gained||fallback||0}
+function applyKinetikContext(){const c=Bridge.ctx||{},el=document.getElementById('kinCtx');window.KinetikContext=c;if(c.theme)document.documentElement.setAttribute('data-theme',c.theme==='dark'?'dark':'light');ensureKinetikKid();syncEconomyDiamonds();if(el)el.textContent=kinetikContextLabel()}
+addEventListener('message',e=>{const m=e.data||{};if(m.type==='INIT_APP'){Bridge.ctx=m.payload||{};applyKinetikContext()}if(m.type==='KINETIK_EVENT_RESULT'&&m.reqId&&Bridge.reqs[m.reqId]){const f=Bridge.reqs[m.reqId];delete Bridge.reqs[m.reqId];f(m.result)}});
 
 const ZONES={
   english:{name:'Story Kingdom',subject:'English',icon:'📖',color:'#5b6cff',boss:{name:'The Sphinx',emoji:'🦁'}},
@@ -742,7 +792,7 @@ const QBANK={
 function bankKey(zone,stage){ const p={english:'e',science:'s',computing:'c',social:'ss'}[zone]; if(!p)return null; const st=Math.min(stage,3); return p+st; }
 
 /* ===== STATE ===== */
-const DEFAULT_STATE={ active:'baginda', xp:1240, diamonds:240, hearts:5, streak:7, theme:'light',
+const DEFAULT_STATE={ active:'baginda', xp:1240, diamonds:0, hearts:5, streak:7, theme:'light',
   energy:80, evo:68,
   progress:{}, /* zone -> {stage -> {nodes:{idx:{done,stars}}}} */
   daily:{date:null,done:0,goal:2},
@@ -753,12 +803,7 @@ let S=load();
 function load(){ try{const r=localStorage.getItem('kl_state2'); if(r)return Object.assign(JSON.parse(JSON.stringify(DEFAULT_STATE)),JSON.parse(r));}catch(e){} return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
 function save(){ try{localStorage.setItem('kl_state2',JSON.stringify(S));}catch(e){} }
 
-/* ===== KINETIK BUS (light) ===== */
-let bus=null; try{bus=new BroadcastChannel('kinetik');}catch(e){}
-function creditBuddy(amount,skill){
-  try{const c=parseInt(localStorage.getItem('kbw_pending_diamonds')||'0',10)||0;localStorage.setItem('kbw_pending_diamonds',String(c+amount));}catch(e){}
-  try{bus&&bus.postMessage({type:'diamonds.earned',amount,source:'kinetik-learn',skill,ts:Date.now()});}catch(e){}
-}
+/* Diamonds are awarded only through the Kinetik bridge. No local Buddy wallet. */
 
 const MEDAL_DEFS=[
   {id:'first_lesson',e:'🎓',n:'First Steps',d:'Complete a lesson'},
@@ -1153,24 +1198,33 @@ function useHint(){ const q=L.qs[L.qi]; if(S.diamonds<5&&false){} toast(q.why||'
 function quitLesson(){ if(confirmQuit()) { L=null; goPage('zone'); renderZone(); } }
 function confirmQuit(){ return true; }
 function heartsOut(){ $('#heartsout').classList.add('show'); buildBuddy($('#hoBuddy'),{species:KIDS[S.active].buddy,mood:'sad'}); }
-function refillHearts(){ if(S.diamonds<40){toast('Not enough diamonds','💎');return;} S.diamonds-=40; L.hearts=5; renderHearts(); save(); $('#heartsout').classList.remove('show'); $('#tbDia').textContent=S.diamonds; renderQ(); }
+function refillHearts(){ L.hearts=5; renderHearts(); save(); $('#heartsout').classList.remove('show'); refreshDiamondLabels(); renderQ(); toast('Hearts refilled — keep learning!','💎'); }
 </script>
 <script>
 /* ============ FINISH + VICTORY ============ */
 let vicBuddyApi=null;
-function finishLesson(){
+async function finishLesson(){
   const stars = L.perfect?3 : L.hearts>=3?2 : 1;
   const base = L.type==='speed'?15:10; const xp=base+(L.perfect?5:0); const dia=(L.type==='speed'?8:5)+(L.perfect?3:0);
-  S.xp+=xp; S.diamonds+=dia; S.energy=Math.min(100,S.energy+10); S.evo=Math.min(100,S.evo+3);
+  S.xp+=xp; S.energy=Math.min(100,S.energy+10); S.evo=Math.min(100,S.evo+3);
   S.league[S.active]=(S.league[S.active]||0)+xp;
-  const p=getProg(L.zone,L.stage); const prev=p.nodes[L.idx]||{}; p.nodes[L.idx]={done:true,stars:Math.max(stars,prev.stars||0)};
+  const p=getProg(L.zone,L.stage); const prev=p.nodes[L.idx]||{},masteryWas=(prev.stars||0)>=3; p.nodes[L.idx]={done:true,stars:Math.max(stars,prev.stars||0)};
   if(!S.medals.includes('first_lesson'))S.medals.push('first_lesson');
   // daily
   S.daily.done=Math.min(S.daily.goal,S.daily.done+1);
   // streak (mark today)
   const today=new Date().toISOString().slice(0,10); if(S._lastDay!==today){S.streak=(S._lastDay&&isYesterday(S._lastDay))?S.streak+1:(S._lastDay?1:S.streak); S._lastDay=today;}
-  save(); creditBuddy(dia, ZONES[L.zone].subject);
-  showVictory(stars,xp,dia);
+  save();
+  const subject=ZONES[L.zone].subject, lessonId=L.zone+'-'+L.stage+'-'+L.idx, sourceId='primary-quest-'+lessonId+'-'+Date.now();
+  recordKinetik('learning_sessions',{kind:'primary.lesson',zone:L.zone,stage:L.stage,nodeIndex:L.idx,subject,stars,xp,diamonds:dia,perfect:L.perfect,type:L.type});
+  let awarded=0;
+  const practice=await emitKinetik('practice.completed',Math.min(12,Math.max(3,dia)),{title:subject+' lesson',subject,stage:L.stage,stars,xp,diamonds:dia,type:L.type},sourceId);
+  awarded+=applyDiamondResult(practice,Bridge.embedded?0:dia);
+  if(stars===3&&!masteryWas){
+    const mastery=await emitKinetik('mastery.unlocked',15,{title:subject+' 3-star mastery',subject,stage:L.stage,nodeIndex:L.idx},'primary-quest-mastery-'+lessonId);
+    awarded+=applyDiamondResult(mastery,Bridge.embedded?0:15);
+  }
+  showVictory(stars,xp,awarded||dia);
 }
 function isYesterday(d){ const y=new Date(Date.now()-864e5).toISOString().slice(0,10); return d===y; }
 function showVictory(stars,xp,dia){
@@ -1229,9 +1283,18 @@ function dmg(sel,txt,col){ const r=$(sel).getBoundingClientRect(); const d=docum
   d.style.left=(r.left+r.width/2-10)+'px'; d.style.top=(r.top)+'px'; document.body.appendChild(d);
   gsap.to(d,{y:-44,opacity:0,duration:.9,ease:'power2.out',onComplete:()=>d.remove()}); }
 function shake(sel){ const el=$(sel); el.classList.add('screenshake'); setTimeout(()=>el.classList.remove('screenshake'),400); }
-function bossWin(){ const p=getProg(L.zone,L.stage); p.nodes[L.idx]={done:true,stars:3}; S.diamonds+=15; S.xp+=25; S.energy=Math.min(100,S.energy+12);
-  S.league[S.active]=(S.league[S.active]||0)+25; if(!S.medals.includes('boss_slayer'))S.medals.push('boss_slayer'); save(); creditBuddy(15,'Boss');
-  showVictory(3,25,15); $('#vicTitle').textContent='Boss Defeated! 👑'; }
+async function bossWin(){ const p=getProg(L.zone,L.stage),prev=p.nodes[L.idx]||{},masteryWas=(prev.stars||0)>=3; p.nodes[L.idx]={done:true,stars:3}; S.xp+=25; S.energy=Math.min(100,S.energy+12);
+  S.league[S.active]=(S.league[S.active]||0)+25; if(!S.medals.includes('boss_slayer'))S.medals.push('boss_slayer'); save();
+  const subject=ZONES[L.zone].subject, lessonId=L.zone+'-'+L.stage+'-'+L.idx, sourceId='primary-quest-boss-'+lessonId+'-'+Date.now();
+  recordKinetik('learning_sessions',{kind:'primary.boss',zone:L.zone,stage:L.stage,nodeIndex:L.idx,subject,stars:3,xp:25,diamonds:15,perfect:true,type:'boss'});
+  let awarded=0;
+  const practice=await emitKinetik('practice.completed',12,{title:subject+' boss battle',subject,stage:L.stage,stars:3,xp:25,diamonds:15,type:'boss'},sourceId);
+  awarded+=applyDiamondResult(practice,Bridge.embedded?0:12);
+  if(!masteryWas){
+    const mastery=await emitKinetik('mastery.unlocked',15,{title:subject+' boss defeated',subject,stage:L.stage,nodeIndex:L.idx},'primary-quest-boss-mastery-'+lessonId);
+    awarded+=applyDiamondResult(mastery,Bridge.embedded?0:15);
+  }
+  showVictory(3,25,awarded||15); $('#vicTitle').textContent='Boss Defeated! 👑'; }
 function bossLose(){ $('#bossBanner').textContent='💔 Buddy fainted! Try again.'; setTimeout(()=>{ goPage('zone'); renderZone(); },1400); }
 
 /* ============ NAV / PAGES ============ */
@@ -1301,8 +1364,6 @@ function boot(){
   tl.add(()=>splashBuddyApi.react('correct'),'-=.2');
   tl.to('#spChips',{opacity:1,duration:.4},'-=.1');
   tl.to('#spStart',{opacity:1,y:0,duration:.4});
-  // claim pending diamonds silently
-  try{const pend=parseInt(localStorage.getItem('kbw_pending_diamonds')||'0',10)||0;}catch(e){}
 }
 function enterApp(){ $('#splash').classList.add('hide'); renderHome(); setTimeout(()=>{$('#splash').style.display='none';},600); }
 window.addEventListener('load',boot);

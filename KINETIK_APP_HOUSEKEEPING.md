@@ -27,8 +27,8 @@ agent system doc says how the emotional/product logic should work.
 | 5 | `App_GameCodeClash.html` | Code Clash | Core game | M3 | Add persisted rounds and caps |
 | 6 | `App_GameDataDetective.html` | Data Detective | Learning | M2 | Define case/progress schema |
 | 7 | `App_GameEmojiParty.html` | Emoji Party | Core game | M3 | Add Buddy reactions after sessions |
-| 8 | `App_GameLadderRush.html` | Choice Trail | Reflection game | M2 | Clarify split from Decision Coach |
-| 9 | `App_GameLuckySpin.html` | Circle Spinner | Utility | M1 | Keep mostly reward-neutral |
+| 8 | `App_GameLadderRush.html` | Ladder & Snake / Choice Trail | Reflection board game | M2 | Add capped round/reflection events; clarify split from Decision Coach |
+| 9 | `App_GameLuckySpin.html` | Fortune Wheel / Circle Spinner | Utility/randomizer | M1 | Keep spin reward-neutral; only real follow-up tasks can earn |
 | 10 | `App_GameStrata.html` | Strata | Sidecar | M2 | Keep outside core economy |
 | 11 | `App_ProductivityAgenticAI.html` | Agent Lab | Learning | M3 | Add deterministic agent-action records |
 | 12 | `App_ProductivityArticulation.html` | Voice Coach | Coach | M3 | Persist rehearsal/practice sessions |

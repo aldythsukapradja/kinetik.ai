@@ -12,7 +12,8 @@
   "appId": "lucky-spin",
   "name": "Circle Spinner",
   "shortName": "Spinner",
-  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='32' cy='32' r='20'/><path d='M32 12v40M12 32h40M18 18l28 28M46 18L18 46'/><circle cx='32' cy='32' r='5' fill='white' stroke='none'/><path d='M45 9l4 8 8 1-7 5 2 8-7-5-7 5 2-8-7-5 8-1z' fill='white' stroke='none' opacity='.82'/></svg>",
+  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='32' cy='32' r='20'/><path d='M32 12v40M12 32h40M18 18l28 28M46 18L18 46'/><circle cx='32' cy='32' r='5' fill='white' stroke='none'/><path d='M45 9l4 8 8 1-7 5 2 8-7-5-7 5 2-8-7-5 8-1z' fill='white' stroke='none' opacity='.82'/><\/svg>",
+  "homeIcon": "🎡",
   "gradient": [
     "#ff4d9d",
     "#6c5ce7"
@@ -27,6 +28,10 @@
   ],
   "worksWith": [
     "standalone"
+  ],
+  "emits": [
+    "game.round.completed",
+    "game.win"
   ],
   "status": "live",
   "minMembers": 1
@@ -62,11 +67,12 @@ body{font-family:var(--body);color:var(--ink);
 .screen.on{display:flex}
 @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px;gap:10px}
-.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;overflow:hidden;white-space:nowrap;font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink)}
 .logo{width:34px;height:34px;border-radius:11px;background:conic-gradient(from 0deg,var(--pink),var(--gold),var(--mint),var(--sky),var(--violet),var(--pink));display:grid;place-items:center;box-shadow:0 8px 18px rgba(255,77,157,.4);position:relative}
 .logo::after{content:"";position:absolute;width:11px;height:11px;border-radius:50%;background:#fff}
-.wallet{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);padding:8px 15px;border-radius:99px;font-family:var(--display);font-weight:700;font-size:15px;box-shadow:var(--shadow-sm)}
-.coin{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE9A8,var(--gold) 58%,var(--gold-d));display:grid;place-items:center;font-size:11px;color:#7a5600;box-shadow:0 2px 5px rgba(217,138,14,.45)}
+.wallet{flex:0 0 auto;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);padding:8px 15px;border-radius:99px;font-family:var(--display);font-weight:700;font-size:15px;box-shadow:var(--shadow-sm)}
+.kinctx{flex:0 1 112px;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--card);border:1px solid var(--line);padding:7px 10px;border-radius:99px;font-size:11px;font-weight:800;color:var(--ink-dim);box-shadow:var(--shadow-sm)}
+.point{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE9A8,var(--gold) 58%,var(--gold-d));display:grid;place-items:center;font-size:11px;color:#7a5600;box-shadow:0 2px 5px rgba(217,138,14,.45)}
 .scroll{flex:1;overflow-y:auto;padding:4px 20px 26px}
 .hero{position:relative;border-radius:28px;padding:24px 22px;overflow:hidden;margin-bottom:22px;box-shadow:var(--shadow);background:linear-gradient(135deg,#FF4D9D,#A24BE0 60%,#FF9A3D)}
 .hero h1{font-family:var(--display);font-weight:800;font-size:33px;line-height:1;color:#fff;letter-spacing:.3px;margin-bottom:7px;position:relative;z-index:2}
@@ -187,12 +193,13 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:60;display:none}
   <section class="screen on" id="home">
     <div class="topbar">
       <div class="brand"><span class="logo"></span> Lucky Spin</div>
-      <div class="wallet"><span class="coin">$</span><span id="walletHome">0</span></div>
+      <div class="kinctx" id="kinCtx">Standalone</div>
+      <div class="wallet"><span class="point">$</span><span id="walletHome">0</span></div>
     </div>
     <div class="scroll">
       <div class="hero">
         <h1>Lucky&nbsp;Spin</h1>
-        <p>Spin the wheel, predict where it lands, and win coins by beating brain games.</p>
+        <p>Spin the wheel, predict where it lands, and win points by beating brain games.</p>
         <svg class="spinmark" viewBox="0 0 100 100"><g>
           <circle cx="50" cy="50" r="46" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width="3" stroke-dasharray="6 6"/>
           <path d="M50 8 A42 42 0 0 1 92 50 L50 50Z" fill="#ffffff" fill-opacity=".22"/>
@@ -233,7 +240,7 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:60;display:none}
         <div class="hub"><span id="hubEmoji">🎯</span></div>
       </div>
       <div class="predict" id="predictBox">
-        <div class="predict-h">🔮 Predict the landing for <b>2× coins</b> (optional)</div>
+        <div class="predict-h">🔮 Predict the landing for <b>2× points</b> (optional)</div>
         <div class="pred-row" id="predRow"></div>
       </div>
     </div>
@@ -247,11 +254,23 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:60;display:none}
 <div class="toast" id="toast"></div>
 <script>
 const SAVE_KEY='luckyspin_save';
+const APP_ID='lucky-spin';
+const Bridge={embedded:window.self!==window.top,ctx:{},send(type,payload){if(this.embedded)parent.postMessage({type,appId:APP_ID,...(payload||{})},'*')}};
+if(Bridge.embedded)document.body.classList.add('embedded');
+function contextLabel(){const c=Bridge.ctx||{},who=c.personName||c.userName||'Standalone',circle=c.circleName||'';return c.circleId?[who,circle].filter(Boolean).join(' · '):'Standalone'}
+function defaultPlayerName(fallback){return (Bridge.ctx.personName||Bridge.ctx.userName||save.name||fallback||'Player').slice(0,10)}
+function currentPerson(){const c=Bridge.ctx||{};return {id:c.personId||'local-player',name:(c.personName||c.userName||save.name||'Player').slice(0,32)}}
+function syncKinetikName(){const c=Bridge.ctx||{};if(c.personName&&save._kinetikPersonId!==c.personId){save.name=c.personName.slice(0,10);save._kinetikPersonId=c.personId||'';store()}}
+function scopedPayload(payload){const c=Bridge.ctx||{},p=currentPerson();return Object.assign({appId:APP_ID,circleId:c.circleId||'standalone',circleName:c.circleName||'',personId:p.id,personName:p.name,createdAt:new Date().toISOString()},payload||{})}
+function recordKinetik(collection,payload){Bridge.send('DATA_CREATE',{collection,ownerPersonId:true,payload:scopedPayload(payload)})}
+function emitKinetik(eventType,amount,metadata,sourceRecordId){const c=Bridge.ctx||{},p=currentPerson();Bridge.send('KINETIK_EVENT',{eventType,amount,sourceRecordId:sourceRecordId||'',circleId:c.circleId||'',personId:p.id,metadata:Object.assign({personName:p.name},metadata||{})})}
+function applyKinetikContext(){const el=document.getElementById('kinCtx');window.KinetikContext=Bridge.ctx;if(Bridge.ctx&&Bridge.ctx.theme)document.documentElement.setAttribute('data-theme',Bridge.ctx.theme==='dark'?'dark':'light');if(el)el.textContent=contextLabel();syncKinetikName()}
+addEventListener('message',e=>{const m=e.data||{};if(m.type==='INIT_APP'){Bridge.ctx=m.payload||{};applyKinetikContext()}});
 function load(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))||{}}catch(e){return{}}}
 function store(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save))}catch(e){}}
-let save=Object.assign({coins:0,spins:0,correct:0,bestStreak:0,sound:true,name:'',lastDaily:''},load());
-function addCoins(n){save.coins+=n;store();renderWallet()}
-function renderWallet(){document.getElementById('walletHome').textContent=save.coins.toLocaleString()}
+let save=Object.assign({points:0,spins:0,correct:0,bestStreak:0,sound:true,name:'',lastDaily:''},load());
+function addPoints(n){save.points+=n;store();renderWallet()}
+function renderWallet(){document.getElementById('walletHome').textContent=save.points.toLocaleString()}
 
 const CATS={
   math:{name:'Math',emoji:'➕',c:'#2E9BF0',d:'#1A7FCE'},
@@ -416,17 +435,17 @@ function resolveLanding(idx){
   const predHit=!!(state.pred&&(cat===state.pred||isJack));
   setTimeout(()=>playMiniGame(playCat,isJack,predHit,(correct)=>{
     const diffMult=sel.level+1,wedgeMult=isJack?5:1,predMult=predHit?2:1;
-    const coins=correct?10*diffMult*wedgeMult*predMult:0;
-    finishTurn(coins,correct);
+    const points=correct?10*diffMult*wedgeMult*predMult:0;
+    finishTurn(points,correct);
   }),520);
 }
 
-function finishTurn(coins,correct){
-  const p=state.players[state.turn];p.score+=coins;
+function finishTurn(points,correct){
+  const p=state.players[state.turn];p.score+=points;
   const byLocalHuman=(state.mode!=='online')?p.human:(state.turn===net.myIndex);
-  if(byLocalHuman){save.spins++;if(correct){save.correct++;streak++;if(streak>save.bestStreak)save.bestStreak=streak;}else streak=0;addCoins(coins);store();}
-  if(coins>0){toast('+'+coins+' coins '+(correct?'🎉':''));} else toast('No coins this time');
-  if(state.mode==='online'&&!net.host){net.hostConn.send({t:'played',coins:coins,correct:correct});return;}
+  if(byLocalHuman){save.spins++;if(correct){save.correct++;streak++;if(streak>save.bestStreak)save.bestStreak=streak;}else streak=0;addPoints(points);store();}
+  if(points>0){toast('+'+points+' points '+(correct?'🎉':''));} else toast('No points this time');
+  if(state.mode==='online'&&!net.host){net.hostConn.send({t:'played',points:points,correct:correct});return;}
   advanceTurn();
 }
 function advanceTurn(){
@@ -443,12 +462,12 @@ function botTurn(){
     const cat=WHEEL[idx];const isJack=cat==='jackpot';const playCat=isJack?PRED_CATS[Math.random()*PRED_CATS.length|0]:cat;
     document.getElementById('hubEmoji').textContent=CATS[cat].emoji;sfx('land');
     const success=Math.random()<(0.74-sel.level*0.12);
-    const coins=success?10*(sel.level+1)*(isJack?5:1):0;
-    setTimeout(()=>showBotResult(playCat,isJack,success,coins,()=>{const p=state.players[state.turn];p.score+=coins;advanceTurn();}),520);
+    const points=success?10*(sel.level+1)*(isJack?5:1):0;
+    setTimeout(()=>showBotResult(playCat,isJack,success,points,()=>{const p=state.players[state.turn];p.score+=points;advanceTurn();}),520);
   });
 }
-function showBotResult(cat,isJack,success,coins,cb){const meta=CATS[cat];const sheet=document.getElementById('mgSheet');
-  sheet.innerHTML='<span class="mg-badge" style="background:'+meta.d+'">'+meta.emoji+' '+(isJack?'JACKPOT ×5':meta.name)+'</span><span class="result-emoji">🤖</span><div class="win-title" style="font-size:24px">Bot played '+meta.name+'</div><div class="win-sub">'+(success?'The bot answered correctly and earned +'+coins+' coins':'The bot got it wrong — no coins')+'</div><button class="sheet-btn" id="botCont">Continue →</button>';
+function showBotResult(cat,isJack,success,points,cb){const meta=CATS[cat];const sheet=document.getElementById('mgSheet');
+  sheet.innerHTML='<span class="mg-badge" style="background:'+meta.d+'">'+meta.emoji+' '+(isJack?'JACKPOT ×5':meta.name)+'</span><span class="result-emoji">🤖</span><div class="win-title" style="font-size:24px">Bot played '+meta.name+'</div><div class="win-sub">'+(success?'The bot answered correctly and earned +'+points+' points':'The bot got it wrong — no points')+'</div><button class="sheet-btn" id="botCont">Continue →</button>';
   sheet.querySelector('#botCont').onclick=()=>{closeScrim('mgScrim');cb();};
   if(success)sfx('correct');else sfx('wrong');openScrim('mgScrim');}
 
@@ -520,6 +539,10 @@ function showWinner(players){
   const sorted=players.slice().sort((a,b)=>b.score-a.score);const top=sorted[0];
   const myName=(net.on?save.name:null);
   const iWon=net.on?(top.name===myName):(top.name==='You'||top.name==='Player 1'&&top.score>=sorted[1].score);
+  const roundId='circle-spinner-'+Date.now(),myScore=net.on?((sorted.find(p=>p.name===save.name)||{}).score||0):((players.find(p=>p.name==='You'||p.name==='Player 1')||{}).score||0);
+  recordKinetik('game_results',{kind:'circle-spinner.round',mode:sel.mode,winnerName:top.name,won:iWon,myScore,topScore:top.score,rounds:ROUNDS,level:sel.level});
+  emitKinetik('game.round.completed',Math.min(8,Math.max(2,Math.round(myScore/25)+2)),{title:'Circle Spinner round',mode:sel.mode,winnerName:top.name,myScore,topScore:top.score,rounds:ROUNDS},roundId);
+  if(iWon)emitKinetik('game.win',8,{title:'Circle Spinner win',mode:sel.mode,winnerName:top.name,score:top.score},roundId+'-win');
   sfx('win');confetti();
   const sheet=document.getElementById('winSheet');
   let list='';sorted.forEach((p,i)=>{list+='<div class="final-p'+(i===0?' first':'')+'"><span class="av" style="background:'+p.col.c+'">'+p.emoji+'</span>'+(i===0?'🏆 ':'')+p.name+'<span class="fsc">'+p.score+'</span></div>';});
@@ -532,10 +555,10 @@ function broadcast(msg){net.conns.forEach(c=>{try{c.send(msg)}catch(e){}})}
 function broadcastSB(){if(!net.host)return;broadcast({t:'sb',players:state.players.map(p=>({name:p.name,emoji:p.emoji,col:p.col,score:p.score,spinsDone:p.spinsDone})),turn:state.turn,over:state.over,level:sel.level});}
 function teardownNet(){try{if(net.peer)net.peer.destroy()}catch(e){}net={on:false,host:false,peer:null,conns:[],myIndex:0,hostConn:null};}
 function openLobby(){go('lobby');
-  document.getElementById('lobbyBody').innerHTML='<div class="lobby-card"><div class="section-h" style="margin-top:0">Your name</div><input class="field" id="nameIn" placeholder="NAME" maxlength="10" style="text-transform:none;letter-spacing:1px" value="'+(save.name||'')+'"><div style="margin-top:18px"><button class="sheet-btn" id="createBtn" style="margin-top:0">Create a circle</button></div><div class="section-h">Or join with a code</div><input class="field" id="codeIn" placeholder="CODE" maxlength="4"><button class="sheet-btn ghost" id="joinBtn">Join circle</button><div class="status" id="lobbyStatus"></div></div><div class="status" style="font-size:12px;color:var(--ink-faint)">Everyone must be online at the same time. Up to 4 players take turns spinning.</div>';
+  document.getElementById('lobbyBody').innerHTML='<div class="lobby-card"><div class="section-h" style="margin-top:0">Your name</div><input class="field" id="nameIn" placeholder="NAME" maxlength="10" style="text-transform:none;letter-spacing:1px" value="'+defaultPlayerName('')+'"><div style="margin-top:18px"><button class="sheet-btn" id="createBtn" style="margin-top:0">Create a circle</button></div><div class="section-h">Or join with a code</div><input class="field" id="codeIn" placeholder="CODE" maxlength="4"><button class="sheet-btn ghost" id="joinBtn">Join circle</button><div class="status" id="lobbyStatus"></div></div><div class="status" style="font-size:12px;color:var(--ink-faint)">Everyone must be online at the same time. Up to 4 players take turns spinning.</div>';
   document.getElementById('createBtn').onclick=hostCircle;document.getElementById('joinBtn').onclick=joinCircle;document.getElementById('lobbyBack').onclick=()=>{teardownNet();go('home')};}
 function lobbyStatus(t){const e=document.getElementById('lobbyStatus');if(e)e.textContent=t;}
-function hostCircle(){const name=(document.getElementById('nameIn').value||'Host').trim().slice(0,10)||'Host';save.name=name;store();
+function hostCircle(){const name=(document.getElementById('nameIn').value||defaultPlayerName('Host')).trim().slice(0,10)||'Host';save.name=name;store();
   if(typeof Peer==='undefined'){lobbyStatus('Online needs an internet connection.');return;}
   lobbyStatus('Creating your circle…');const code=shortCode();net={on:true,host:true,peer:null,conns:[],myIndex:0,hostConn:null};net.lobby=[{name:name,emoji:AVATARS[0],col:PCOL[0]}];net.code=code;
   const peer=new Peer('ls-'+code,{debug:0});net.peer=peer;
@@ -545,7 +568,7 @@ function hostCircle(){const name=(document.getElementById('nameIn').value||'Host
 function reindexLobby(){net.lobby.forEach((p,i)=>{p.col=PCOL[i];p.emoji=AVATARS[i];});}
 function hostHandle(conn,d){
   if(d.t==='join'){if(net.started||net.lobby.length>=4){conn.send({t:'full'});return;}const i=net.lobby.length;net.lobby.push({name:(d.name||'Friend').slice(0,10),emoji:AVATARS[i],col:PCOL[i],_conn:conn});net.conns.push(conn);renderHostLobby(net.code);pushLobby();}
-  if(d.t==='played'){if(state&&!state.over){state.players[state.turn].score+=d.coins;advanceTurn();}}
+  if(d.t==='played'){if(state&&!state.over){state.players[state.turn].score+=d.points;advanceTurn();}}
 }
 function pushLobby(){broadcast({t:'lobby',players:net.lobby.map(p=>({name:p.name,emoji:p.emoji,col:p.col}))});}
 function renderHostLobby(code){net.code=code;const body=document.getElementById('lobbyBody');
@@ -555,7 +578,7 @@ function renderHostLobby(code){net.code=code;const body=document.getElementById(
   document.getElementById('lobbyBack').onclick=()=>{teardownNet();go('home')};}
 function startOnlineGame(){net.started=true;const players=net.lobby.map((p,i)=>({name:p.name,human:true,score:0,spinsDone:0,emoji:AVATARS[i],col:PCOL[i]}));
   broadcast({t:'begin',players:players.map(p=>({name:p.name,emoji:p.emoji,col:p.col})),level:sel.level});sel.mode='online';initGame(players);}
-function joinCircle(){const name=(document.getElementById('nameIn').value||'Friend').trim().slice(0,10)||'Friend';const code=(document.getElementById('codeIn').value||'').trim().toUpperCase();
+function joinCircle(){const name=(document.getElementById('nameIn').value||defaultPlayerName('Friend')).trim().slice(0,10)||'Friend';const code=(document.getElementById('codeIn').value||'').trim().toUpperCase();
   if(code.length<4){lobbyStatus('Enter the 4-letter code.');return;}save.name=name;store();
   if(typeof Peer==='undefined'){lobbyStatus('Online needs an internet connection.');return;}
   lobbyStatus('Connecting…');net={on:true,host:false,peer:null,conns:[],myIndex:0,hostConn:null};

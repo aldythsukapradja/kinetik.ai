@@ -142,6 +142,7 @@ function validateManifest(file, j, issues) {
 function catalogEntry(file, html, j) {
   const pf = parseAppFile(file);
   const name = j.name || titleOf(html) || pf.name;
+  const avatar = String(j.avatar || j.homeIcon || j.homeGlyph || guessIcon(name));
   return {
     id: fileId(file),
     appId: j.appId || fileId(file),
@@ -149,6 +150,8 @@ function catalogEntry(file, html, j) {
     shortName: j.shortName || name,
     file,
     glyph: String(j.icon || guessIcon(name)),
+    avatar,
+    homeGlyph: avatar,
     gradient: Array.isArray(j.gradient) && j.gradient.length ? j.gradient : ["#6366f1", "#22d3ee"],
     category: pf.category,
     tagline: j.tagline || "",
@@ -157,6 +160,7 @@ function catalogEntry(file, html, j) {
     active: true,
     audience: j.audience || "all",
     worksWith: cleanList(j.worksWith, ALLOWED_WORKS_WITH, ["standalone"]),
+    emits: Array.isArray(j.emits) ? [...new Set(j.emits.map(String).filter(Boolean))] : [],
     minMembers: j.minMembers || 1,
     desc: j.about || j.tagline || ""
   };

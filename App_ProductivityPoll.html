@@ -9,7 +9,8 @@
   "appId": "kinetik-buddy",
   "name": "Kinetik Buddy",
   "shortName": "Buddy",
-  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><ellipse cx='32' cy='36' rx='17' ry='19' fill='white' stroke='none'/><path d='M32 17v-6M32 11l6 4M32 11l-6 4'/><circle cx='26' cy='34' r='2.2' fill='#4f46e5' stroke='none'/><circle cx='38' cy='34' r='2.2' fill='#4f46e5' stroke='none'/><path d='M26 43c4 4 8 4 12 0' stroke='#4f46e5'/><path d='M50 22c-3 1-5 3-6 6-1-3-3-5-6-6 3-1 5-3 6-6 1 3 3 5 6 6z' fill='white' stroke='none' opacity='.85'/></svg>",
+  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><ellipse cx='32' cy='36' rx='17' ry='19' fill='white' stroke='none'/><path d='M32 17v-6M32 11l6 4M32 11l-6 4'/><circle cx='26' cy='34' r='2.2' fill='#4f46e5' stroke='none'/><circle cx='38' cy='34' r='2.2' fill='#4f46e5' stroke='none'/><path d='M26 43c4 4 8 4 12 0' stroke='#4f46e5'/><path d='M50 22c-3 1-5 3-6 6-1-3-3-5-6-6 3-1 5-3 6-6 1 3 3 5 6 6z' fill='white' stroke='none' opacity='.85'/><\/svg>",
+  "homeIcon": "🐣",
   "gradient": [
     "#55c7ff",
     "#7b63ff"
@@ -26,6 +27,10 @@
     "offline",
     "standalone",
     "moments"
+  ],
+  "emits": [
+    "buddy.quest.completed",
+    "diamond.gift"
   ],
   "status": "live",
   "minMembers": 1
@@ -1031,8 +1036,75 @@ function makePet(canvas, opts){
 const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
 const DIA='<svg class="dia" viewBox="0 0 24 24" style="width:14px;height:14px;vertical-align:-2px"><defs><linearGradient id="dg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fe9ff"/><stop offset="1" stop-color="#0a8fd6"/></linearGradient></defs><path d="M6 3h12l4 6-10 12L2 9z" fill="url(#dg2)"/></svg>';
+const APP_ID='kinetik-buddy';
+const embedded=(()=>{try{return window.self!==window.top}catch(e){return true}})();
+let CTX={userId:'',userName:'',personId:'',personName:'You',circleId:'standalone',circleName:'Family Circle',circleType:'family',role:'member',roleLabel:'Member',isLeader:false,isCoLeader:false,isCircleAdmin:false,people:[]};
+let ECONOMY=null;
+const Bridge={
+  embedded, reqs:{}, rid:0,
+  send(type,payload){try{if(embedded&&window.parent&&window.parent!==window)window.parent.postMessage({type,appId:APP_ID,payload},"*");}catch(e){}},
+  request(type,payload){return new Promise(res=>{if(!embedded)return res(null);const reqId=APP_ID+"_"+(++this.rid);this.reqs[reqId]=res;try{window.parent.postMessage({type,appId:APP_ID,reqId,...(payload||{})},"*");}catch(e){delete this.reqs[reqId];return res(null);}setTimeout(()=>{if(this.reqs[reqId]){delete this.reqs[reqId];res(null);}},2200);});},
+  async economy(){return this.request("KINETIK_ECONOMY_SNAPSHOT");},
+  openApp(appId){this.send("OPEN_APP",{appId});}
+};
+addEventListener("message",e=>{
+  const m=e.data||{};
+  if(m.type==="INIT_APP"&&m.payload)applyKinetikContext(m.payload);
+  if(m.type==="KINETIK_ECONOMY_SNAPSHOT_RESULT"){
+    applyEconomySnapshot(m.payload);
+    if(m.reqId&&Bridge.reqs[m.reqId]){const f=Bridge.reqs[m.reqId];delete Bridge.reqs[m.reqId];f(m.payload);}
+  }
+  if(m.type==="KINETIK_EVENT_RESULT"&&m.reqId&&Bridge.reqs[m.reqId]){const f=Bridge.reqs[m.reqId];delete Bridge.reqs[m.reqId];f(m.result);}
+});
 
 let pet, shopPet;
+
+function canUseAdminPowers(){
+  return !!(CTX.isLeader||CTX.isCoLeader||CTX.isCircleAdmin||CTX.role==="owner"||CTX.role==="leader"||CTX.role==="admin");
+}
+function requireAdminPower(){
+  if(canUseAdminPowers())return true;
+  toast("Only Circle Leaders can use Leader Superpowers","👑");
+  return false;
+}
+function applyKinetikContext(p){
+  CTX=Object.assign({},CTX,p||{});
+  CTX.people=Array.isArray(CTX.people)?CTX.people:[];
+  if(CTX.theme){S.theme=CTX.theme==='dark'?'dark':'light';document.documentElement.setAttribute('data-theme',S.theme);}
+  refreshEconomy();
+}
+async function refreshEconomy(){
+  const snap=await Bridge.economy();
+  if(snap)applyEconomySnapshot(snap);
+}
+function applyEconomySnapshot(snap){
+  if(!snap||snap.error)return;
+  ECONOMY=snap;
+  syncStateFromEconomy();
+  if(document.readyState!=="loading"&&$('#walletNum'))renderAll();
+}
+function localEnergyFor(shellEnergy){
+  return ({Growth:'learning',Care:'care',Play:'play',Move:'rhythm',Circle:'social',Story:'joy'})[shellEnergy]||'calm';
+}
+function syncStateFromEconomy(){
+  if(!ECONOMY||!ECONOMY.buddy)return;
+  const b=ECONOMY.buddy,energy=b.energy||{};
+  S.diamonds=Number(b.diamonds||0);
+  S.xp=Number(b.xp||0);
+  S.level=Number(b.level||1);
+  S.rank=rankForPerson(CTX.personId);
+  const mapped={learning:0,play:0,care:0,joy:0,rhythm:0,calm:0,social:0};
+  Object.keys(energy).forEach(k=>{const to=localEnergyFor(k);mapped[to]=Math.min(100,(mapped[to]||0)+Number(energy[k]||0)*4);});
+  S.energy=Object.assign({},S.energy,mapped);
+}
+function economyEvents(){return ECONOMY&&Array.isArray(ECONOMY.diamondEvents)?ECONOMY.diamondEvents:[];}
+function economyApps(){return ECONOMY&&Array.isArray(ECONOMY.diamondApps)?ECONOMY.diamondApps:[];}
+function economyPeople(){return ECONOMY&&Array.isArray(ECONOMY.people)&&ECONOMY.people.length?ECONOMY.people:MEMBERS.map((m,i)=>({id:'demo-'+i,name:m.name,color:'#7b63ff'}));}
+function rankForPerson(personId){
+  const rows=personScores();
+  const i=rows.findIndex(r=>r.id===personId);
+  return i<0?Math.min(4,rows.length||1):i+1;
+}
 
 /* ---------- INIT ---------- */
 function init(){
@@ -1046,6 +1118,7 @@ function init(){
   setTimeout(()=>{ $('#tapHint').classList.remove('show'); }, 7000);
   // intro speech
   setTimeout(()=>speak(`Hi! I'm ${SPECIES[S.species].name} 🌟`), 800);
+  refreshEconomy();
 }
 
 function renderAll(){
@@ -1057,7 +1130,20 @@ function renderAll(){
 /* ---------- WALLET ---------- */
 function renderWallet(){ $('#walletNum').textContent = S.diamonds.toLocaleString(); }
 function spend(n){ if(S.diamonds<n) return false; S.diamonds-=n; renderWallet(); save(); return true; }
-function earn(n,fromEl){ S.diamonds+=n; flyDiamonds(n,fromEl); save(); }
+function earn(n,fromEl,metadata){
+  if(Bridge.embedded&&ECONOMY){
+    const meta=metadata||{},sourceRecordId=meta.sourceRecordId||('buddy-'+Date.now());
+    Bridge.request("KINETIK_EVENT",{eventType:"buddy.quest.completed",amount:n,sourceRecordId,metadata:Object.assign({title:"Buddy quest",personName:CTX.personName},meta)}).then(result=>{
+      const gained=result&&result.diamond?Number(result.diamond.amount||0):0;
+      if(result&&result.buddy){ECONOMY.buddy=result.buddy;syncStateFromEconomy();renderAll();}
+      else refreshEconomy();
+      if(gained>0)flyDiamonds(gained,fromEl);
+      else if(result&&result.duplicate)toast("Already counted for Buddy","💎");
+    });
+    return;
+  }
+  S.diamonds+=n; flyDiamonds(n,fromEl); save();
+}
 
 /* ---------- SHEET (buddy page) ---------- */
 function renderSheet(){
@@ -1096,7 +1182,7 @@ function completeQuest(id,el){
   const q=S.quests.find(x=>x.id===id); if(!q||q.done) return;
   q.done=true; el.classList.add('done');
   addEnergy(q.energy,10);
-  earn(q.r, el.querySelector('.qreward'));
+  earn(q.r, el.querySelector('.qreward'), {title:q.t,kind:'buddy.quest',sourceRecordId:'buddy-quest-'+q.id+'-'+new Date().toISOString().slice(0,10),energy:q.energy});
   pet.celebrate();
   speak(`+${q.r} diamonds! ${SPECIES[S.species].name} loved that.`);
   gainXP(q.r);
@@ -1108,7 +1194,7 @@ function bestMove(el){
   const q=S.quests.find(x=>!x.done);
   if(q){ completeQuest(q.id, $(`[data-q="${q.id}"]`)||el); return; }
   // all done — simulate a learning session
-  addEnergy('learning',12); earn(12,el); gainXP(12); pet.celebrate();
+  addEnergy('learning',12); earn(12,el,{title:'Buddy bonus learning session',kind:'buddy.best_move'}); gainXP(12); pet.celebrate();
   speak('Bonus learning session! +12 💎'); toast('Best move complete · +12 💎','✨');
   renderSheet(); renderEnergy(); updateEvoBanner();
 }
@@ -1227,14 +1313,40 @@ function bindSheet(){
 </script>
 <script>
 /* ---------- PORTALS (Map) ---------- */
+function appEventsFor(app){
+  const keys=[app.id,app.appId,app.file].filter(Boolean).map(String);
+  return economyEvents().filter(e=>keys.includes(String(e.appId)));
+}
+function energyForApp(app){
+  const rules=ECONOMY&&ECONOMY.rules||{},hit=(app.emits||[]).map(e=>rules[e]&&rules[e].energy).find(Boolean);
+  return localEnergyFor(hit||'Growth');
+}
+function rewardForApp(app){
+  const rules=ECONOMY&&ECONOMY.rules||{};
+  const vals=(app.emits||[]).map(e=>rules[e]&&(rules[e].defaultAmount||rules[e].maxPerEvent)).filter(Boolean);
+  return Math.max(2,...vals,Math.min(12,Math.max(3,Math.round((app.totalDiamonds||0)/(Math.max(1,app.eventCount||1))))));
+}
+function currentPortals(){
+  const apps=economyApps();
+  if(!apps.length)return PORTALS;
+  return apps.map((app,i)=>{
+    const energy=energyForApp(app),ev=appEventsFor(app),last=ev[0],grad=Array.isArray(app.gradient)?app.gradient.join(','):'#6b7cff,#9a7bff';
+    const badgeTxt=app.totalDiamonds?`${app.totalDiamonds} 💎`:app.eventCount?`${app.eventCount} events`:(i<2?'Ready':'Open');
+    return {
+      id:app.id,name:app.name,icon:app.avatar||'💎',energy,reward:rewardForApp(app),
+      badge:app.totalDiamonds?'done':(i<2?'hot':'rank'),badgeTxt,grad,
+      subtitle:last?`${last.personName} · ${last.amount} 💎`:'Ready to earn'
+    };
+  });
+}
 function renderPortals(){
-  $('#portalGrid').innerHTML=PORTALS.map(p=>{
+  $('#portalGrid').innerHTML=currentPortals().map(p=>{
     const em=ENERGY_META[p.energy];
     return `<div class="portal ${p.locked?'locked':''}" data-p="${p.id}">
       <div class="glow" style="background:radial-gradient(circle,${p.grad.split(',')[0]},transparent)"></div>
       <div class="pic" style="background:linear-gradient(135deg,${p.grad})">${p.icon}</div>
       <div class="pname">${p.name}</div>
-      <div class="penergy" style="color:${em.color}">${em.label} energy</div>
+      <div class="penergy" style="color:${em.color}">${p.subtitle||em.label+' energy'}</div>
       <div class="pfoot">
         <div class="preward">+${p.reward} ${DIA}</div>
         <div class="pbadge ${p.badge}">${p.badgeTxt}</div>
@@ -1245,31 +1357,43 @@ function renderPortals(){
   $$('#portalGrid .portal').forEach(el=>el.onclick=()=>openPortal(el.dataset.p));
 }
 function openPortal(id){
-  const p=PORTALS.find(x=>x.id===id); if(!p) return;
+  const p=currentPortals().find(x=>x.id===id); if(!p) return;
   if(p.locked){ toast('Unlocks at level 6','🔒'); return; }
   const em=ENERGY_META[p.energy];
   openModal(`
     <div class="modal-handle"></div>
     <h2>${p.icon} ${p.name}</h2>
-    <p class="msub">${em.label} energy · earns +${p.reward} 💎 per session</p>
+    <p class="msub">${em.label} energy · synced with the real Buddy diamond economy</p>
     <div class="buy-preview" style="background:linear-gradient(135deg,${p.grad});font-size:64px">${p.icon}</div>
     <div class="stat-strip" style="margin:0 0 16px">
-      <div class="stat-card"><div class="sv">+${p.reward}</div><div class="sl">Diamonds</div></div>
-      <div class="stat-card"><div class="sv">+8</div><div class="sl">${em.label}</div></div>
-      <div class="stat-card"><div class="sv">${p.badge==='rank'?p.badgeTxt:'New'}</div><div class="sl">Your Rank</div></div>
+      <div class="stat-card"><div class="sv">+${p.reward}</div><div class="sl">Typical 💎</div></div>
+      <div class="stat-card"><div class="sv">${p.badgeTxt}</div><div class="sl">Circle data</div></div>
+      <div class="stat-card"><div class="sv">${em.label}</div><div class="sl">Energy</div></div>
     </div>
-    <button class="btn btn-primary" style="width:100%" onclick="simulateApp('${id}')">▶ Open & complete session</button>
+    <button class="btn btn-primary" style="width:100%" onclick="openKinetikApp('${id}')">Open real app</button>
+    ${canUseAdminPowers()?`<button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="leaderBoost('${id}')">👑 Leader Superpower: test reward</button>`:""}
     <button class="modal-close" onclick="closeModal()">Maybe later</button>
   `);
 }
+function openKinetikApp(id){
+  closeModal();
+  if(Bridge.embedded)Bridge.openApp(id);
+  else leaderBoost(id,true);
+}
+function leaderBoost(id,standaloneFallback){
+  if(!standaloneFallback&&!requireAdminPower())return;
+  simulateApp(id);
+}
 function simulateApp(id){
-  const p=PORTALS.find(x=>x.id===id); closeModal();
+  if(Bridge.embedded&&!canUseAdminPowers()){requireAdminPower();return;}
+  const p=currentPortals().find(x=>x.id===id); closeModal();
+  if(!p)return;
   setTimeout(()=>{
     addEnergy(p.energy,8); 
     // jump to buddy page so reward feels grounded on the pet
     $$('.nav-btn').forEach(x=>x.classList.remove('active')); $('[data-page="buddy"]').classList.add('active');
     $$('.page').forEach(pg=>pg.classList.remove('active')); $('#page-buddy').classList.add('active');
-    earn(p.reward, $('#walletBtn'));
+    earn(p.reward, $('#walletBtn'), {title:'Leader test reward: '+p.name,kind:'leader.superpower',appId:p.id});
     gainXP(p.reward); pet.celebrate();
     speak(`${p.name} done! +${p.reward} 💎`);
     toast(`${p.name} session complete · +${p.reward} 💎`, p.icon);
@@ -1288,37 +1412,60 @@ function bindBoards(){
     renderBoards(b.dataset.seg);
   });
 }
+function medal(i){return ['🥇','🥈','🥉'][i]||'#'+(i+1);}
+function personScores(){
+  const people=economyPeople(),rows=people.map((p,i)=>({id:p.id,name:p.name||('Member '+(i+1)),color:p.color||'#7b63ff',diamonds:0,events:0,streak:0,lastAt:'',me:p.id===CTX.personId}));
+  const byId=Object.fromEntries(rows.map(r=>[r.id,r]));
+  economyEvents().forEach(e=>{
+    const r=byId[e.personId]||(byId[e.personId]={id:e.personId,name:e.personName||'Someone',color:'#7b63ff',diamonds:0,events:0,streak:0,lastAt:'',me:e.personId===CTX.personId});
+    if(!rows.includes(r))rows.push(r);
+    r.diamonds+=Number(e.amount||0);r.events++;r.lastAt=r.lastAt&&r.lastAt>e.at?r.lastAt:e.at;
+  });
+  return rows.sort((a,b)=>(b.diamonds-a.diamonds)||(b.events-a.events)||a.name.localeCompare(b.name));
+}
+function appRows(app){
+  const rows={};
+  appEventsFor(app).forEach(e=>{
+    const key=e.personId||e.personName||'unknown';
+    const r=rows[key]=rows[key]||{id:key,name:e.personName||'Someone',diamonds:0,events:0,lastAt:''};
+    r.diamonds+=Number(e.amount||0);r.events++;r.lastAt=r.lastAt&&r.lastAt>e.at?r.lastAt:e.at;
+  });
+  return Object.values(rows).sort((a,b)=>(b.diamonds-a.diamonds)||(b.events-a.events));
+}
+function appRecordCount(app){
+  const keys=[app.id,app.appId,app.file].filter(Boolean).map(String);
+  return (ECONOMY&&Array.isArray(ECONOMY.appRecords)?ECONOMY.appRecords:[]).filter(r=>keys.includes(String(r.appId))).length;
+}
 function renderBoards(seg){
   const C=$('#boardContent');
   if(seg==='overall'){
-    C.innerHTML=`<div class="board-card"><h3>🏆 Family League</h3><div class="bsub">This week · resets Sunday</div>${
-      MEMBERS.map(m=>`<div class="rank-row ${m.me?'me':''}">
-        <div class="rank-medal">${['🥇','🥈','🥉','4️⃣'][m.rank-1]}</div>
-        <div class="rank-pet" style="background:linear-gradient(135deg,${SHOP.species.find(s=>s.id===m.species).color},#ffffff55)">${m.pet}</div>
-        <div class="rank-info"><div class="rn">${m.name}${m.me?' (you)':''}</div><div class="rd">${m.streak}-day streak</div></div>
-        <div class="rank-pts">${m.pts}</div></div>`).join('')}</div>`;
+    const rows=personScores();
+    C.innerHTML=`<div class="board-card"><h3>🏆 Circle Diamond League</h3><div class="bsub">${ECONOMY?'Real Buddy economy · current circle':'Demo data · open inside Kinetik to sync'}</div>${
+      rows.map((r,i)=>`<div class="rank-row ${r.me?'me':''}">
+        <div class="rank-medal">${medal(i)}</div>
+        <div class="rank-pet" style="background:linear-gradient(135deg,${r.color},#ffffff55)">${(r.name||'?')[0]}</div>
+        <div class="rank-info"><div class="rn">${r.name}${r.me?' (you)':''}</div><div class="rd">${r.events||0} economy event${r.events===1?'':'s'}</div></div>
+        <div class="rank-pts">${r.diamonds} 💎</div></div>`).join('')}</div>`;
   } else if(seg==='apps'){
-    const boards=[
-      {t:'⚡ Clock Trainer',sub:'Weekly accuracy',rows:[['Keyla','94%'],['Aldyth','92%'],['Kinara','88%']]},
-      {t:'🎾 Padel Americano',sub:'Weekend wins',rows:[['Baginda','12'],['Aldyth','8'],['Kinara','6']]},
-      {t:'🛒 Grocery Buddy',sub:'Shopping runs',rows:[['Kinara','9'],['Aldyth','5'],['Baginda','3']]},
-      {t:'♟️ MindCastle Chess',sub:'Weekly wins',rows:[['Aldyth','7'],['Baginda','5'],['Keyla','2']]},
-    ];
-    C.innerHTML=boards.map(b=>`<div class="board-card"><h3>${b.t}</h3><div class="bsub">${b.sub}</div>${
-      b.rows.map((r,i)=>`<div class="rank-row ${r[0]==='Aldyth'?'me':''}"><div class="rank-medal">${['🥇','🥈','🥉'][i]}</div>
-      <div class="rank-info"><div class="rn">${r[0]}</div></div><div class="rank-pts">${r[1]}</div></div>`).join('')}</div>`).join('');
+    const apps=currentPortals();
+    C.innerHTML=apps.map(app=>{
+      const rows=appRows(app),records=appRecordCount(app);
+      const body=rows.length?rows.slice(0,3).map((r,i)=>`<div class="rank-row ${r.id===CTX.personId?'me':''}"><div class="rank-medal">${medal(i)}</div>
+        <div class="rank-info"><div class="rn">${r.name}${r.id===CTX.personId?' (you)':''}</div><div class="rd">${r.events} scored event${r.events===1?'':'s'}</div></div><div class="rank-pts">${r.diamonds} 💎</div></div>`).join('')
+        :`<div class="rank-row"><div class="rank-medal">💎</div><div class="rank-info"><div class="rn">Ready to score</div><div class="rd">${records} app record${records===1?'':'s'} synced</div></div><div class="rank-pts">0 💎</div></div>`;
+      return `<div class="board-card"><h3>${app.icon||'💎'} ${app.name}</h3><div class="bsub">${app.badgeTxt||'Connected'} · ${records} stored record${records===1?'':'s'}</div>${body}</div>`;
+    }).join('');
   } else {
+    const latest=economyEvents().slice(0,5),pending=(ECONOMY&&ECONOMY.agentActions||[]).filter(a=>a.type==='approval.waiting');
+    const topApp=economyApps().slice().sort((a,b)=>(b.totalDiamonds-a.totalDiamonds))[0];
     C.innerHTML=`
-    <div class="showcase"><h3>⚡ This Week's Clock Masters</h3>
-      <div class="sc-row"><span>Peak accuracy</span><b>Keyla · 94%</b></div>
-      <div class="sc-row"><span>Longest streak</span><b>Aldyth · 12 days</b></div>
-      <div class="sc-row"><span>Most improved</span><b>Baginda · +18%</b></div></div>
-    <div class="showcase"><h3>🎾 Weekend Padel Warriors</h3>
-      <div class="sc-row"><span>Most games</span><b>Baginda · 5</b></div>
-      <div class="sc-row"><span>Fastest match</span><b>Kinara · 18 min</b></div></div>
-    <div class="showcase"><h3>🌸 Moments Memory</h3>
-      <div class="sc-row"><span>Memories saved</span><b>Keyla · 18</b></div>
-      <div class="sc-row"><span>Family favourite</span><b>Beach day 🏖️</b></div></div>`;
+    <div class="showcase"><h3>💎 Latest Diamond Moments</h3>
+      ${latest.length?latest.map(e=>`<div class="sc-row"><span>${e.personName} · ${e.appName}</span><b>+${e.amount} 💎</b></div>`).join(''):'<div class="sc-row"><span>No diamond moments yet</span><b>Open a synced app</b></div>'}</div>
+    <div class="showcase"><h3>👑 Leader Attention</h3>
+      ${pending.length?pending.slice(0,4).map(a=>`<div class="sc-row"><span>${a.title||'Approval waiting'}</span><b>Waiting</b></div>`).join(''):'<div class="sc-row"><span>No pending approvals</span><b>Clear</b></div>'}</div>
+    <div class="showcase"><h3>🚀 Strongest App</h3>
+      <div class="sc-row"><span>${topApp?topApp.name:'No synced app yet'}</span><b>${topApp?topApp.totalDiamonds+' 💎':'Install one'}</b></div>
+      <div class="sc-row"><span>Total circle diamonds</span><b>${S.diamonds} 💎</b></div></div>`;
   }
 }
 
@@ -1334,31 +1481,57 @@ function bindCircle(){
   $('#celebrateBtn').onclick=()=>{ celebrateGoal(); toast('You cheered the circle! 🎉','💜'); };
 }
 function renderCircle(){
-  $('#cDiamonds').textContent=(2840).toLocaleString();
-  $('#memberList').innerHTML=MEMBERS.map(m=>`
-    <div class="member" data-m="${m.name}">
-      <div class="m-pet" style="background:linear-gradient(135deg,${SHOP.species.find(s=>s.id===m.species).color},#ffffff55)">${m.pet}</div>
-      <div class="m-info"><div class="mn">${m.name}${m.me?'':''} ${m.rank===1?'👑':''}</div><div class="md">${m.pts} pts · ${m.streak}-day streak</div></div>
-      <div class="m-rank">#${m.rank}</div>
+  const rows=personScores();
+  $('#cDiamonds').textContent=S.diamonds.toLocaleString();
+  $('#memberList').innerHTML=rows.map((m,i)=>`
+    <div class="member" data-m="${m.id}">
+      <div class="m-pet" style="background:linear-gradient(135deg,${m.color},#ffffff55)">${(m.name||'?')[0]}</div>
+      <div class="m-info"><div class="mn">${m.name}${m.me?' (you)':''} ${i===0?'👑':''}</div><div class="md">${m.diamonds} diamonds · ${m.events} event${m.events===1?'':'s'}</div></div>
+      <div class="m-rank">#${i+1}</div>
       <button class="cheer" data-cheer="${m.name}">Cheer</button>
     </div>`).join('');
-  $$('#memberList .cheer').forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); earn(3,b); toast(`Cheered ${b.dataset.cheer}! +3 💎`,'👏'); });
+  $$('#memberList .cheer').forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); toast(`Cheered ${b.dataset.cheer}!`,'👏'); });
   $$('#memberList .member').forEach(el=>el.onclick=()=>openPassport(el.dataset.m));
   const pct=Math.round(S.goalNow/S.goalMax*100);
   $('#goalFill').style.width=pct+'%'; $('#goalNow').textContent=S.goalNow;
   $('#goalLeft').textContent=(S.goalMax-S.goalNow)+' to hatch';
 }
-function openPassport(name){
-  const m=MEMBERS.find(x=>x.name===name); const sp=SHOP.species.find(s=>s.id===m.species);
+function openPassport(id){
+  const rows=personScores(),idx=rows.findIndex(x=>x.id===id),m=rows[idx]||rows[0]; if(!m)return;
+  const giftPanel=canUseAdminPowers()?`<div class="section-label" style="margin-top:12px">Leader Diamond Gift</div>
+    <div class="gift-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 10px">
+      <button class="btn-equip" onclick="sendDiamondGift('${m.id}',10)">+10 💎</button>
+      <button class="btn-equip" onclick="sendDiamondGift('${m.id}',25)">+25 💎</button>
+      <button class="btn-equip" onclick="sendDiamondGift('${m.id}',50)">+50 💎</button>
+    </div>`:"";
   openModal(`<div class="modal-handle"></div>
-    <div class="buy-preview" style="background:linear-gradient(135deg,${sp.color},#ffffff55);font-size:70px">${m.pet}</div>
-    <h2>${m.name}</h2><p class="msub">${sp.name} · ${sp.desc} · Rank #${m.rank}</p>
+    <div class="buy-preview" style="background:linear-gradient(135deg,${m.color},#ffffff55);font-size:70px">${(m.name||'?')[0]}</div>
+    <h2>${m.name}</h2><p class="msub">${ECONOMY?'Real circle economy':'Demo profile'} · Rank #${idx+1}</p>
     <div class="stat-strip" style="margin:0 0 8px">
-      <div class="stat-card"><div class="sv">${m.pts}</div><div class="sl">Points</div></div>
-      <div class="stat-card"><div class="sv">${m.streak}</div><div class="sl">Streak</div></div>
-      <div class="stat-card"><div class="sv">#${m.rank}</div><div class="sl">Rank</div></div></div>
-    <button class="btn btn-primary" style="width:100%" onclick="earn(3,document.querySelector('#walletBtn'));toast('Cheered ${m.name}! +3 💎','👏');closeModal()">👏 Send a cheer</button>
+      <div class="stat-card"><div class="sv">${m.diamonds}</div><div class="sl">Diamonds</div></div>
+      <div class="stat-card"><div class="sv">${m.events}</div><div class="sl">Events</div></div>
+      <div class="stat-card"><div class="sv">#${idx+1}</div><div class="sl">Rank</div></div></div>
+    ${giftPanel}
+    <button class="btn btn-primary" style="width:100%" onclick="toast('Cheered ${m.name}!','👏');closeModal()">👏 Send a cheer</button>
     <button class="modal-close" onclick="closeModal()">Close</button>`);
+}
+function sendDiamondGift(personId,amount){
+  if(!requireAdminPower())return;
+  const target=(economyPeople().find(p=>p.id===personId)||personScores().find(p=>p.id===personId)||{name:'member'});
+  const sourceRecordId='diamond-gift-'+personId+'-'+Date.now();
+  Bridge.request("KINETIK_EVENT",{
+    eventType:"diamond.gift",
+    amount,
+    personId,
+    circleId:CTX.circleId,
+    sourceRecordId,
+    metadata:{title:'Leader diamond gift',kind:'leader.gift',giftedByPersonId:CTX.personId,giftedByName:CTX.personName,recipientName:target.name,personName:target.name}
+  }).then(result=>{
+    if(!result||!result.ok){toast(result&&result.error?result.error:'Gift could not be sent','⚠️');return;}
+    toast(`Gifted ${result.diamond?result.diamond.amount:amount} 💎 to ${target.name}`,'🎁');
+    closeModal();
+    refreshEconomy().then(()=>{renderCircle();renderBoards('overall');renderWallet();});
+  });
 }
 function celebrateGoal(){
   for(let i=0;i<20;i++){ setTimeout(()=>{ const x=Math.random()*window.innerWidth, y=window.innerHeight*0.4; burst(x,y); }, i*60); }
@@ -1423,7 +1596,7 @@ function openBuy(it){
     ${S.diamonds>=it.price
       ? `<button class="btn btn-primary" style="width:100%" onclick="buyItem('${it.id}')">Buy & equip</button>`
       : `<button class="btn btn-primary" style="width:100%;opacity:.5;pointer-events:none">Need ${it.price-S.diamonds} more 💎</button>
-         <p style="text-align:center;font-size:12px;color:var(--ink-faint);margin-top:10px">Earn diamonds in the App World, or use Simulation Mode in settings.</p>`}
+         <p style="text-align:center;font-size:12px;color:var(--ink-faint);margin-top:10px">Earn diamonds in synced apps${canUseAdminPowers()?', or use Leader Superpowers for testing.':'.'}</p>`}
     <button class="modal-close" onclick="closeModal()">Close</button>`);
 }
 function buyItem(id){
@@ -1472,7 +1645,7 @@ function openPetActions(){
 }
 function petAction(a){
   closeModal();
-  if(a==='play'){ addEnergy('play',6); pet.celebrate(); speak('So fun! +6 Play ⚡'); earn(3,$('#walletBtn')); }
+  if(a==='play'){ addEnergy('play',6); pet.celebrate(); speak('So fun! +6 Play ⚡'); toast('Play energy added','🎮'); }
   else if(a==='feed'){ addEnergy('care',6); pet.bounce(); speak('Yum! +6 Care 💚'); }
   else if(a==='rest'){ addEnergy('calm',8); pet.levitate(true); speak('Zzz... +8 Calm 🌙'); setTimeout(()=>pet.levitate(false),2000); }
   else if(a==='stats'){ $('#sheet').classList.add('full'); }
@@ -1524,7 +1697,7 @@ function openEvolution(){
     ${ready
       ? `<button class="btn btn-primary" style="width:100%" onclick="doEvolve('${dom}')">🌟 Evolve now</button>`
       : `<button class="btn btn-primary" style="width:100%;opacity:.5;pointer-events:none">Keep feeding ${ENERGY_META[dom].label}</button>
-         <p style="text-align:center;font-size:12px;color:var(--ink-faint);margin-top:10px">Reach 100% — or use Simulation Mode to evolve instantly.</p>`}
+         <p style="text-align:center;font-size:12px;color:var(--ink-faint);margin-top:10px">Reach 100%${canUseAdminPowers()?' — or use Leader Superpowers to test evolution.':'.'}</p>`}
     <button class="modal-close" onclick="closeModal()">Close</button>`);
 }
 function doEvolve(dom){
@@ -1555,29 +1728,29 @@ function bindTopbar(){
 }
 function openWallet(){
   openModal(`<div class="modal-handle"></div>
-    <h2>💎 Your Diamonds</h2><p class="msub">Earn by completing apps, quests & cheers</p>
+    <h2>💎 Circle Diamonds</h2><p class="msub">${ECONOMY?'Synced from the real Buddy economy':'Open inside Kinetik to sync with the circle economy'}</p>
     <div class="buy-preview" style="background:linear-gradient(135deg,#7fe9ff,#0a8fd6);font-size:52px;color:#fff">${S.diamonds.toLocaleString()} 💎</div>
     <div class="set-row"><span class="sr-ic">🗺️</span><div class="sr-txt"><div class="srt">Play apps</div><div class="srd">Open the App World to earn</div></div><button class="btn-equip" onclick="closeModal();gotoPage('map')">Go</button></div>
-    <div class="set-row"><span class="sr-ic">✨</span><div class="sr-txt"><div class="srt">Simulation Mode</div><div class="srd">Unlimited diamonds for testing</div></div><button class="btn-equip" onclick="closeModal();openSettings()">Open</button></div>
+    ${canUseAdminPowers()?`<div class="set-row"><span class="sr-ic">👑</span><div class="sr-txt"><div class="srt">Leader Superpowers</div><div class="srd">Admin-level testing tools</div></div><button class="btn-equip" onclick="closeModal();openSettings()">Open</button></div>`:""}
     <button class="modal-close" onclick="closeModal()">Close</button>`);
 }
 function openSettings(){
   openModal(`<div class="modal-handle"></div>
-    <h2>Settings</h2><p class="msub">Theme, simulation & reset</p>
+    <h2>Settings</h2><p class="msub">Theme${canUseAdminPowers()?', Leader Superpowers & reset':''}</p>
     <div class="set-row"><span class="sr-ic">🌙</span><div class="sr-txt"><div class="srt">Dark theme</div><div class="srd">Light is the default</div></div>
       <div class="toggle ${S.theme==='dark'?'on':''}" id="themeToggle"><div class="knob"></div></div></div>
 
-    <div class="section-label" style="margin-top:18px">Simulation Mode (cheats)</div>
-    <div class="cheat-banner">⚡ Test the full economy — add diamonds, fill energy, evolve and unlock everything instantly.</div>
+    ${canUseAdminPowers()?`<div class="section-label" style="margin-top:18px">Leader Superpowers</div>
+    <div class="cheat-banner">👑 Admin-level powers for testing the Buddy economy, evolution, and closet without waiting for real sessions.</div>
     <div class="cheat-grid">
-      <button class="cheat-btn" onclick="cheatDiamonds(500)"><span class="cb-ic">💎</span>+500 Diamonds</button>
-      <button class="cheat-btn" onclick="cheatDiamonds(99999)"><span class="cb-ic">🤑</span>Unlimited 💎</button>
+      <button class="cheat-btn" onclick="cheatDiamonds(500)"><span class="cb-ic">💎</span>Grant +500</button>
+      <button class="cheat-btn" onclick="cheatDiamonds(99999)"><span class="cb-ic">👑</span>Treasury Burst</button>
       <button class="cheat-btn" onclick="cheatEnergy()"><span class="cb-ic">🔋</span>Fill Energy</button>
       <button class="cheat-btn" onclick="cheatLevel()"><span class="cb-ic">⬆️</span>Level Up</button>
       <button class="cheat-btn" onclick="cheatUnlock()"><span class="cb-ic">🔓</span>Unlock All Items</button>
       <button class="cheat-btn" onclick="cheatEvolve()"><span class="cb-ic">🌟</span>Evolve Now</button>
     </div>
-    <button class="cheat-btn danger" style="width:100%;flex-direction:row;margin-top:10px" onclick="cheatReset()"><span class="cb-ic">♻️</span>Reset Everything</button>
+    <button class="cheat-btn danger" style="width:100%;flex-direction:row;margin-top:10px" onclick="cheatReset()"><span class="cb-ic">♻️</span>Reset Buddy Lab</button>`:""}
     <button class="modal-close" onclick="closeModal()">Done</button>`);
   $('#themeToggle').onclick=toggleTheme;
 }
@@ -1587,12 +1760,13 @@ function toggleTheme(){
   $('#themeToggle').classList.toggle('on',S.theme==='dark');
   save();
 }
-function cheatDiamonds(n){ S.diamonds+=n; renderWallet(); save(); flyDiamonds(Math.min(n,30),$('#settingsBtn')); toast(n>=99999?'Unlimited diamonds!':`+${n} 💎`,'🤑'); renderShop(); }
-function cheatEnergy(){ for(const k in S.energy) S.energy[k]=80; save(); renderEnergy(); renderSheet(); updateEvoBanner(); toast('All energy filled to 80%','🔋'); if(pet)pet.celebrate(); }
-function cheatLevel(){ S.level+=1; S.xp=0; save(); renderSheet(); updateEvoBanner(); toast(`Now level ${S.level}`,'⬆️'); if(pet)pet.celebrate(); }
-function cheatUnlock(){ for(const c in SHOP) SHOP[c].forEach(it=>{ if(!S.owned.includes(it.id)) S.owned.push(it.id); }); save(); renderShop(); toast('All items unlocked','🔓'); }
-function cheatEvolve(){ closeModal(); for(const k in S.energy) S.energy[k]=Math.max(S.energy[k],60); doEvolve(dominantEnergy()); }
+function cheatDiamonds(n){ if(!requireAdminPower())return; S.diamonds+=n; renderWallet(); save(); flyDiamonds(Math.min(n,30),$('#settingsBtn')); toast(n>=99999?'Leader treasury burst!':`Leader granted +${n} 💎`,'👑'); renderShop(); }
+function cheatEnergy(){ if(!requireAdminPower())return; for(const k in S.energy) S.energy[k]=80; save(); renderEnergy(); renderSheet(); updateEvoBanner(); toast('Leader filled all energy','🔋'); if(pet)pet.celebrate(); }
+function cheatLevel(){ if(!requireAdminPower())return; S.level+=1; S.xp=0; save(); renderSheet(); updateEvoBanner(); toast(`Leader promoted Nova to level ${S.level}`,'⬆️'); if(pet)pet.celebrate(); }
+function cheatUnlock(){ if(!requireAdminPower())return; for(const c in SHOP) SHOP[c].forEach(it=>{ if(!S.owned.includes(it.id)) S.owned.push(it.id); }); save(); renderShop(); toast('Leader unlocked the closet','🔓'); }
+function cheatEvolve(){ if(!requireAdminPower())return; closeModal(); for(const k in S.energy) S.energy[k]=Math.max(S.energy[k],60); doEvolve(dominantEnergy()); }
 function cheatReset(){
+  if(!requireAdminPower())return;
   openModal(`<div class="modal-handle"></div><h2>Reset everything?</h2><p class="msub">This clears all progress and starts fresh.</p>
     <button class="btn btn-primary" style="width:100%;background:linear-gradient(135deg,#f5504a,#ff8a5c)" onclick="localStorage.removeItem('kbw_state');location.reload()">Yes, reset</button>
     <button class="modal-close" onclick="openSettings()">Cancel</button>`);

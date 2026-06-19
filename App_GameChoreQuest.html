@@ -3,20 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Chore Quest</title>
+<title>Home Quest</title>
 <script type="application/kinetik-app+json">
 {
   "appId": "chore-quest",
-  "name": "Chore Quest",
-  "shortName": "Chores",
-  "icon": "🧹",
-  "gradient": ["#34d977", "#14b8a6"],
-  "category": "family",
-  "tagline": "Do chores, earn diamonds, power your Buddy.",
-  "audience": "family",
-  "worksWith": ["kinetik-bus", "kinetik-buddy-world", "offline", "standalone"],
-  "emits": ["diamonds.earned", "chore.completed", "chore.approved"],
-  "status": "prototype"
+  "name": "Home Quest",
+  "shortName": "Home Quest",
+  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M14 31l18-15 18 15'/><path d='M19 28v21h26V28'/><path d='M26 49V36h12v13'/><path d='M45 13c-3 1-5 3-6 6-1-3-3-5-6-6 3-1 5-3 6-6 1 3 3 5 6 6z' fill='white' stroke='none'/><\/svg>",
+  "homeIcon": "🧹",
+  "gradient": [
+    "#0f766e",
+    "#f59e0b"
+  ],
+  "category": "games",
+  "tagline": "Turn home jobs into diamonds.",
+  "about": "A kid-first chore quest where finished home jobs become approval cards, Buddy energy, and diamond progress after a grown-up checks them.",
+  "audience": "kids",
+  "circleTypes": [
+    "family"
+  ],
+  "worksWith": [
+    "offline",
+    "standalone"
+  ],
+  "emits": [
+    "task.completed",
+    "task.approved"
+  ],
+  "status": "live",
+  "minMembers": 1
 }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -407,12 +422,27 @@ function rollDay(){
    ========================================================= */
 let bus=null;
 try{ bus=new BroadcastChannel('kinetik'); }catch(e){}
+function shellEconomyEvent(type,payload,ts){
+  if(window.parent===window)return;
+  const map={
+    'chore.completed':{eventType:'task.completed',amount:0,status:'pending'},
+    'chore.approved':{eventType:'task.approved',status:'approved'}
+  }[type];
+  if(!map)return;
+  const kid=payload.kid||payload.person||S.active;
+  const choreId=payload.choreId||String(payload.chore||'task').toLowerCase().replace(/[^a-z0-9]+/g,'-');
+  const sourceRecordId=['chore',kid,choreId,todayStr(),map.status].join(':');
+  const metadata={title:payload.chore||'Home quest',chore:payload.chore||'',choreId,kid,kidName:KIDS[kid]&&KIDS[kid].name||kid,energy:payload.energy||'care',approvalRequired:map.status==='pending',status:map.status};
+  try{ window.parent.postMessage({type:'KINETIK_EVENT',appId:'chore-quest',eventType:map.eventType,sourceRecordId,amount:Number(payload.amount||map.amount||0),metadata},'*'); }catch(e){}
+}
 function busSend(type,payload){
   const ev=Object.assign({type,ts:Date.now(),source:'chore-quest'},payload);
   // 1) live broadcast (Buddy updates instantly if open)
   try{ bus&&bus.postMessage(ev); }catch(e){}
   // 2) event log
   try{ const log=JSON.parse(localStorage.getItem('kinetik_events')||'[]'); log.push(ev); localStorage.setItem('kinetik_events',JSON.stringify(log.slice(-60))); }catch(e){}
+  // 3) main Kinetik shell economy (iframe/AppHost)
+  shellEconomyEvent(type,payload||{},ev.ts);
 }
 /* credit diamonds to the Buddy: increments the pending pool Buddy claims on open */
 function creditBuddy(amount,meta){
@@ -518,7 +548,7 @@ function doChore(id,btnEl){
   if(S.approvalMode){
     st[id]='pending'; save(); renderChores(); renderHero(); renderBadge();
     toast('Sent to a grown-up to check ✓','⏳');
-    busSend('chore.completed',{chore:c.name});
+    busSend('chore.completed',{chore:c.name,choreId:c.id,kid:S.active,energy:c.energy,approvalRequired:true});
   } else {
     awardChore(id,btnEl);
   }
@@ -534,7 +564,7 @@ function awardChore(id,fromEl){
   save();
   // THE LINK: send diamonds to the Buddy
   creditBuddy(c.reward,{name:c.name,energy:c.energy});
-  busSend('chore.approved',{chore:c.name,amount:c.reward});
+  busSend('chore.approved',{chore:c.name,choreId:c.id,kid:S.active,energy:c.energy,amount:c.reward});
   renderAll();
   celebrate(c);
 }
@@ -628,7 +658,7 @@ function approveFor(kid,id){
   S.history.unshift({kid,choreId:id,name:c.name,icon:c.icon,amount:c.reward,ts:Date.now()}); S.history=S.history.slice(0,40);
   save();
   creditBuddy(c.reward,{name:c.name,energy:c.energy});
-  busSend('chore.approved',{chore:c.name,amount:c.reward});
+  busSend('chore.approved',{chore:c.name,choreId:id,kid,energy:c.energy,amount:c.reward});
   toast(`Approved · +${c.reward} 💎 to ${KIDS[kid].buddy}`,'✅');
   if(kid===S.active) celebrate(c);
   renderAll();

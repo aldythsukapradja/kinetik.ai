@@ -314,6 +314,23 @@ html[data-theme="dark"] #splash{background:linear-gradient(180deg,rgba(5,7,15,.9
 .askcard .arow .bar{width:3px;height:22px;border-radius:2px;flex:0 0 auto}
 .askcard .arow .sub{color:var(--dim);font-size:12px}
 .askcard .dh{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-top:7px}
+.askcard .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.spineStats{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;max-width:430px}
+.spineStat{display:flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:var(--chip);border:1px solid var(--brd2);font-size:11.5px;color:var(--dim);font-weight:700}
+.spineStat b{color:var(--text);font-size:12px}
+.spineModes{display:flex;gap:6px;padding:4px;border-radius:999px;background:var(--chip);border:1px solid var(--brd2);max-width:100%;overflow-x:auto;scrollbar-width:none}
+.spineModes::-webkit-scrollbar{display:none}
+.spineMode{border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;color:var(--dim);white-space:nowrap}
+.spineMode.on{color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 8px 20px color-mix(in srgb,var(--acc) 24%,transparent)}
+.spineLead{max-width:440px;text-align:center;color:var(--dim);font-size:13.5px;line-height:1.55}
+.spineHint{font-size:12px;color:var(--dim);margin-top:2px;line-height:1.45}
+.spinePhotoGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0 5px}
+.spinePhoto{aspect-ratio:1;border-radius:14px;overflow:hidden;background:var(--chip);position:relative;border:1px solid var(--brd2)}
+.spinePhoto img{width:100%;height:100%;object-fit:cover;display:block}
+.spinePhoto span{position:absolute;left:6px;right:6px;bottom:5px;border-radius:999px;padding:3px 6px;background:rgba(8,12,30,.48);color:#fff;font-size:9.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spineMini{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
+.spineMini span{border-radius:12px;background:var(--chip);padding:8px 9px;font-size:12px;color:var(--dim)}
+.spineMini b{display:block;color:var(--text);font-size:13px}
 #askInput{flex:1;resize:none;max-height:110px;background:var(--glass2);border:1px solid var(--brd);border-radius:24px;padding:13px 17px;outline:none;backdrop-filter:blur(18px)}
 #askSend{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;flex:0 0 auto;display:flex;align-items:center;justify-content:center;transition:all var(--dur1)}
 #askSend[disabled]{opacity:.35}
@@ -331,9 +348,12 @@ html[data-theme="dark"] #splash{background:linear-gradient(180deg,rgba(5,7,15,.9
 .appgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:6px 2px;align-content:start}
 .appico{display:flex;flex-direction:column;align-items:center;gap:7px;transition:transform var(--dur1) var(--ease)}
 .appico:active{transform:scale(.9)}
-.appico .ic{width:100%;aspect-ratio:1;max-width:74px;border-radius:26%;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 10px 26px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.35)}
+.appico .ic{width:100%;aspect-ratio:1;max-width:74px;border-radius:26%;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 10px 26px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.35);position:relative;overflow:visible}
+.appico .ic.homeemoji{font-size:34px;text-shadow:0 4px 12px rgba(0,0,0,.18)}
 .appico.store .ic{background:transparent!important;overflow:hidden;box-shadow:0 12px 30px rgba(8,12,30,.28)}
 .appico.store .ic svg{width:100%;height:100%}
+.appico .diamond-dot{position:absolute;right:-5px;top:-5px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#e8fbff,#7fe9ff 42%,#26c6ff);border:2px solid color-mix(in srgb,var(--bg0) 82%,white);box-shadow:0 8px 18px rgba(38,198,255,.42),inset 0 1px 0 rgba(255,255,255,.9);font-size:12px;line-height:1;z-index:2}
+.appico .diamond-dot.hub{background:linear-gradient(135deg,#fff7cc,#7fe9ff 52%,#7b63ff);box-shadow:0 8px 18px rgba(123,99,255,.34),inset 0 1px 0 rgba(255,255,255,.9)}
 .appico span{font-size:11px;font-weight:600;color:var(--text);opacity:.85;text-align:center;display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .feat{border-radius:var(--radius-lg);position:relative;overflow:hidden;padding:22px 20px;display:flex;flex-direction:column;gap:6px;color:#fff;margin-bottom:16px;box-shadow:var(--shadow)}
 .feat .k{font-size:10px;font-weight:800;letter-spacing:.16em;opacity:.85}
@@ -351,10 +371,11 @@ html[data-theme="dark"] #splash{background:linear-gradient(180deg,rgba(5,7,15,.9
 .getbtn{margin-left:auto;flex:0 0 auto;border-radius:999px;padding:7px 19px;font-size:13px;font-weight:700;letter-spacing:.01em;background:color-mix(in srgb,#0a84ff 13%,var(--chip));color:#0a84ff;transition:transform var(--dur1),background var(--dur1),color var(--dur1)}
 .getbtn:active{transform:scale(.94);background:#0a84ff;color:#fff}
 .getbtn.soon{opacity:.5;pointer-events:none}
-/* Manifest icons are inline foreground SVGs. Keep marks contained inside shell tiles. */
+/* SVG manifest icons are technical fallbacks; human-facing app avatars use emoji. */
 .appico .ic svg,.strow .ic svg,.ascard .art svg,.ascard .ic svg,.ashero .glyph svg,.ashero .ic svg,.adhero .ic svg,.shot svg{width:72%;height:72%;display:block}
 .ashero .glyph svg{width:58px;height:58px}
 .shot svg{width:42%;height:42%}
+.appavatar{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;text-shadow:0 4px 12px rgba(0,0,0,.18)}
 /* defensive fallback for legacy initials; current App_*.html manifests use inline SVGs */
 .mono{color:#fff;font-weight:800;letter-spacing:-.02em;line-height:1;display:block}
 .mono[data-n="2"]{font-size:.74em}
@@ -638,8 +659,16 @@ html[data-theme="dark"] #splash{background:linear-gradient(180deg,rgba(5,7,15,.9
 /* app host */
 #appHost{position:fixed;top:0;left:0;right:0;height:var(--app-height);z-index:70;display:none;flex-direction:column;background:var(--bg0)}
 #appHost.on{display:flex}
-#appHostBar{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + var(--sat)) 16px 10px;background:var(--glass2);backdrop-filter:blur(20px);border-bottom:1px solid var(--brd2)}
-#appHostBar b{font-size:15px}
+#appHostBar{display:flex;align-items:center;gap:10px;padding:calc(10px + var(--sat)) 16px 10px;background:var(--glass2);backdrop-filter:blur(20px);border-bottom:1px solid var(--brd2)}
+#appHostTitle{font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.appHostActions{margin-left:auto;display:flex;align-items:center;gap:8px;flex:0 0 auto}
+#appEcoBadge{display:flex;align-items:center;gap:5px;min-height:34px;border-radius:999px;padding:6px 10px;background:color-mix(in srgb,var(--acc) 11%,var(--glass2));border:1px solid color-mix(in srgb,var(--acc) 22%,var(--brd2));box-shadow:inset 0 1px 0 rgba(255,255,255,.32),0 8px 20px rgba(30,80,130,.13);font-size:12px;font-weight:900;color:var(--text);transition:transform var(--dur1),background var(--dur1),opacity var(--dur1)}
+#appEcoBadge .gem{font-size:15px;filter:drop-shadow(0 2px 5px rgba(38,198,255,.38))}
+#appEcoBadge small{font-size:9px;line-height:1;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:900}
+#appEcoBadge.synced small{color:var(--acc)}
+#appEcoBadge.unsynced{opacity:.72}
+#appEcoBadge.bump{animation:diamondBump .62s cubic-bezier(.2,.9,.25,1)}
+@keyframes diamondBump{0%{transform:scale(1)}35%{transform:scale(1.13)}70%{transform:scale(.97)}100%{transform:scale(1)}}
 #appFrame{flex:1;border:none;width:100%;background:transparent}
 /* ============ ME ============ */
 .me-prof{display:flex;align-items:center;gap:15px;border-radius:var(--radius-md);padding:18px;margin-bottom:13px}
@@ -867,7 +896,7 @@ html[data-theme="dark"] #splash{background:linear-gradient(180deg,rgba(5,7,15,.9
   </div>
 </div>
 
-<div id="appHost"><div id="appHostBar"><b id="appHostTitle">App</b><button class="btn ghost" style="padding:7px 16px" id="appHostDone">Done</button></div><iframe id="appFrame" title="app"></iframe></div>
+<div id="appHost"><div id="appHostBar"><b id="appHostTitle">App</b><div class="appHostActions"><div id="appEcoBadge" class="unsynced" title="Buddy economy ready"><span class="gem">💎</span><b id="appEcoCount">0</b><small id="appEcoState">Ready</small></div><button class="btn ghost" style="padding:7px 16px" id="appHostDone">Done</button></div></div><iframe id="appFrame" title="app"></iframe></div>
 <div id="sheetLayer"><div id="scrim"></div><div id="sheet" class="glass"><div class="grab"></div><h3 id="sheetTitle"></h3><div id="sheetBody"></div></div></div>
 <div id="toasts"></div>
 
@@ -1016,6 +1045,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Cinema",
     "file": "App_EntertainmentCinema.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><rect x='12' y='16' width='40' height='32' rx='7'/><path d='M22 16l5 9M35 16l5 9M12 26h40'/><path d='M29 32l12 7-12 7z' fill='white' stroke='none'/><\/svg>",
+    "avatar": "🎬",
+    "homeGlyph": "🎬",
     "gradient": [
       "#070b18",
       "#2563eb"
@@ -1032,6 +1063,7 @@ const BUILTIN_APP_CATALOG=[
     "worksWith": [
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A private circle video and cinematic media space for Kinetik. Today it hosts curated story experiences; later it becomes the YouTube-style home for family, friends, learning clips, and creator channels."
   },
@@ -1042,6 +1074,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Home Quest",
     "file": "App_GameChoreQuest.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M14 31l18-15 18 15'/><path d='M19 28v21h26V28'/><path d='M26 49V36h12v13'/><path d='M45 13c-3 1-5 3-6 6-1-3-3-5-6-6 3-1 5-3 6-6 1 3 3 5 6 6z' fill='white' stroke='none'/><\/svg>",
+    "avatar": "🧹",
+    "homeGlyph": "🧹",
     "gradient": [
       "#0f766e",
       "#f59e0b"
@@ -1058,8 +1092,12 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [
+      "task.completed",
+      "task.approved"
+    ],
     "minMembers": 1,
-    "desc": "A family chore quest where kids complete home missions, adults approve rewards, and every useful contribution helps the Kinetik Buddy grow."
+    "desc": "A kid-first chore quest where finished home jobs become approval cards, Buddy energy, and diamond progress after a grown-up checks them."
   },
   {
     "id": "game-circle-chess",
@@ -1068,6 +1106,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Chess",
     "file": "App_GameCircleChess.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M20 49h25M24 41h17M28 35c-6-5-5-14 4-20 6 4 12 5 14 12-4 2-9 2-12 0'/><path d='M34 27c-1 5 2 9 7 14'/><circle cx='27' cy='23' r='1.7' fill='white' stroke='none'/><\/svg>",
+    "avatar": "♟️",
+    "homeGlyph": "♟️",
     "gradient": [
       "#0e9f6e",
       "#e8a53c"
@@ -1084,6 +1124,12 @@ const BUILTIN_APP_CATALOG=[
     "worksWith": [
       "standalone"
     ],
+    "emits": [
+      "practice.completed",
+      "mastery.unlocked",
+      "game.round.completed",
+      "game.win"
+    ],
     "minMembers": 1,
     "desc": "A friendly chess-thinking app for tactics, pattern recognition, lessons, and circle challenges. Built for calm practice before competitive play."
   },
@@ -1094,6 +1140,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Clock",
     "file": "App_GameClockTrainer.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='32' cy='32' r='19'/><path d='M32 20v13l9 6'/><path d='M18 12l-5 6M46 12l5 6'/><path d='M32 52v4M12 32H8M56 32h-4'/><\/svg>",
+    "avatar": "🕒",
+    "homeGlyph": "🕒",
     "gradient": [
       "#4f46e5",
       "#f59e0b"
@@ -1110,6 +1158,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A kids time-reading quest for analog clocks, elapsed time, and world-clock confidence, with crowns, hearts, streaks, and clear parent-visible progress."
   },
@@ -1120,6 +1169,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Clash",
     "file": "App_GameCodeClash.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M25 18L13 32l12 14M39 18l12 14-12 14'/><path d='M35 14l-8 36'/><path d='M43 10c-2 5-5 8-10 10 5 2 8 5 10 10 2-5 5-8 10-10-5-2-8-5-10-10z' fill='white' stroke='none' opacity='.9'/><\/svg>",
+    "avatar": "⚔️",
+    "homeGlyph": "⚔️",
     "gradient": [
       "#ec4899",
       "#6366f1"
@@ -1137,6 +1188,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A fast pass-and-play logic duel. Guess the hidden color code, use hints carefully, build streaks, and compare clean round scores with the circle."
   },
@@ -1147,6 +1199,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Detective",
     "file": "App_GameDataDetective.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='27' cy='27' r='13'/><path d='M37 37l12 12'/><path d='M21 27h12M27 21v12'/><circle cx='45' cy='17' r='4' fill='white' stroke='none'/><path d='M45 21v8M41 25h8'/><\/svg>",
+    "avatar": "🔎",
+    "homeGlyph": "🔎",
     "gradient": [
       "#0f5132",
       "#14b8a6"
@@ -1164,6 +1218,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A practical analytics game for charts, KPIs, funnels, A/B tests, statistics, misleading visuals, and analyst case decisions."
   },
@@ -1174,9 +1229,11 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Emoji",
     "file": "App_GameEmojiParty.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='30' cy='34' r='16'/><path d='M24 31h.1M36 31h.1'/><path d='M23 40c4 4 10 4 14 0'/><path d='M46 12l5 5M15 15l-4 6M47 35l6 1M20 9l2 7'/><path d='M42 19c-2 1-4 3-5 6-1-3-3-5-6-6 3-1 5-3 6-6 1 3 3 5 5 6z' fill='white' stroke='none'/><\/svg>",
+    "avatar": "😄",
+    "homeGlyph": "😄",
     "gradient": [
-      "#f59e0b",
-      "#ec4899"
+      "#7c3aed",
+      "#ff5d8f"
     ],
     "category": "games",
     "tagline": "Guess fast, laugh faster.",
@@ -1191,8 +1248,11 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [
+      "game.round.completed"
+    ],
     "minMembers": 1,
-    "desc": "A light party guessing game for family and friends. Tap multiple-choice emoji clues, run party-card rounds, build streaks, and share scores."
+    "desc": "A polished party guessing game for family and friends. Decode emoji clues, play solo, teams, or audience mode, use hints, and finish with a circle-friendly score reveal."
   },
   {
     "id": "game-ladder-rush",
@@ -1201,6 +1261,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Trail",
     "file": "App_GameLadderRush.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M18 50c8-3 9-11 14-18s8-12 16-15'/><path d='M16 19h14M20 28h15M24 37h15M28 46h15'/><circle cx='48' cy='17' r='5' fill='white' stroke='none'/><path d='M14 50h38'/><\/svg>",
+    "avatar": "🎲",
+    "homeGlyph": "🎲",
     "gradient": [
       "#6c5ce7",
       "#18b981"
@@ -1217,6 +1279,10 @@ const BUILTIN_APP_CATALOG=[
     "worksWith": [
       "standalone"
     ],
+    "emits": [
+      "game.round.completed",
+      "game.win"
+    ],
     "minMembers": 1,
     "desc": "A progression game for judgment, reflection, and everyday decisions. Short prompts turn better thinking into a playful circle trail."
   },
@@ -1227,6 +1293,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Spinner",
     "file": "App_GameLuckySpin.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='32' cy='32' r='20'/><path d='M32 12v40M12 32h40M18 18l28 28M46 18L18 46'/><circle cx='32' cy='32' r='5' fill='white' stroke='none'/><path d='M45 9l4 8 8 1-7 5 2 8-7-5-7 5 2-8-7-5 8-1z' fill='white' stroke='none' opacity='.82'/><\/svg>",
+    "avatar": "🎡",
+    "homeGlyph": "🎡",
     "gradient": [
       "#ff4d9d",
       "#6c5ce7"
@@ -1243,6 +1311,10 @@ const BUILTIN_APP_CATALOG=[
     "worksWith": [
       "standalone"
     ],
+    "emits": [
+      "game.round.completed",
+      "game.win"
+    ],
     "minMembers": 1,
     "desc": "A playful wheel for chores, dares, prizes, dinner choices, and party prompts. Great for quick shared moments, with rewards kept intentionally small."
   },
@@ -1253,6 +1325,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Strata",
     "file": "App_GameStrata.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M11 42c10-6 16 5 26-1 7-4 9-9 16-7'/><path d='M11 31c10-6 16 5 26-1 7-4 9-9 16-7'/><path d='M11 20c10-6 16 5 26-1 7-4 9-9 16-7'/><path d='M19 49h30'/><path d='M32 27l6 7-6 7-6-7z' fill='white' stroke='none' opacity='.88'/><\/svg>",
+    "avatar": "⛰️",
+    "homeGlyph": "⛰️",
     "gradient": [
       "#7c4a21",
       "#e0a458"
@@ -1269,6 +1343,7 @@ const BUILTIN_APP_CATALOG=[
     "worksWith": [
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A specialized stratigraphy and exploration strategy game. Learn to reason through layers, placement, risk, and field decisions."
   },
@@ -1279,6 +1354,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Agent Lab",
     "file": "App_ProductivityAgenticAI.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><rect x='17' y='19' width='30' height='25' rx='9'/><path d='M32 19v-7'/><circle cx='25' cy='31' r='2' fill='white' stroke='none'/><circle cx='39' cy='31' r='2' fill='white' stroke='none'/><path d='M24 44l-6 8M40 44l6 8M23 53h18'/><path d='M48 16l7-5M16 16l-7-5'/><\/svg>",
+    "avatar": "🤖",
+    "homeGlyph": "🤖",
     "gradient": [
       "#06d6a0",
       "#7209b7"
@@ -1296,6 +1373,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A concept-first coach for agentic AI: goals, tools, memory, planning, reflection, evaluation, and human oversight through short practical missions."
   },
@@ -1306,6 +1384,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Voice",
     "file": "App_ProductivityArticulation.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><rect x='24' y='13' width='16' height='27' rx='8'/><path d='M18 31c0 9 6 15 14 15s14-6 14-15M32 46v8M24 54h16'/><path d='M49 23c3 3 3 11 0 14M15 23c-3 3-3 11 0 14'/><\/svg>",
+    "avatar": "🎙️",
+    "homeGlyph": "🎙️",
     "gradient": [
       "#ea580c",
       "#f59e0b"
@@ -1323,6 +1403,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A warm speaking coach for pacing, pauses, clean articulation, vocal variety, and clearer stories. Practice in short no-microphone sessions."
   },
@@ -1333,6 +1414,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Loops",
     "file": "App_ProductivityBehaviour.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M20 25a15 15 0 0 1 25-7l4 4'/><path d='M49 12v10H39'/><path d='M44 39a15 15 0 0 1-25 7l-4-4'/><path d='M15 52V42h10'/><circle cx='32' cy='32' r='6' fill='white' stroke='none'/><\/svg>",
+    "avatar": "🔁",
+    "homeGlyph": "🔁",
     "gradient": [
       "#7c3aed",
       "#06b6d4"
@@ -1350,6 +1433,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A behavior-design coach for habits, cues, routines, rewards, friction, and tiny wins. Daily reps feed streaks and future Buddy quests."
   },
@@ -1360,12 +1444,14 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Primary",
     "file": "App_ProductivityCambridgePrimary.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M14 17h16c5 0 8 3 8 8v26H22c-5 0-8-3-8-8z'/><path d='M50 17H38v34h12z'/><path d='M23 28h8M23 37h8'/><path d='M47 11c-2 4-5 7-9 8 4 2 7 5 9 9 2-4 5-7 9-9-4-1-7-4-9-8z' fill='white' stroke='none'/><\/svg>",
+    "avatar": "📚",
+    "homeGlyph": "📚",
     "gradient": [
-      "#34d399",
-      "#4f46e5"
+      "#7c3aed",
+      "#26c6ff"
     ],
     "category": "productivity",
-    "tagline": "Primary learning, mapped.",
+    "tagline": "Primary learning adventure.",
     "status": "live",
     "allowed": [
       "family"
@@ -1376,8 +1462,12 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [
+      "practice.completed",
+      "mastery.unlocked"
+    ],
     "minMembers": 1,
-    "desc": "A local-first primary learning engine for English, math, science, and languages. Track objectives, mistakes, mastery, and parent-reviewed content."
+    "desc": "A Cambridge-style primary learning world for English, math, science, computing, and social studies. Children move through subject zones, answer short questions, and build visible mastery."
   },
   {
     "id": "productivity-charisma",
@@ -1386,6 +1476,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Presence",
     "file": "App_ProductivityCharisma.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='32' cy='22' r='8'/><path d='M18 50c3-10 9-15 14-15s11 5 14 15'/><path d='M16 21c-4 4-5 12-2 17M48 21c4 4 5 12 2 17'/><path d='M32 6v5M15 11l4 4M49 11l-4 4'/><\/svg>",
+    "avatar": "🌟",
+    "homeGlyph": "🌟",
     "gradient": [
       "#f7b733",
       "#fc5c7d"
@@ -1403,6 +1495,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A daily social-skill coach for presence, warmth, confidence, listening, and real-world scenarios. Practice small moves that make interactions feel better."
   },
@@ -1413,6 +1506,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Code Quest",
     "file": "App_ProductivityCodePhilosophyKids.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M24 18c-7 0-10 4-10 10 0 4-2 4-5 4 3 0 5 1 5 5 0 6 3 9 10 9M40 18c7 0 10 4 10 10 0 4 2 4 5 4-3 0-5 1-5 5 0 6-3 9-10 9'/><circle cx='32' cy='32' r='5' fill='white' stroke='none'/><path d='M32 16v5M32 43v5'/><\/svg>",
+    "avatar": "👾",
+    "homeGlyph": "👾",
     "gradient": [
       "#ff5e57",
       "#0ea5e9"
@@ -1429,6 +1524,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A no-typing logic quest for kids. Practice sequences, loops, conditions, functions, data, and robot-maze reasoning through short interactive puzzles."
   },
@@ -1439,6 +1535,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Kitchen",
     "file": "App_ProductivityCook.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M18 30h28v18H18z'/><path d='M16 30h32'/><path d='M23 30c-4-6 0-10 4-14M32 30c-4-6 0-10 4-14M41 30c-4-6 0-10 4-14'/><path d='M24 48h16M15 39h-4M53 39h-4'/><\/svg>",
+    "avatar": "🍳",
+    "homeGlyph": "🍳",
     "gradient": [
       "#ec5c3b",
       "#f59e0b"
@@ -1457,6 +1555,7 @@ const BUILTIN_APP_CATALOG=[
       "standalone",
       "calendar"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A recipe and meal-planning app for Kinetik circles. Cook step-by-step, plan dinners, send ingredients to Grocery Run, and turn meals into shared progress."
   },
@@ -1467,6 +1566,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Grocery",
     "file": "App_ProductivityGrocery.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M14 17h7l5 28h21l5-20H25'/><circle cx='30' cy='51' r='3' fill='white' stroke='none'/><circle cx='45' cy='51' r='3' fill='white' stroke='none'/><path d='M39 15c5 0 8 4 8 9-6 0-10-3-10-8M35 24c-5-2-8-6-7-12 6 1 9 5 9 12'/><\/svg>",
+    "avatar": "🛒",
+    "homeGlyph": "🛒",
     "gradient": [
       "#23b993",
       "#4d8dff"
@@ -1484,6 +1585,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A shared grocery run app for lists, favorites, reusable baskets, shopping history, and circle helper points."
   },
@@ -1494,6 +1596,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Buddy",
     "file": "App_ProductivityPoll.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><ellipse cx='32' cy='36' rx='17' ry='19' fill='white' stroke='none'/><path d='M32 17v-6M32 11l6 4M32 11l-6 4'/><circle cx='26' cy='34' r='2.2' fill='#4f46e5' stroke='none'/><circle cx='38' cy='34' r='2.2' fill='#4f46e5' stroke='none'/><path d='M26 43c4 4 8 4 12 0' stroke='#4f46e5'/><path d='M50 22c-3 1-5 3-6 6-1-3-3-5-6-6 3-1 5-3 6-6 1 3 3 5 6 6z' fill='white' stroke='none' opacity='.85'/><\/svg>",
+    "avatar": "🐣",
+    "homeGlyph": "🐣",
     "gradient": [
       "#55c7ff",
       "#7b63ff"
@@ -1512,6 +1616,7 @@ const BUILTIN_APP_CATALOG=[
       "standalone",
       "moments"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A pet-first avatar, diamond economy, circle leaderboard, and app companion layer for Kinetik."
   },
@@ -1522,6 +1627,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Presenter",
     "file": "App_ProductivityPresenter.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><rect x='13' y='13' width='38' height='27' rx='5'/><path d='M22 51l10-11 10 11M32 40v13'/><path d='M22 29l7-7 6 5 8-9'/><circle cx='47' cy='18' r='2.5' fill='white' stroke='none'/><\/svg>",
+    "avatar": "🎤",
+    "homeGlyph": "🎤",
     "gradient": [
       "#2563eb",
       "#0ea5e9"
@@ -1539,6 +1646,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A presentation coach for structure, openings, slide clarity, delivery, nerves, and Q&A control. Run short stage-ready practice decks."
   },
@@ -1549,6 +1657,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Times",
     "file": "App_ProductivityTimesTableQuest.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><rect x='14' y='14' width='36' height='36' rx='8'/><path d='M24 24l16 16M40 24L24 40'/><path d='M22 50v5M42 50v5M50 22h5M50 42h5M9 22h5M9 42h5'/><\/svg>",
+    "avatar": "✖️",
+    "homeGlyph": "✖️",
     "gradient": [
       "#ffb545",
       "#ff5d8f"
@@ -1566,6 +1676,10 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [
+      "practice.completed",
+      "mastery.unlocked"
+    ],
     "minMembers": 1,
     "desc": "A playful multiplication quest with hearts, XP, streaks, crowns, boss rounds, and weak-fact practice that repeats until it sticks."
   },
@@ -1576,6 +1690,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Decision",
     "file": "App_ProductivityWisdom.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M17 16h15c7 0 13 6 13 13 0 11-13 18-13 18s-15-8-15-18z'/><path d='M32 47v8M24 55h16'/><path d='M26 28h12M32 22v12'/><path d='M48 16l6-6M16 16l-6-6'/><\/svg>",
+    "avatar": "🧭",
+    "homeGlyph": "🧭",
     "gradient": [
       "#d97706",
       "#92400e"
@@ -1593,6 +1709,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A daily mental-model coach for clearer decisions, inversion, second-order thinking, builder wisdom, money psychology, and private reflection notes."
   },
@@ -1603,6 +1720,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "World Cup",
     "file": "App_SocialWorldCup26.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='32' cy='32' r='20'/><path d='M32 12c7 5 10 12 10 20s-3 15-10 20M32 12c-7 5-10 12-10 20s3 15 10 20M12 32h40'/><path d='M25 27l7-5 7 5-3 8h-8z' fill='white' stroke='none'/><path d='M20 45c7-3 17-3 24 0M20 19c7 3 17 3 24 0'/><\/svg>",
+    "avatar": "🏆",
+    "homeGlyph": "🏆",
     "gradient": [
       "#0a7d3c",
       "#ffd34d"
@@ -1619,6 +1738,7 @@ const BUILTIN_APP_CATALOG=[
     "worksWith": [
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A World Cup prediction arena for your circle. Forecast matches, compare standings, and make the tournament feel social from kickoff to final."
   },
@@ -1629,6 +1749,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Basket",
     "file": "App_SportBasketball.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='32' cy='32' r='20'/><path d='M13 27c12 3 26-2 38-11M51 37c-12-3-26 2-38 11M32 12c-5 11-5 29 0 40M16 18c10 9 22 20 32 28'/><\/svg>",
+    "avatar": "🏀",
+    "homeGlyph": "🏀",
     "gradient": [
       "#ff7a1a",
       "#f43f5e"
@@ -1646,6 +1768,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A basketball technique coach for shot path, handle rhythm, footwork, defense, quick self-checks, streaks, and practice progress."
   },
@@ -1656,6 +1779,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Guitar",
     "file": "App_SportLearnGuitar.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M22 45c-5-5-4-14 2-18 3-2 7-1 10-4l12-12 7 7-12 12c-3 3-2 7-4 10-4 6-13 7-18 2z'/><circle cx='28' cy='36' r='5'/><path d='M42 15l7 7M48 10l6 6M38 31l-8 8'/><\/svg>",
+    "avatar": "🎸",
+    "homeGlyph": "🎸",
     "gradient": [
       "#8b5cf6",
       "#f59e0b"
@@ -1673,6 +1798,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A step-by-step guitar practice coach for chord shapes, switches, strums, rhythm loops, confidence checks, and streaks."
   },
@@ -1683,6 +1809,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Tennis",
     "file": "App_SportLearnTennis.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><ellipse cx='26' cy='25' rx='12' ry='18' transform='rotate(35 26 25)'/><path d='M34 38l14 14M18 18l16 16M14 28l16 16'/><circle cx='47' cy='16' r='5' fill='white' stroke='none'/><\/svg>",
+    "avatar": "🎾",
+    "homeGlyph": "🎾",
     "gradient": [
       "#84cc16",
       "#14b8a6"
@@ -1700,6 +1828,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A tennis practice coach for contact point, split-step timing, serve toss, footwork, volleys, and match-ready cues."
   },
@@ -1710,6 +1839,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Matchday",
     "file": "App_SportPadel.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><rect x='13' y='12' width='38' height='30' rx='4'/><path d='M32 12v30M13 27h38'/><path d='M24 50l9-12M33 38l8 6'/><circle cx='44' cy='49' r='4' fill='white' stroke='none'/><\/svg>",
+    "avatar": "🎾",
+    "homeGlyph": "🎾",
     "gradient": [
       "#2f6bff",
       "#54c7ec"
@@ -1726,6 +1857,7 @@ const BUILTIN_APP_CATALOG=[
     "worksWith": [
       "calendar"
     ],
+    "emits": [],
     "minMembers": 4,
     "desc": "Run Americano or Mexicano padel sessions in seconds: fair rotations, live scoring, leaderboards, result cards, and calendar-ready sessions."
   },
@@ -1736,6 +1868,8 @@ const BUILTIN_APP_CATALOG=[
     "shortName": "Academy",
     "file": "App_SportPadelAcademy.html",
     "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M16 47h32'/><path d='M24 47l6-18h4l6 18'/><path d='M27 38h10'/><circle cx='45' cy='19' r='9'/><path d='M45 10v18M36 19h18'/><path d='M15 20c7-8 17-11 29-9'/><\/svg>",
+    "avatar": "🏅",
+    "homeGlyph": "🏅",
     "gradient": [
       "#13b981",
       "#2563eb"
@@ -1753,6 +1887,7 @@ const BUILTIN_APP_CATALOG=[
       "offline",
       "standalone"
     ],
+    "emits": [],
     "minMembers": 1,
     "desc": "A local-first padel training path for technique, tactics, movement, rules, and match IQ, ready to connect later with Matchday results."
   }
@@ -1829,17 +1964,25 @@ function parseAppFile(file){
   const name=(rest.join(" ")||words.join(" ")||"App").trim();
   return {category,name};
 }
-const guessIcon=name=>{const map={Chess:"♟️",Clash:"⚡",Emoji:"😄",Ladder:"🎲",Lucky:"🎡",Padel:"🎾",Tennis:"🎾",Basket:"🏀",Football:"⚽",Golf:"⛳",Swim:"🏊",Guitar:"🎸",Piano:"🎹",Times:"✖️",Table:"✖️",Philosophy:"🧩",Data:"🔎",Grocery:"🛒",Cook:"🍳",Meal:"🍽️",Poll:"🗳️",Movie:"🎬",Quiz:"❓",Charisma:"🗣️",Present:"🎤",Wisdom:"📘",Clock:"⏱️",Habit:"🌱",Read:"📚",Money:"💰"};const k=Object.keys(map).find(w=>new RegExp(w,"i").test(name));return map[k]||"✦";};
+const guessIcon=name=>{const map={Cinema:"🎬",Chess:"♟️",Clash:"⚔️",Emoji:"😄",Ladder:"🎲",Lucky:"🎡",Strata:"⛰️",Padel:"🎾",Tennis:"🎾",Basket:"🏀",Football:"⚽",Golf:"⛳",Swim:"🏊",Guitar:"🎸",Piano:"🎹",Times:"✖️",Table:"✖️",Philosophy:"🧩",Data:"🔎",Grocery:"🛒",Cook:"🍳",Meal:"🍽️",Poll:"🐣",Buddy:"🐣",Movie:"🎬",Quiz:"❓",Charisma:"🌟",Presence:"🌟",Present:"🎤",Wisdom:"🧭",Decision:"🧭",Clock:"🕒",Habit:"🌱",Read:"📚",Primary:"📚",Money:"💰",Agent:"🤖",Voice:"🎙️",Loop:"🔁",Code:"👾",Chore:"🧹",Home:"🧹",World:"🏆"};const k=Object.keys(map).find(w=>new RegExp(w,"i").test(name));return map[k]||"✦";};
 /* catalog id is FILE-based (unique per App_*.html) so duplicate manifest appIds in
    copied files can't collide/hide each other. appId is kept only as a reference. */
 const fileId=file=>String(file).replace(/^App[_-]?/i,"").replace(/\.html?$/i,"")
   .replace(/([a-z0-9])([A-Z])/g,"$1-$2").replace(/[^a-zA-Z0-9]+/g,"-").toLowerCase().replace(/^-+|-+$/g,"")||"app";
-/* an app "icon" is an emoji, an inline <svg>, or 1-3 letter initials. Letters render as a
-   polished white lettermark (App-Store style) instead of plain small text. */
+/* One app avatar resolver for the Apps tab, Store, and future agent handoffs. */
 const isMono=g=>/^[A-Za-z0-9]{1,3}$/.test(String(g||"").trim());
+const isSvgGlyph=g=>/^<svg\b/i.test(String(g||"").trim());
 function iconInner(glyph){
   const g=String(glyph==null?"✦":glyph).trim();
   return isMono(g)?`<span class="mono" data-n="${g.length}">${esc(g.toUpperCase())}</span>`:g;
+}
+function appAvatar(app){
+  const g=String(app&&app.avatar||app&&app.homeGlyph||app&&app.homeIcon||"").trim();
+  if(g)return g;
+  return isSvgGlyph(app&&app.glyph)?guessIcon(app&&app.name||""):String(app&&app.glyph||guessIcon(app&&app.name||""));
+}
+function appHomeGlyph(app){
+  return appAvatar(app);
 }
 function cleanManifestList(values,allowed,fallback){
   if(!Array.isArray(values))return fallback;
@@ -1848,12 +1991,14 @@ function cleanManifestList(values,allowed,fallback){
 }
 function manifestToCatalog(j,file){
   const pf=parseAppFile(file),icon=String(j.icon||"✦");
+  const avatar=String(j.avatar||j.homeIcon||j.homeGlyph||guessIcon(j.name||pf.name));
   return {id:fileId(file),appId:j.appId||fileId(file),name:j.name||pf.name,shortName:j.shortName||j.name||pf.name,file,
-    glyph:icon,  /* emoji or inline <svg> embedded in the app's own manifest — never external */
+    glyph:icon,avatar,homeGlyph:avatar,
     gradient:Array.isArray(j.gradient)&&j.gradient.length?j.gradient:["#6366f1","#22d3ee"],
     category:pf.category||j.category||"lifestyle",tagline:j.tagline||"",desc:j.about||j.tagline||"",
     audience:j.audience||"all",allowed:cleanManifestList(j.circleTypes,ALLOWED_CIRCLE_TYPES,["family","friends"]),
     worksWith:cleanManifestList(j.worksWith,ALLOWED_WORKS_WITH,["standalone"]),status:j.status==="soon"?"soon":"live",
+    emits:Array.isArray(j.emits)?[...new Set(j.emits.map(String).filter(Boolean))]:[],
     minMembers:j.minMembers||1,active:true};
 }
 function fallbackApp(file,html){
@@ -1862,9 +2007,9 @@ function fallbackApp(file,html){
   const name=(tm?tm[1].replace(/\s*[-–|]\s*Kinetik.*$/i,"").trim():"")||pf.name;
   const cat=pf.category||"productivity";
   return {id:fileId(file),appId:fileId(file),name,shortName:name.slice(0,14),file,
-    glyph:guessIcon(name),iconSvg:"",gradient:["#7c8cff","#30c6df"],category:cat,
+    glyph:guessIcon(name),homeGlyph:guessIcon(name),iconSvg:"",gradient:["#7c8cff","#30c6df"],category:cat,
     tagline:catLabel(cat)+" app.",desc:name+" — discovered from "+file+".",
-    audience:"all",allowed:["family","friends"],worksWith:["standalone"],status:"live",minMembers:1,active:true};
+    audience:"all",allowed:["family","friends"],worksWith:["standalone"],status:"live",emits:[],minMembers:1,active:true};
 }
 const AppRegistry={
   manifestOf(html){
@@ -1934,7 +2079,7 @@ function fromSheet(col,row){
   if(col==="circles")return {...r,accent:r.accent||splitGradient(r.color),active:activeRow(r)};
   if(col==="routines")return {...r,participantPersonIds:jsonVal(r.participantPersonIdsJson,r.participantPersonIds||[]),dayOfWeek:dayVal(r.dayOfWeek),preparation:jsonVal(r.preparationJson,r.preparation||[]),active:activeRow(r)};
   if(col==="events")return {...r,participantPersonIds:jsonVal(r.participantPersonIdsJson,r.participantPersonIds||[]),preparation:jsonVal(r.preparationJson,r.preparation||[]),active:activeRow(r)};
-  if(col==="appCatalog")return {...r,glyph:r.glyph||appGlyph(r),gradient:splitGradient(r.gradient),allowed:jsonVal(r.allowedCircleTypesJson,r.allowed||["family","friends"]),status:r.status==="active"?"live":(r.status||"live"),active:activeRow(r)};
+  if(col==="appCatalog"){const avatar=r.avatar||r.homeGlyph||r.homeIcon||guessIcon(r.name||r.id||"");return {...r,glyph:r.glyph||appGlyph(r),avatar,homeGlyph:avatar,emits:jsonVal(r.emitsJson,r.emits||[]),gradient:splitGradient(r.gradient),allowed:jsonVal(r.allowedCircleTypesJson,r.allowed||["family","friends"]),status:r.status==="active"?"live":(r.status||"live"),active:activeRow(r)};}
   if(col==="circleApps")return {...r,installed:boolVal(r.installed),pinned:boolVal(r.pinned)};
   if(col==="appRecords")return {...r,payload:jsonVal(r.payloadJson,r.payload||{}),deleted:boolVal(r.deleted)};
   if(col==="circleMembers")return {...r,userId:r.userId||null,active:activeRow(r)};
@@ -1945,7 +2090,7 @@ function toSheet(col,row){
   if(col==="users"){r.defaultPersonId=r.defaultPersonId||r.personId;r.passwordDemo=r.passwordDemo||r.pin;delete r.personId;delete r.pin;}
   if(col==="circles"){r.color=r.color||(r.accent&&r.accent[0]);delete r.accent;}
   if(col==="routines"||col==="events"){r.participantPersonIdsJson=JSON.stringify(r.participantPersonIds||[]);r.preparationJson=JSON.stringify(r.preparation||[]);delete r.participantPersonIds;delete r.preparation;}
-  if(col==="appCatalog"){r.gradient=Array.isArray(r.gradient)?`linear-gradient(135deg,${r.gradient[0]},${r.gradient[1]||r.gradient[0]})`:r.gradient;r.allowedCircleTypesJson=JSON.stringify(r.allowed||["family","friends"]);delete r.glyph;delete r.allowed;}
+  if(col==="appCatalog"){r.gradient=Array.isArray(r.gradient)?`linear-gradient(135deg,${r.gradient[0]},${r.gradient[1]||r.gradient[0]})`:r.gradient;r.allowedCircleTypesJson=JSON.stringify(r.allowed||["family","friends"]);r.emitsJson=JSON.stringify(r.emits||[]);delete r.glyph;delete r.allowed;delete r.emits;}
   if(col==="appRecords"){r.payloadJson=JSON.stringify(r.payload||{});delete r.payload;}
   return r;
 }
@@ -2197,7 +2342,8 @@ const KinEngine={
     "reflection.saved":{energy:"Growth",defaultAmount:2,maxPerEvent:8,dailyCap:25,mood:"thoughtful"},
     "moment.created":{energy:"Story",defaultAmount:3,maxPerEvent:10,dailyCap:25,mood:"glowing"},
     "moment.styled":{energy:"Story",defaultAmount:2,maxPerEvent:8,dailyCap:20,mood:"sparkly"},
-    "buddy.quest.completed":{energy:"Care",defaultAmount:12,maxPerEvent:35,dailyCap:80,mood:"celebrating"}
+    "buddy.quest.completed":{energy:"Care",defaultAmount:12,maxPerEvent:35,dailyCap:80,mood:"celebrating"},
+    "diamond.gift":{energy:"Circle",defaultAmount:10,maxPerEvent:100,dailyCap:500,mood:"generous"}
   },
   normalize(raw={}){
     const p=raw.payload||raw;
@@ -2237,7 +2383,57 @@ const KinEngine={
       .reduce((sum,x)=>sum+Number(x.amount||0),0);
     return Math.max(0,Number(rule.dailyCap||0)-used);
   },
-  handle(raw){
+  applyEconomyState(state){
+    if(!state||!state.ok)return state;
+    DB.d.diamondEvents=Array.isArray(DB.d.diamondEvents)?DB.d.diamondEvents:[];
+    DB.d.buddyState=DB.d.buddyState&&typeof DB.d.buddyState==="object"?DB.d.buddyState:{};
+    const circleId=state.buddy?.circleId||state.circleId||S.circleId;
+    if(state.buddy&&circleId)DB.d.buddyState[circleId]=state.buddy;
+    if(Array.isArray(state.diamondEvents)&&circleId){
+      const incoming=state.diamondEvents.map(d=>({...d,at:d.at||d.createdAt||new Date().toISOString(),metadata:d.metadata||{}}));
+      const other=(DB.d.diamondEvents||[]).filter(d=>d.circleId!==circleId);
+      DB.d.diamondEvents=[...incoming,...other].slice(0,600);
+    }
+    DB.save();
+    return state;
+  },
+  applyResult(result,raw){
+    if(!result||!result.ok)return result||{ok:false,error:"No economy result"};
+    DB.d.agentActions=Array.isArray(DB.d.agentActions)?DB.d.agentActions:[];
+    DB.d.diamondEvents=Array.isArray(DB.d.diamondEvents)?DB.d.diamondEvents:[];
+    DB.d.buddyState=DB.d.buddyState&&typeof DB.d.buddyState==="object"?DB.d.buddyState:{};
+    const evt=result.event||this.normalize(raw)||{},rule=this.rules[evt.eventType]||{};
+    evt.at=evt.at||evt.createdAt||new Date().toISOString();
+    evt.metadata=evt.metadata&&typeof evt.metadata==="object"?evt.metadata:{};
+    if(result.buddy){
+      const cid=result.buddy.circleId||evt.circleId||S.circleId;
+      DB.d.buddyState[cid]=result.buddy;
+    }
+    if(result.action&&!DB.d.agentActions.some(a=>a.id===result.action.id)){
+      DB.d.agentActions.unshift(result.action);DB.d.agentActions=DB.d.agentActions.slice(0,120);
+    }
+    const diamond=result.diamond;
+    if(diamond){
+      diamond.at=diamond.at||diamond.createdAt||evt.at;
+      diamond.metadata=diamond.metadata&&typeof diamond.metadata==="object"?diamond.metadata:evt.metadata||{};
+      diamond.amount=Number(diamond.amount||0);
+      if(!DB.d.diamondEvents.some(d=>d.id===diamond.id)){
+        DB.d.diamondEvents.unshift(diamond);DB.d.diamondEvents=DB.d.diamondEvents.slice(0,600);
+      }
+    }
+    DB.save();
+    if(result.duplicate||result.capped)return result;
+    const person=personName(evt.personId)||evt.metadata.personName||"Someone";
+    if(diamond){
+      const st=result.buddy||this.state(evt.circleId),prevLevel=Math.max(1,Math.floor((Number(st.xp||0)-Number(diamond.amount||0)*4)/120)+1);
+      this.pulse({title:prevLevel<Number(st.level||1)?"Buddy leveled up":`${diamond.energy||rule.energy||"Diamond"} energy gained`,text:`${person} earned ${diamond.amount} diamonds from ${evt.metadata.title||evt.appName||evt.appId}.`,gain:`+${diamond.amount} diamonds`});
+      EventBus.emit("kin:event",{event:evt,diamond,action:result.action,buddy:st});
+    }else if(result.action&&result.action.type==="approval.waiting"){
+      this.pulse({title:"Buddy noticed",text:`${person} finished ${evt.metadata.title||"a home quest"}. Waiting for approval.`,gain:"Pending"});
+    }
+    return result;
+  },
+  localHandle(raw){
     const evt=this.normalize(raw);
     if(!evt)return {ok:false,error:"Unsupported event"};
     DB.d.agentActions=Array.isArray(DB.d.agentActions)?DB.d.agentActions:[];
@@ -2267,6 +2463,20 @@ const KinEngine={
     EventBus.emit("kin:event",{event:evt,diamond,action,buddy:st});
     return {ok:true,event:evt,diamond,action,buddy:st};
   },
+  async handle(raw){
+    if(window.EconomyAPI){
+      try{
+        const result=await EconomyAPI.record(raw);
+        return this.applyResult(result,raw);
+      }catch(e){
+        const msg=e&&e.message?e.message:String(e);
+        const canFallback=/Unknown POST action|Sheet missing|Failed to fetch|NetworkError|Load failed|fetch|offline/i.test(msg);
+        console.warn("Economy backend unavailable",e);
+        if(!canFallback)return {ok:false,error:msg};
+      }
+    }
+    return this.localHandle(raw);
+  },
   pulse({title,text,gain}){
     const old=document.querySelector(".kinpulse");if(old)old.remove();
     const el=document.createElement("div");el.className="kinpulse";
@@ -2277,6 +2487,42 @@ const KinEngine={
   }
 };
 window.KinEngine=KinEngine;
+const EconomyAPI={
+  async call(action,body={}){
+    const res=await fetch(LIVE_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({action,...body})});
+    const json=await res.json();
+    if(!json.ok)throw new Error(json.error||action+" failed");
+    return json;
+  },
+  async record(raw={}){
+    const p=raw.payload||raw,app=AppHost.cur||appByAnyId(raw.appId||p.appId)||{};
+    return this.call("recordKinetikEvent",{
+      userId:S.userId,
+      circleId:p.circleId||S.circleId,
+      personId:p.personId||S.personId,
+      appId:p.appId||raw.appId||app.id||"unknown-app",
+      eventType:p.eventType,
+      sourceRecordId:p.sourceRecordId||"",
+      amount:p.amount??p.diamonds,
+      metadata:p.metadata||{}
+    });
+  },
+  async refresh(circleId=S.circleId){
+    if(!circleId||!S.userId)return null;
+    try{
+      const state=await this.call("getEconomyState",{circleId,userId:S.userId,limit:300});
+      KinEngine.applyEconomyState(state);
+      AppHost.updateEconomyBadge();
+      AppHost.sendEconomySnapshot();
+      return state;
+    }catch(e){
+      console.warn("Economy refresh skipped",e);
+      return null;
+    }
+  }
+};
+window.EconomyAPI=EconomyAPI;
 
 /* ---------------- Motion (GSAP guarded) ---------------- */
 const Motion={
@@ -3380,16 +3626,186 @@ $("#chatSend").onclick=()=>Chat.send();
   ci.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();Chat.send();}});})();
 
 /* ---------------- ASK ---------------- */
+/* KinSpine is the reusable deterministic action layer for the POC.
+   It reads shell context, prepares cross-app cards, and commits only after a tap. */
+const KinSpine={
+  mode:"learn",actions:{},_n:0,
+  labels:{learn:"Learning",schedule:"Schedule",moments:"Photos",apps:"Apps"},
+  promptMap(){
+    const family=circle()&&circle().type==="family";
+    return {
+      learn:family?["Suggest learning for today","What should Kinara practice next?","Open Times Quest"]:["Suggest learning for today","Pick a quick skill practice","Open a learning app"],
+      schedule:["Make a learning schedule","Add 20 minutes of learning tomorrow","Find a free study slot"],
+      moments:["Extract photos from Moments","Make a family album","Post a new Moment photo"],
+      apps:["Suggest the next app","Open Home Quest","Open Kinetik Buddy","Open Cinema"]
+    };
+  },
+  prompts(){return this.promptMap()[this.mode]||this.promptMap().learn;},
+  jsArg(v){return String(v||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\n/g," ");},
+  uid(prefix){return (prefix||"sp")+Date.now()+"_"+(++this._n);},
+  state(){
+    const st=DB.d.buddyState&&DB.d.buddyState[S.circleId];
+    return st||{diamonds:0,level:1,mood:"curious",energy:{}};
+  },
+  home(){
+    const c=circle()||{name:"your circle",type:"family"},st=this.state(),photos=this.photoItems().length;
+    const today=S.circleId?Cal.agendaToday(S.circleId).length:0;
+    const modes=Object.keys(this.labels).map(k=>`<button class="spineMode ${this.mode===k?"on":""}" onclick="KinSpine.setMode('${k}')">${esc(this.labels[k])}</button>`).join("");
+    const prompts=this.prompts().map(q=>`<button class="chip" onclick="KinSpine.ask('${this.jsArg(q)}')">${esc(q)}</button>`).join("");
+    return `<div class="orbwrap"><div id="orb"></div>
+      <p class="spineLead">I can help <b>${esc(c.name)}</b> move between learning, calendar, apps, and Moments.</p>
+      <div class="spineStats">
+        <span class="spineStat"><b>${Number(st.diamonds||0)}</b> diamonds</span>
+        <span class="spineStat"><b>${Number(st.level||1)}</b> Buddy level</span>
+        <span class="spineStat"><b>${today}</b> today</span>
+        <span class="spineStat"><b>${photos}</b> photos</span>
+      </div>
+      <div class="spineModes">${modes}</div>
+      <div class="qps">${prompts}</div></div>`;
+  },
+  setMode(mode){
+    if(!this.labels[mode])return;
+    this.mode=mode;
+    const wrap=document.querySelector("#askStream .orbwrap");
+    if(wrap)wrap.outerHTML=this.home();
+  },
+  ask(text){Ask.send(text);},
+  async respond(text,add){
+    const t=String(text||"").toLowerCase();
+    if(this.isLearningSchedule(t)){add(this.learningScheduleCard(text));return true;}
+    if(this.isMomentIntent(t)){await this.ensureMoments();add(this.momentPhotoCard(t));return true;}
+    if(this.isLearningIntent(t)){add(this.learningCard(text));return true;}
+    if(this.isAppIntent(t)){add(this.appCard(t));return true;}
+    return false;
+  },
+  isLearningSchedule(t){return /(schedule|calendar|add|plan|slot|routine)/.test(t)&&/(learn|learning|study|practice|times|math|cambridge|reading|homework)/.test(t);},
+  isLearningIntent(t){return /(learn|learning|study|practice|times table|times quest|math|multiply|multiplication|cambridge|reading|homework|skill)/.test(t);},
+  isMomentIntent(t){return /(moment|moments|photo|photos|album|story|memory|memories|post)/.test(t)&&/(extract|pull|find|show|make|create|post|album|story|theme|inspiration)/.test(t);},
+  isAppIntent(t){return /(suggest|recommend|next|open|launch).*(app|quest|buddy|home quest|grocery|cinema|padel|chess)|\b(open|launch)\s+(home quest|times quest|primary quest|buddy|cinema)\b/.test(t);},
+  isKid(p){
+    const by=Number(p&&p.birthYear);
+    return !!p&&(by?new Date().getFullYear()-by<18:/kinara|baginda|keyla|kid|child/i.test(p.displayName||""));
+  },
+  pickLearner(text){
+    const t=String(text||"").toLowerCase(),ppl=circlePeople();
+    const named=ppl.find(p=>t.includes(String(p.displayName||"").toLowerCase())||t.includes(String(p.displayName||"").split(" ")[0].toLowerCase()));
+    return named||ppl.find(p=>p.id===S.personId&&this.isKid(p))||ppl.find(p=>this.isKid(p))||me()||ppl[0]||{id:S.personId,displayName:"Learner",color:"var(--acc)"};
+  },
+  pickLearningApp(text){
+    const t=String(text||"").toLowerCase();
+    const opts=[
+      {id:"productivity-times-table-quest",name:"Times Quest",why:"fast math reps",match:/times|table|math|multiply|multiplication|number/},
+      {id:"productivity-cambridge-primary",name:"Primary Quest",why:"school practice",match:/cambridge|primary|english|science|reading|school|homework/},
+      {id:"productivity-code-philosophy-kids",name:"Code Philosophy Kids",why:"logic thinking",match:/code|logic|philosophy|computer/},
+      {id:"productivity-agentic-ai",name:"Agentic AI Coach",why:"AI literacy",match:/agent|ai|prompt/}
+    ];
+    const hit=opts.find(o=>o.match.test(t))||opts[0],app=appByAnyId(hit.id);
+    return app?{...hit,name:app.name,app}:hit;
+  },
+  learningTitle(person,app){
+    if(app.id==="productivity-times-table-quest")return `${person.displayName} multiplication sprint`;
+    if(app.id==="productivity-cambridge-primary")return `${person.displayName} Primary Quest focus`;
+    if(app.id==="productivity-code-philosophy-kids")return `${person.displayName} logic quest`;
+    return `${person.displayName} learning focus`;
+  },
+  learningCard(text){
+    const person=this.pickLearner(text),app=this.pickLearningApp(text),title=this.learningTitle(person,app);
+    return `<div class="askcard glass"><span class="ah">Suggested learning</span>
+      <div class="arow"><span class="bar" style="background:${person.color||"var(--acc)"}"></span><span><b>${esc(title)}</b> <span class="sub">${esc(app.name)} · ${esc(app.why)}</span></span></div>
+      <p class="spineHint">Keep it short, scoreable, and easy to repeat. The Buddy should reward consistency before intensity.</p>
+      <div class="acts"><button class="btn" onclick="KinSpine.openApp('${app.id}')">Open ${esc(app.name)}</button><button class="btn ghost" onclick="KinSpine.ask('Make a learning schedule')">Schedule it</button></div></div>`;
+  },
+  findLearningSlot(personId,text){
+    const t=String(text||"").toLowerCase(),offset=/today/.test(t)?0:1;
+    const wins=[["16:00","19:30"],["18:00","20:30"],["07:00","09:00"]];
+    for(let i=0;i<7;i++){
+      const d=addDays(new Date(),offset+i);
+      for(const w of wins){
+        const slot=Cal.firstFreeSlot(S.circleId,d,[personId],w[0],w[1],20);
+        if(slot)return {date:iso(d),dayLabel:this.dayLabel(d),start:slot.start,end:slot.end,free:true};
+      }
+    }
+    const d=addDays(new Date(),offset);
+    return {date:iso(d),dayLabel:this.dayLabel(d),start:"17:00",end:"17:20",free:false};
+  },
+  learningScheduleCard(text){
+    const person=this.pickLearner(text),app=this.pickLearningApp(text),slot=this.findLearningSlot(person.id,text),id=this.uid("spcard");
+    const title=this.learningTitle(person,app);
+    this.actions[id]={type:"learningEvent",circleId:S.circleId,personId:person.id,appId:app.id,appName:app.name,title,date:slot.date,start:slot.start,end:slot.end};
+    return `<div class="pvcard glass" id="${id}"><div class="pt">Learning schedule · preview</div>
+      <h4>${esc(title)}</h4>
+      <div class="kv"><span>${esc(slot.dayLabel)} · ${fmtT(slot.start)} – ${fmtT(slot.end)}</span><span>${esc(person.displayName)} · ${esc(app.name)}</span><span>${slot.free?"Free slot found":"Preview slot; check conflicts"}</span></div>
+      <div class="acts"><button class="btn" onclick="KinSpine.commit('${id}')">Add to Calendar</button><button class="btn ghost" onclick="KinSpine.dismiss('${id}')">Not now</button></div></div>`;
+  },
+  commit(id){
+    const a=this.actions[id];if(!a||a.state==="done")return;
+    if(a.type==="learningEvent"){
+      const row=DataAPI.create("events",{circleId:a.circleId,title:a.title,date:a.date,endDate:a.date,startTime:a.start,endTime:a.end,
+        participantPersonIds:[a.personId],responsiblePersonId:S.personId,category:"learning",preparation:["Open "+a.appName,"Keep the session short and scoreable"],sourceAppId:a.appId});
+      a.state="done";
+      KinEngine.handle({type:"KINETIK_EVENT",payload:{eventType:"calendar.created",appId:"kinetik-spine",personId:S.personId,sourceRecordId:row.id,amount:2,metadata:{title:a.title,kind:"learning.schedule",targetPersonId:a.personId,appId:a.appId}}});
+      const w=document.getElementById(id);if(w){const acts=w.querySelector(".acts");if(acts)acts.innerHTML='<span style="color:var(--ok);font-weight:700;font-size:13.5px">✓ Added to Calendar</span>';}
+      EventBus.emit("calendar:eventCreated");Toast.show("Learning added to Calendar ✓");
+    }
+  },
+  dismiss(id){const w=document.getElementById(id);if(w){const acts=w.querySelector(".acts");if(acts)acts.innerHTML='<span style="color:var(--faint);font-size:13px">Dismissed</span>';}},
+  async ensureMoments(){
+    if(MomentsState.loadedCircle===S.circleId&&(MomentsState.memoryLines.length||MomentsState.stories.length))return;
+    try{await loadMoments(false);}catch(e){}
+  },
+  photoItems(){
+    const out=[];
+    (MomentsState.memoryLines||[]).forEach(p=>{
+      (p.media||[]).filter(m=>m&&m.driveFileId).forEach((m,i)=>out.push({id:(p.postId||"post")+"_"+i,title:p.title||p.caption||"Memory",author:authorOf(p.authorUserId).name,createdAt:p.createdAt,src:mediaSrc(m),kind:"Memory Line"}));
+    });
+    (MomentsState.stories||[]).forEach(s=>{
+      const media=Array.isArray(s.media)?s.media:(s.media?[s.media]:(Array.isArray(s.mediaItems)?s.mediaItems:[]));
+      media.filter(m=>m&&m.driveFileId).forEach((m,i)=>out.push({id:(s.storyId||"story")+"_"+i,title:s.title||"Story",author:authorOf(s.authorUserId).name,createdAt:s.createdAt,src:mediaSrc(m),kind:"Moment Story"}));
+    });
+    return out.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+  },
+  momentPhotoCard(t){
+    const photos=this.photoItems().slice(0,8),album=/album|family/.test(t);
+    if(!photos.length)return `<div class="askcard glass"><span class="ah">Moments photos</span>
+      <p class="spineHint">I do not see loaded Moment photos yet. Open Moments and post the first memory, then I can pull from it here.</p>
+      <div class="acts"><button class="btn" onclick="KinSpine.openMoments()">Open Moments</button><button class="btn ghost" onclick="KinSpine.openMomentCreate('memory-line')">Post photo</button></div></div>`;
+    return `<div class="askcard glass"><span class="ah">${album?"Family album starter":"Moment photos"}</span>
+      <div class="spinePhotoGrid">${photos.slice(0,4).map(p=>`<div class="spinePhoto"><img src="${p.src}" alt=""><span>${esc(p.title)}</span></div>`).join("")}</div>
+      <p class="spineHint">${album?"I found the newest photos that can become an album set.":"I found the latest photos from Moments."} This is read-only until you choose where to use them.</p>
+      <div class="spineMini"><span><b>${photos.length}</b> photos ready</span><span><b>${esc(photos[0].author)}</b> latest author</span></div>
+      <div class="acts"><button class="btn" onclick="KinSpine.openMoments()">Open Moments</button><button class="btn ghost" onclick="KinSpine.openMomentCreate('moment')">Make Story</button><button class="btn ghost" onclick="KinSpine.openApp('entertainment-cinema')">Open Cinema</button></div></div>`;
+  },
+  suggestedApps(t){
+    const st=this.state(),energy=st.energy||{};
+    const low=[["Growth","productivity-times-table-quest"],["Care","game-chore-quest"],["Story","entertainment-cinema"],["Move","sport-padel-academy"],["Play","game-circle-chess"]]
+      .sort((a,b)=>(energy[a[0]]||0)-(energy[b[0]]||0));
+    let ids=low.map(x=>x[1]);
+    if(/buddy/.test(t))ids=["productivity-poll",...ids];
+    if(/home|chore/.test(t))ids=["game-chore-quest",...ids];
+    if(/cinema|story/.test(t))ids=["entertainment-cinema",...ids];
+    return [...new Set(ids)].map(id=>appByAnyId(id)).filter(Boolean).slice(0,3);
+  },
+  appCard(t){
+    const apps=this.suggestedApps(t);
+    return `<div class="askcard glass"><span class="ah">Suggested apps</span>
+      ${apps.map(a=>`<div class="arow"><span class="bar" style="background:${(a.gradient&&a.gradient[0])||"var(--acc)"}"></span><span><b>${esc(a.name)}</b> <span class="sub">${esc(a.tagline||a.desc||"Good next step")}</span></span></div>`).join("")||'<p class="spineHint">No app suggestion yet.</p>'}
+      <div class="acts">${apps.map(a=>`<button class="btn ghost" onclick="KinSpine.openApp('${a.id}')">${esc(a.shortName||a.name)}</button>`).join("")}</div></div>`;
+  },
+  openApp(appId){const app=appByAnyId(appId);if(app)AppHost.open(app.id);else Toast.show("App not found");},
+  openMoments(){switchTab("moments");AskScreen.close();},
+  openMomentCreate(type){switchTab("moments");AskScreen.close();setTimeout(()=>Create.open(type||"memory-line"),220);},
+  dayLabel(d){const n=new Date();if(iso(d)===iso(n))return"today";if(iso(d)===iso(addDays(n,1)))return"tomorrow";return DOW[d.getDay()]+" "+d.getDate();}
+};
+window.KinSpine=KinSpine;
 const Ask={
   hello(){
-    const stream=$("#askStream");stream.innerHTML=`
-    <div class="orbwrap"><div id="orb"></div><p>What can I help coordinate in <b>${esc(circle().name)}</b>?</p>
-    <div class="qps">${this.prompts().map(q=>`<button class="chip" onclick="Ask.send('${q.replace(/'/g,"\\'")}')">${esc(q)}</button>`).join("")}</div></div>`;
+    const stream=$("#askStream");stream.innerHTML=KinSpine.home();
   },
   prompts(){
-    return circle().type==="family"
+    const base=circle().type==="family"
       ?["Who's free this weekend?","Set up a family dinner this weekend","What do we have today?","What needs preparation?","Add Kinara padel every Tuesday at 8am"]
       :["Who's free this weekend?","Set up padel this weekend","What's tomorrow?","Start an event poll"];
+    return [...KinSpine.prompts(),...base].slice(0,7);
   },
   send(text){
     text=text.trim();if(!text)return;
@@ -3403,9 +3819,10 @@ const Ask={
     setTimeout(()=>{if(orb)orb.classList.remove("think");const td=document.getElementById("tdTmp");if(td)td.remove();this.respond(text);stream.scrollTop=stream.scrollHeight;},620);
     stream.scrollTop=stream.scrollHeight;
   },
-  respond(text){
+  async respond(text){
     const t=text.toLowerCase(),stream=$("#askStream");
     const add=h=>{stream.insertAdjacentHTML("beforeend",h);stream.scrollTop=stream.scrollHeight;};
+    if(await KinSpine.respond(text,add))return;
     /* @kin calendar coordination (availability / clash handoff / set-up a plan) */
     const ag=Agent.plan(text,{circleId:S.circleId,asker:S.personId});
     if(ag){ag.bubbles.forEach(b=>add(`<div class="msg kin glass">${b}</div>`));if(ag.card)add(Agent.makeCard(ag.card,S.circleId));return;}
@@ -3651,6 +4068,56 @@ askIn.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventD
 $("#askSend").onclick=()=>Ask.send(askIn.value);
 
 /* ---------------- APPS (iPhone home grid) + STORE (full-screen app) ---------------- */
+function diamondEventsFor(app){
+  return Array.isArray(app&&app.emits)?app.emits.filter(e=>KinEngine.rules[e]):[];
+}
+function diamondLinkKind(app){
+  const id=String(app&&app.id||""),appId=String(app&&app.appId||""),file=String(app&&app.file||"");
+  if(id==="productivity-poll"||appId==="buddy-world"||file==="App_ProductivityPoll.html")return "hub";
+  return diamondEventsFor(app).length?"synced":"";
+}
+function diamondBadge(app){
+  const kind=diamondLinkKind(app);
+  if(!kind)return "";
+  const title=kind==="hub"?"Buddy diamond economy hub":"Synced with Buddy diamond economy";
+  return `<i class="diamond-dot ${kind}" title="${esc(title)}" aria-label="${esc(title)}">💎</i>`;
+}
+const DIAMOND_MATURITY_BASE={
+  "productivity-poll":2000,"buddy-world":2000,"App_ProductivityPoll.html":2000,
+  "game-chore-quest":920,"chore-quest":920,"App_GameChoreQuest.html":920,
+  "productivity-times-table-quest":860,"times-table-quest":860,"App_ProductivityTimesTableQuest.html":860,
+  "productivity-cambridge-primary":820,"cambridge-primary":820,"App_ProductivityCambridgePrimary.html":820,
+  "game-circle-chess":760,"mindcastle-chess":760,"App_GameCircleChess.html":760,
+  "game-ladder-rush":680,"wisdom-trail":680,"App_GameLadderRush.html":680,
+  "game-lucky-spin":660,"lucky-spin":660,"App_GameLuckySpin.html":660,
+  "game-emoji-party":620,"emoji-party":620,"App_GameEmojiParty.html":620
+};
+const DIAMOND_EVENT_WEIGHT={
+  "task.completed":10,"task.approved":36,
+  "practice.completed":22,"mastery.unlocked":42,
+  "game.round.completed":16,"game.win":28,
+  "calendar.created":14,"reflection.saved":14,
+  "moment.created":18,"moment.styled":14,
+  "buddy.quest.completed":34,"diamond.gift":26
+};
+function diamondMaturityScore(app){
+  const keys=appKeys(app);
+  const base=keys.reduce((m,k)=>Math.max(m,DIAMOND_MATURITY_BASE[k]||0),0);
+  const events=diamondEventsFor(app);
+  if(!base&&!events.length)return 0;
+  const eventScore=events.reduce((s,e)=>s+(DIAMOND_EVENT_WEIGHT[e]||10),0);
+  const energies=new Set(events.map(e=>KinEngine.rules[e]&&KinEngine.rules[e].energy).filter(Boolean)).size;
+  const combos=
+    (events.includes("task.completed")&&events.includes("task.approved")?34:0)+
+    (events.includes("practice.completed")&&events.includes("mastery.unlocked")?28:0)+
+    (events.includes("game.round.completed")&&events.includes("game.win")?20:0);
+  return base+eventScore+(events.length*7)+(energies*6)+combos;
+}
+function sortAppsForGrid(apps){
+  return apps.map((app,i)=>({app,i,score:diamondMaturityScore(app)}))
+    .sort((a,b)=>(b.score-a.score)||(a.i-b.i))
+    .map(x=>x.app);
+}
 function renderApps(){
   const c=circle();if(!c)return;
   const B=$("#appsBody");
@@ -3659,9 +4126,10 @@ function renderApps(){
     const app=appByAnyId(row.appId);
     if(app&&!seenApps.has(app.id)){seenApps.add(app.id);installed.push(app);}
   });
+  const sortedInstalled=sortAppsForGrid(installed);
   const icons=[
     `<button class="appico store" onclick="Store.open()"><span class="ic" style="color:#fff">${KINETIK_ICON_SVG}</span><span>Kinetik Store</span></button>`,
-    ...installed.map(a=>`<button class="appico" onclick="AppHost.open('${a.id}')"><span class="ic" style="background:linear-gradient(135deg,${a.gradient[0]},${a.gradient[1]})">${iconInner(a.glyph)}</span><span>${esc(a.name)}</span></button>`)
+    ...sortedInstalled.map(a=>`<button class="appico" onclick="AppHost.open('${a.id}')"><span class="ic homeemoji appavatar" style="background:linear-gradient(135deg,${a.gradient[0]},${a.gradient[1]})">${iconInner(appAvatar(a))}${diamondBadge(a)}</span><span>${esc(a.name)}</span></button>`)
   ];
   B.innerHTML=`<div class="lbl" style="margin:8px 0 14px;flex:0 0 auto">${esc(c.name)} · Apps</div>
     <div id="appPager" class="apppager"></div>
@@ -3741,13 +4209,13 @@ const Store={view:"list",detailId:null,query:"",cat:"all",
   grad(a){return `linear-gradient(135deg,${a.gradient[0]},${a.gradient[1]})`;},
   card(a){
     return `<div class="ascard" data-store-detail="${esc(a.id)}">
-      <div class="art" style="background:${this.grad(a)}">${iconInner(a.glyph)}</div>
+      <div class="art appavatar" style="background:${this.grad(a)}">${iconInner(appAvatar(a))}</div>
       <div class="rw"><div style="min-width:0;flex:1"><b>${esc(a.name)}</b><small>${esc(catLabel(a.category))}</small></div>${this.getBtn(a)}</div>
     </div>`;
   },
   listRow(a){
     const inst=this.isInst(a),soon=a.status==="soon";
-    return `<div class="strow" style="cursor:pointer" data-store-detail="${esc(a.id)}"><span class="ic" style="background:${this.grad(a)}">${iconInner(a.glyph)}</span>
+    return `<div class="strow" style="cursor:pointer" data-store-detail="${esc(a.id)}"><span class="ic appavatar" style="background:${this.grad(a)}">${iconInner(appAvatar(a))}</span>
       <div style="min-width:0"><b>${esc(a.name)}</b><p>${esc(a.tagline)}</p>${inst&&!soon?`<button class="rm" data-store-action="remove" data-app-id="${esc(a.id)}"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><path d="M5 12h14"/></svg>Remove</button>`:`<p style="font-size:10.5px;color:var(--faint);font-weight:700">${esc(catLabel(a.category))}</p>`}</div>
       ${this.getBtn(a)}</div>`;
   },
@@ -3772,8 +4240,8 @@ const Store={view:"list",detailId:null,query:"",cat:"all",
     const featured=avail.find(a=>a.status==="live"&&!this.isInst(a))||avail.find(a=>a.status==="live")||avail[0];
     let html=searchOpen+chips;
     if(featured)html+=`<div class="ashero" style="background:${this.grad(featured)}" data-store-detail="${esc(featured.id)}">
-      <span class="glyph">${iconInner(featured.glyph)}</span><span class="tag">Featured</span><h3>${esc(featured.name)}</h3><p>${esc(featured.tagline)}</p>
-      <div class="row"><span class="ic">${iconInner(featured.glyph)}</span><div style="flex:1;min-width:0"><b style="font-size:14px">${esc(featured.name)}</b><div style="font-size:11px;opacity:.85">${esc(catLabel(featured.category))}</div></div>${this.getBtn(featured,true)}</div></div>`;
+      <span class="glyph appavatar">${iconInner(appAvatar(featured))}</span><span class="tag">Featured</span><h3>${esc(featured.name)}</h3><p>${esc(featured.tagline)}</p>
+      <div class="row"><span class="ic appavatar">${iconInner(appAvatar(featured))}</span><div style="flex:1;min-width:0"><b style="font-size:14px">${esc(featured.name)}</b><div style="font-size:11px;opacity:.85">${esc(catLabel(featured.category))}</div></div>${this.getBtn(featured,true)}</div></div>`;
     cats.forEach(cat=>{
       const apps=avail.filter(a=>a.category===cat);if(!apps.length)return;
       html+=`<div class="assec"><b>${esc(catLabel(cat))}</b>${apps.length>2?`<span onclick="Store.setCat('${cat}')" style="cursor:pointer">See all ›</span>`:""}</div>
@@ -3813,7 +4281,7 @@ const Store={view:"list",detailId:null,query:"",cat:"all",
     const works=(a.worksWith||["standalone"]).map(w=>w[0].toUpperCase()+w.slice(1));
     B.innerHTML=`
     <div class="adhero" style="background:${this.grad(a)}">
-      <div class="r"><span class="ic">${iconInner(a.glyph)}</span>
+      <div class="r"><span class="ic appavatar">${iconInner(appAvatar(a))}</span>
         <div style="min-width:0"><h2>${esc(a.name)}</h2><p>${esc(a.tagline)}</p>${this.getBtn(a,true)}</div></div>
     </div>
     <div class="adinfo">
@@ -3824,9 +4292,9 @@ const Store={view:"list",detailId:null,query:"",cat:"all",
     </div>
     <div class="sdsec">Preview</div>
     <div class="shots">
-      <div class="shot" style="background:linear-gradient(160deg,${a.gradient[0]},${a.gradient[1]})">${iconInner(a.glyph)}</div>
-      <div class="shot" style="background:linear-gradient(20deg,${a.gradient[1]},${a.gradient[0]})">${iconInner(a.glyph)}</div>
-      <div class="shot" style="background:linear-gradient(120deg,${a.gradient[0]},${a.gradient[1]})">${iconInner(a.glyph)}</div>
+      <div class="shot appavatar" style="background:linear-gradient(160deg,${a.gradient[0]},${a.gradient[1]})">${iconInner(appAvatar(a))}</div>
+      <div class="shot appavatar" style="background:linear-gradient(20deg,${a.gradient[1]},${a.gradient[0]})">${iconInner(appAvatar(a))}</div>
+      <div class="shot appavatar" style="background:linear-gradient(120deg,${a.gradient[0]},${a.gradient[1]})">${iconInner(appAvatar(a))}</div>
     </div>
     <div class="sdsec">About</div>
     <p class="sdp">${esc(a.desc||a.tagline)}</p>
@@ -3861,31 +4329,102 @@ window.Store=Store;
 
 /* ---------------- App Host + Bridge ---------------- */
 const AppHost={cur:null,
+  isBuddyApp(app=this.cur){
+    const keys=appKeys(app);
+    return keys.includes("productivity-poll")||keys.includes("kinetik-buddy")||keys.includes("kinetik-buddy-world");
+  },
+  economySnapshot(){
+    const people=circlePeople().map(p=>({id:p.id,name:p.displayName,color:p.color,birthYear:p.birthYear||""}));
+    const roles=Perm.roleContext(S.userId,S.circleId),st=KinEngine.state(S.circleId);
+    const events=(DB.d.diamondEvents||[]).filter(e=>e.circleId===S.circleId).map(e=>{
+      const app=appByAnyId(e.appId)||{},rule=KinEngine.rules[e.eventType]||{};
+      return {...e,appName:app.name||e.metadata?.appName||e.appId,personName:personName(e.personId)||e.metadata?.personName||"Someone",energy:e.energy||rule.energy||""};
+    });
+    const installedApps=[];
+    DB.d.circleApps.filter(r=>r.circleId===S.circleId&&r.installed).forEach(row=>{
+      const app=appByAnyId(row.appId);
+      if(app&&!installedApps.some(a=>a.id===app.id))installedApps.push(app);
+    });
+    const diamondApps=sortAppsForGrid(installedApps.filter(a=>diamondLinkKind(a)&&diamondLinkKind(a)!=="hub")).map(app=>{
+      const keys=appKeys(app),ev=events.filter(e=>keys.includes(String(e.appId)));
+      return {
+        id:app.id,appId:app.appId,name:app.name,shortName:app.shortName,file:app.file,
+        avatar:appAvatar(app),gradient:app.gradient,category:app.category,
+        emits:diamondEventsFor(app),maturityScore:diamondMaturityScore(app),
+        diamondKind:diamondLinkKind(app),totalDiamonds:ev.reduce((s,e)=>s+Number(e.amount||0),0),
+        eventCount:ev.length,lastAt:ev[0]&&ev[0].at||"",lastEvent:ev[0]||null
+      };
+    });
+    return {
+      circle:{id:S.circleId,name:circle()?.name||"",type:circle()?.type||""},
+      user:{id:S.userId,name:DataAPI.get("users",S.userId)?.displayName||"",role:roles.role,roleLabel:roles.roleLabel,isLeader:roles.isLeader,isCoLeader:roles.isCoLeader,isCircleAdmin:roles.isCircleAdmin,isAdult:roles.isAdult,isKid:roles.isKid},
+      person:{id:S.personId,name:me()?.displayName||""},
+      people,
+      buddy:st,
+      rules:KinEngine.rules,
+      diamondEvents:events.slice(0,300),
+      agentActions:(DB.d.agentActions||[]).filter(a=>a.circleId===S.circleId).slice(0,120),
+      diamondApps,
+      appRecords:(DB.d.appRecords||[]).filter(r=>r.circleId===S.circleId&&!r.deleted).slice(0,250),
+      generatedAt:new Date().toISOString()
+    };
+  },
   open(appId){
     const app=appByAnyId(appId);
     if(!app||!app.file)return Toast.show("Coming soon");
     this.cur=app;
     $("#appHostTitle").textContent=app.name;
+    this.updateEconomyBadge();
     $("#appFrame").src=app.file;
     $("#appHost").classList.add("on");
     if(Motion.ok())gsap.fromTo("#appHost",{y:30,opacity:0},{y:0,opacity:1,duration:.42,ease:"power3.out"});
   },
   close(){$("#appHost").classList.remove("on");$("#appFrame").src="about:blank";this.cur=null;renderAll();},
+  economyEvents(app=this.cur){return diamondLinkKind(app)==="hub"?["buddy.quest.completed"]:diamondEventsFor(app);},
+  updateEconomyBadge(result){
+    const badge=$("#appEcoBadge");if(!badge)return;
+    const st=KinEngine.state(S.circleId),ready=!!this.economyEvents().length,diamond=result&&result.diamond;
+    $("#appEcoCount").textContent=Number(st.diamonds||0).toLocaleString();
+    $("#appEcoState").textContent=diamond?`+${diamond.amount}`:(ready?"Synced":"Ready");
+    badge.classList.toggle("synced",ready);
+    badge.classList.toggle("unsynced",!ready);
+    badge.title=ready?`${this.cur.name} is synced with Buddy's diamond economy`:"Buddy economy ready for this app";
+  },
+  bumpEconomyBadge(result){
+    this.updateEconomyBadge(result);
+    const badge=$("#appEcoBadge");if(!badge)return;
+    badge.classList.remove("bump");void badge.offsetWidth;badge.classList.add("bump");
+    setTimeout(()=>this.updateEconomyBadge(),1200);
+  },
+  contextPayload(){
+    const u=DataAPI.get("users",S.userId),p=me(),c=circle(),roles=Perm.roleContext(S.userId,S.circleId);
+    const buddy=KinEngine.state(S.circleId);
+    const diamondEvents=(DB.d.diamondEvents||[]).filter(e=>e.circleId===S.circleId);
+    const personDiamonds=diamondEvents.filter(e=>e.personId===S.personId).reduce((sum,e)=>sum+Number(e.amount||0),0);
+    return {
+      userId:S.userId,userName:u&&u.displayName||"",username:u&&u.username||"",
+      personId:S.personId,personName:p&&p.displayName||"",
+      circleId:S.circleId,circleName:c&&c.name||"",circleType:c&&c.type||"",
+      role:roles.role,roleLabel:roles.roleLabel,permission:roles.permission,
+      isLeader:roles.isLeader,isCoLeader:roles.isCoLeader,isCircleAdmin:roles.isCircleAdmin,isAdult:roles.isAdult,isKid:roles.isKid,age:roles.age,
+      theme:document.documentElement.dataset.theme,appId:this.cur&&this.cur.id||"",backendMode:DB.d.settings.backendMode,apiUrl:DB.d.settings.apiUrl,
+      economy:{circleDiamonds:Number(buddy.diamonds||0),personDiamonds,buddyLevel:Number(buddy.level||1),buddyMood:buddy.mood||"curious"},
+      people:circlePeople().map(p=>({id:p.id,name:p.displayName,color:p.color,birthYear:p.birthYear||""}))
+    };
+  },
+  sendContext(){
+    if(!this.cur)return;
+    try{$("#appFrame").contentWindow.postMessage({type:"INIT_APP",payload:this.contextPayload()},"*")}catch(e){}
+  },
+  sendEconomySnapshot(){
+    if(!this.cur||!this.isBuddyApp())return;
+    try{$("#appFrame").contentWindow.postMessage({type:"KINETIK_ECONOMY_SNAPSHOT_RESULT",payload:this.economySnapshot()},"*")}catch(e){}
+  },
   init(){
     $("#appHostDone").onclick=()=>this.close();
-    $("#appFrame").addEventListener("load",()=>{
-      if(!this.cur)return;
-      const u=DataAPI.get("users",S.userId),p=me(),c=circle(),roles=Perm.roleContext(S.userId,S.circleId);
-      $("#appFrame").contentWindow.postMessage({type:"INIT_APP",payload:{
-        userId:S.userId,userName:u&&u.displayName||"",username:u&&u.username||"",
-        personId:S.personId,personName:p&&p.displayName||"",
-        circleId:S.circleId,circleName:c&&c.name||"",circleType:c&&c.type||"",
-        role:roles.role,roleLabel:roles.roleLabel,permission:roles.permission,
-        isLeader:roles.isLeader,isCoLeader:roles.isCoLeader,isCircleAdmin:roles.isCircleAdmin,isAdult:roles.isAdult,isKid:roles.isKid,age:roles.age,
-        theme:document.documentElement.dataset.theme,appId:this.cur.id,backendMode:DB.d.settings.backendMode,apiUrl:DB.d.settings.apiUrl,
-        people:circlePeople().map(p=>({id:p.id,name:p.displayName,color:p.color,birthYear:p.birthYear||""}))
-      }},"*");
-    });
+    EventBus.on("kin:event",p=>{if(this.cur&&p&&p.event&&appKeys(this.cur).includes(String(p.event.appId)))this.bumpEconomyBadge({diamond:p.diamond});this.sendEconomySnapshot();});
+    EventBus.on("circle:changed",()=>this.sendContext());
+    $("#appFrame").addEventListener("load",()=>this.sendContext());
     addEventListener("message",e=>{
       const m=e.data||{};const reply=p=>{try{$("#appFrame").contentWindow.postMessage(p,"*")}catch(x){}};
       if(m.type==="DATA_LIST"){
@@ -3901,10 +4440,21 @@ const AppHost={cur:null,
       }
       else if(m.type==="DATA_UPDATE"){const r=DataAPI.update("appRecords",m.id,{payload:m.payload});reply({type:"DATA_RESULT",reqId:m.reqId,items:[r]});}
       else if(m.type==="DATA_REMOVE"){DataAPI.update("appRecords",m.id,{deleted:true});reply({type:"DATA_RESULT",reqId:m.reqId,items:[]});}
-      else if(m.type==="SHOW_TOAST")Toast.show(m.message||"");
+      else if(m.type==="SHOW_TOAST"){const p=m.payload||{};Toast.show(m.message||p.message||"");}
       else if(m.type==="KINETIK_EVENT"){
-        const result=KinEngine.handle(m);
-        reply({type:"KINETIK_EVENT_RESULT",reqId:m.reqId,result});
+        KinEngine.handle(m).then(result=>{
+          reply({type:"KINETIK_EVENT_RESULT",reqId:m.reqId,result});
+        }).catch(err=>{
+          reply({type:"KINETIK_EVENT_RESULT",reqId:m.reqId,result:{ok:false,error:String(err&&err.message||err)}});
+        });
+      }
+      else if(m.type==="KINETIK_ECONOMY_SNAPSHOT"){
+        reply({type:"KINETIK_ECONOMY_SNAPSHOT_RESULT",reqId:m.reqId,payload:this.isBuddyApp()?this.economySnapshot():{error:"not_allowed"}});
+      }
+      else if(m.type==="OPEN_APP"){
+        const target=appByAnyId(m.payload?.appId||m.targetAppId||m.appId);
+        if(target)this.open(target.id);
+        else Toast.show("App not found");
       }
       else if(m.type==="CLOSE_APP")this.close();
       else if(m.type==="ADD_TO_CALENDAR"){
@@ -4112,6 +4662,7 @@ window.setCircle=cid=>{
   S.circleId=cid;Session.save();Theme.apply();EventBus.emit("circle:changed");
   S.askStarted=false;S.calSel=null;S.calWeekOffset=0;
   renderAll();Toast.show(circle().name);
+  EconomyAPI.refresh(cid).then(()=>renderAll());
 };
 
 /* ---------------- Circle Switcher (top pill) ---------------- */
@@ -4183,6 +4734,7 @@ function finishLogin(user){
   LastUser.save(user);
   Session.save();EventBus.emit("auth:login");
   $("#login").classList.add("hide");enterShell();
+  EconomyAPI.refresh().then(()=>renderAll());
 }
 function tryLogin(u){
   const pin=$("#pinFld").value.trim();
@@ -4302,6 +4854,7 @@ async function boot(){
   Theme.apply();Scene.init();AppHost.init();
   const has=Session.restore();
   if(has){
+    EconomyAPI.refresh().then(()=>renderAll());
     const ag=Cal.agendaToday(S.circleId);
     Splash.set(ag.length?circle().name+" is ready":"Today is clear");
   }else Splash.set(DB.error?"Opening from this device":"Ready when you are");

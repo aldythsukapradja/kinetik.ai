@@ -12,7 +12,8 @@
   "appId": "mindcastle-chess",
   "name": "Circle Chess",
   "shortName": "Chess",
-  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M20 49h25M24 41h17M28 35c-6-5-5-14 4-20 6 4 12 5 14 12-4 2-9 2-12 0'/><path d='M34 27c-1 5 2 9 7 14'/><circle cx='27' cy='23' r='1.7' fill='white' stroke='none'/></svg>",
+  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M20 49h25M24 41h17M28 35c-6-5-5-14 4-20 6 4 12 5 14 12-4 2-9 2-12 0'/><path d='M34 27c-1 5 2 9 7 14'/><circle cx='27' cy='23' r='1.7' fill='white' stroke='none'/><\/svg>",
+  "homeIcon": "♟️",
   "gradient": [
     "#0e9f6e",
     "#e8a53c"
@@ -27,6 +28,12 @@
   ],
   "worksWith": [
     "standalone"
+  ],
+  "emits": [
+    "practice.completed",
+    "mastery.unlocked",
+    "game.round.completed",
+    "game.win"
   ],
   "status": "live",
   "minMembers": 1
@@ -63,10 +70,11 @@ body{font-family:var(--body);color:var(--ink);
 .screen.on{display:flex}
 @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px;gap:10px}
-.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;overflow:hidden;white-space:nowrap;font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink)}
 .logo{width:34px;height:34px;border-radius:11px;background:linear-gradient(140deg,var(--emerald),#1f6f50);display:grid;place-items:center;box-shadow:0 8px 18px rgba(14,159,110,.4);color:#fff;font-size:18px}
-.wallet{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);padding:8px 15px;border-radius:99px;font-family:var(--display);font-weight:700;font-size:15px;box-shadow:var(--shadow-sm)}
-.coin{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE9A8,var(--gold) 58%,var(--gold-d));display:grid;place-items:center;font-size:11px;color:#7a5600;box-shadow:0 2px 5px rgba(196,131,28,.45)}
+.wallet{flex:0 0 auto;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);padding:8px 15px;border-radius:99px;font-family:var(--display);font-weight:700;font-size:15px;box-shadow:var(--shadow-sm)}
+.kinctx{flex:0 1 112px;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--card);border:1px solid var(--line);padding:7px 10px;border-radius:99px;font-size:11px;font-weight:800;color:var(--ink-dim);box-shadow:var(--shadow-sm)}
+.diamond{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ecfeff,#67e8f9 55%,#0ea5e9);display:grid;place-items:center;font-size:12px;color:#075985;box-shadow:0 2px 7px rgba(14,165,233,.42)}
 .scroll{flex:1;overflow-y:auto;padding:4px 20px 26px}
 .hero{position:relative;border-radius:28px;padding:24px 22px;overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow);background:linear-gradient(135deg,#0E9F6E,#10796f 60%,#1c5b46)}
 .hero h1{font-family:var(--display);font-weight:800;font-size:31px;line-height:1;color:#fff;letter-spacing:.3px;margin-bottom:7px;position:relative;z-index:2}
@@ -177,7 +185,8 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:60;display:none}
   <section class="screen on" id="home">
     <div class="topbar">
       <div class="brand"><span class="logo">♞</span> MindCastle</div>
-      <div class="wallet"><span class="coin">$</span><span id="walletHome">0</span></div>
+      <div class="kinctx" id="kinCtx">Standalone</div>
+      <div class="wallet"><span class="diamond">💎</span><span id="walletHome">0</span></div>
     </div>
     <div class="scroll">
       <div class="hero"><h1>MindCastle</h1><p>Learn real chess, train your brain, and outsmart your friends.</p><span class="k">♚</span></div>
@@ -237,11 +246,28 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:60;display:none}
 <div class="toast" id="toast"></div>
 <script>
 const SAVE_KEY='mindcastle_save';
+const APP_ID='mindcastle-chess';
+const Bridge={embedded:window.self!==window.top,ctx:{},reqs:{},rid:0,
+  send(type,payload){if(this.embedded)parent.postMessage({type,appId:APP_ID,...(payload||{})},'*')},
+  request(type,payload){return new Promise(res=>{if(!this.embedded)return res(null);const reqId=APP_ID+'_'+(++this.rid);this.reqs[reqId]=res;parent.postMessage({type,appId:APP_ID,reqId,...(payload||{})},'*');setTimeout(()=>{if(this.reqs[reqId]){delete this.reqs[reqId];res(null);}},2200);});}
+};
+if(Bridge.embedded)document.body.classList.add('embedded');
+function contextLabel(){const c=Bridge.ctx||{},who=c.personName||c.userName||'Standalone',circle=c.circleName||'';return c.circleId?[who,circle].filter(Boolean).join(' · '):'Standalone'}
+function defaultPlayerName(fallback){return (Bridge.ctx.personName||Bridge.ctx.userName||save.name||fallback||'Player').slice(0,10)}
+function currentPerson(){const c=Bridge.ctx||{};return {id:c.personId||'local-player',name:(c.personName||c.userName||save.name||'Player').slice(0,32)}}
+function syncKinetikName(){const c=Bridge.ctx||{};if(c.personName&&save._kinetikPersonId!==c.personId){save.name=c.personName.slice(0,10);save._kinetikPersonId=c.personId||'';store()}}
+function scopedPayload(payload){const c=Bridge.ctx||{},p=currentPerson();return Object.assign({appId:APP_ID,circleId:c.circleId||'standalone',circleName:c.circleName||'',personId:p.id,personName:p.name,createdAt:new Date().toISOString()},payload||{})}
+function recordKinetik(collection,payload){Bridge.send('DATA_CREATE',{collection,ownerPersonId:true,payload:scopedPayload(payload)})}
+function emitKinetik(eventType,amount,metadata,sourceRecordId){const c=Bridge.ctx||{},p=currentPerson();return Bridge.request('KINETIK_EVENT',{eventType,amount,sourceRecordId:sourceRecordId||'',circleId:c.circleId||'',personId:p.id,metadata:Object.assign({personName:p.name},metadata||{})})}
+function syncEconomyDiamonds(){const eco=Bridge.ctx&&Bridge.ctx.economy;if(!eco||typeof save==='undefined')return;const v=Number(eco.personDiamonds??eco.circleDiamonds);if(Number.isFinite(v)){save.diamonds=v;store();renderWallet();}}
+function applyDiamondResult(result,fallback){const gained=result&&result.diamond?Number(result.diamond.amount||0):0;const p=currentPerson(),byPerson=result&&result.buddy&&result.buddy.byPerson;const dyn=byPerson&&byPerson[p.id]!=null?Number(byPerson[p.id]):NaN;if(Number.isFinite(dyn))save.diamonds=dyn;else save.diamonds+=gained||fallback||0;store();renderWallet();return gained||fallback||0}
+function applyKinetikContext(){const el=document.getElementById('kinCtx');window.KinetikContext=Bridge.ctx;if(Bridge.ctx&&Bridge.ctx.theme)document.documentElement.setAttribute('data-theme',Bridge.ctx.theme==='dark'?'dark':'light');if(el)el.textContent=contextLabel();syncKinetikName();syncEconomyDiamonds()}
+addEventListener('message',e=>{const m=e.data||{};if(m.type==='INIT_APP'){Bridge.ctx=m.payload||{};applyKinetikContext()}if(m.type==='KINETIK_EVENT_RESULT'&&m.reqId&&Bridge.reqs[m.reqId]){const f=Bridge.reqs[m.reqId];delete Bridge.reqs[m.reqId];f(m.result)}});
 function load(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))||{}}catch(e){return{}}}
 function store(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save))}catch(e){}}
-let save=Object.assign({coins:0,wins:0,games:0,lessons:0,sound:true,name:''},load());
-function addCoins(n){save.coins+=n;store();renderWallet()}
-function renderWallet(){document.getElementById('walletHome').textContent=save.coins.toLocaleString()}
+let save=Object.assign({diamonds:0,wins:0,games:0,lessons:0,sound:true,name:''},load());
+if(save.coins&&!save.diamonds){save.diamonds=save.coins;delete save.coins;store();}
+function renderWallet(){document.getElementById('walletHome').textContent=Number(save.diamonds||0).toLocaleString()}
 
 /* ===== engine (perft-validated) ===== */
 const START='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
@@ -439,21 +465,32 @@ function updateStatus(){const g=GAME.g;const ms=legalMoves(g);
   if(GAME.mode==='cpu'||GAME.mode==='online'){const mine=g.turn===GAME.myColor;setStatus((chk?'Check! ':'')+(mine?'Your move':GAME.names[g.turn]+"'s move"),chk);}
   else setStatus((chk?'Check! ':'')+GAME.names[g.turn]+' to move',chk);
 }
-function endGame(result){if(GAME.over)return;GAME.over=true;renderRows();
-  let iWon=false,title,sub,coins;
-  if(result==='draw'){title='Draw';sub='A balanced battle — well played!';coins=15;}
-  else{const winnerName=GAME.names[result];
+async function endGame(result){if(GAME.over)return;GAME.over=true;renderRows();
+  let iWon=false,title,sub,winnerName='';
+  let roundDiamonds=result==='draw'?3:2,winDiamonds=0;
+  if(result==='draw'){title='Draw';sub='A balanced battle — well played!';}
+  else{winnerName=GAME.names[result];
     if(GAME.mode==='cpu'||GAME.mode==='online')iWon=(result===GAME.myColor);else iWon=true;
     title=(GAME.mode==='duo')?winnerName+' wins!':(iWon?'You win! 🎉':'You lost');
     sub=(result?('Checkmate'):'')+' — '+winnerName+' is victorious';
-    coins=iWon?(GAME.mode==='cpu'?40+GAME.level*30:60):(GAME.mode==='duo'?40:8);
+    roundDiamonds=GAME.mode==='duo'?5:3;
+    winDiamonds=iWon&&result!=='draw'?(GAME.mode==='cpu'?Math.min(15,5+GAME.level*2):8):0;
   }
-  save.games++;if(iWon&&result!=='draw')save.wins++;addCoins(coins);store();buildHome();
+  save.games++;if(iWon&&result!=='draw')save.wins++;store();buildHome();
+  const roundId='circle-chess-'+Date.now();
+  recordKinetik('game_results',{kind:'chess.match',mode:GAME.mode,result,winnerName,won:iWon&&result!=='draw',diamonds:roundDiamonds+winDiamonds,moves:GAME.moves.length});
+  let awarded=0;
+  const roundResult=await emitKinetik('game.round.completed',roundDiamonds,{title:'Circle Chess match',mode:GAME.mode,result,winnerName,diamonds:roundDiamonds},roundId);
+  awarded+=applyDiamondResult(roundResult,Bridge.embedded?0:roundDiamonds);
+  if(winDiamonds){
+    const winResult=await emitKinetik('game.win',winDiamonds,{title:'Circle Chess win',mode:GAME.mode,winnerName,diamonds:winDiamonds},roundId+'-win');
+    awarded+=applyDiamondResult(winResult,Bridge.embedded?0:winDiamonds);
+  }
   setStatus(result==='draw'?'Draw':'Checkmate — '+GAME.names[result]+' wins',false);
   if(result!=='draw')paint(GB,GAME.g,{last:GAME.lastMove,checkCol:GAME.g.turn});
   if(iWon||GAME.mode==='duo'){sfx('win');confetti();}else sfx('lose');
   const sheet=document.getElementById('winSheet');
-  sheet.innerHTML='<span class="result-emoji">'+(result==='draw'?'🤝':(iWon||GAME.mode==='duo'?'🏆':'😅'))+'</span><div class="win-title">'+title+'</div><div class="win-sub">'+sub+'</div><div class="reward"><div class="rv">+'+coins+'</div><div class="rl">COINS EARNED</div></div><button class="sheet-btn" id="againBtn">Play again</button><button class="sheet-btn ghost" id="homeBtn">Back to menu</button>';
+  sheet.innerHTML='<span class="result-emoji">'+(result==='draw'?'🤝':(iWon||GAME.mode==='duo'?'🏆':'😅'))+'</span><div class="win-title">'+title+'</div><div class="win-sub">'+sub+'</div><div class="reward"><div class="rv">+'+(awarded||roundDiamonds+winDiamonds)+' 💎</div><div class="rl">DIAMONDS SENT</div></div><button class="sheet-btn" id="againBtn">Play again</button><button class="sheet-btn ghost" id="homeBtn">Back to menu</button>';
   sheet.querySelector('#againBtn').onclick=()=>{closeScrim('winScrim');if(GAME.mode==='online'){if(net.host){net.send({t:'rematch'});startGame('w');}else toast('Waiting for host to rematch…');}else startGame(GAME.mode==='cpu'?GAME.myColor:'w');};
   sheet.querySelector('#homeBtn').onclick=()=>{closeScrim('winScrim');teardownNet();go('home')};
   setTimeout(()=>openScrim('winScrim'),iWon||GAME.mode==='duo'||result==='draw'?700:400);
@@ -532,7 +569,11 @@ function evalLesson(){const L=LESSONS[TUT.idx];const g=TUT.tg;let ok=false;
   else if(L.cond.type==='check')ok=inCheck(g,'b');
   else if(L.cond.type==='mate')ok=inCheck(g,'b')&&legalMoves(g).length===0;
   if(ok){TUT.done=true;sfx('win');burstAt();renderBanner();document.getElementById('tutNext').disabled=false;
-    if(TUT.idx>=save.lessons){save.lessons=TUT.idx+1;addCoins(20);store();toast('Lesson complete! +20 coins');}else toast('Lesson complete! ✓');
+    if(TUT.idx>=save.lessons){save.lessons=TUT.idx+1;store();toast('Lesson complete! Diamonds sent 💎');
+      recordKinetik('learning_sessions',{kind:'chess.lesson',lessonIndex:TUT.idx+1,lessonName:L.name,diamonds:3});
+      emitKinetik('practice.completed',3,{title:'Chess lesson: '+L.name,lessonIndex:TUT.idx+1,diamonds:3},'circle-chess-lesson-'+TUT.idx+'-'+Date.now()).then(r=>applyDiamondResult(r,Bridge.embedded?0:3));
+      if(TUT.idx===LESSONS.length-1)emitKinetik('mastery.unlocked',15,{title:'Chess basics complete',lessonCount:LESSONS.length,diamonds:15},'circle-chess-basics-complete').then(r=>applyDiamondResult(r,Bridge.embedded?0:15));
+    }else toast('Lesson complete! ✓');
     document.getElementById('tutNext').textContent=(TUT.idx===LESSONS.length-1)?'Finish 🎉':'Next →';
   }else{toast('Not quite — try again');setTimeout(()=>loadLesson(TUT.idx),700);}
 }
@@ -542,10 +583,10 @@ net.send=function(m){try{if(net.conn)net.conn.send(m)}catch(e){}};
 function teardownNet(){try{if(net.peer)net.peer.destroy()}catch(e){}net={on:false,host:false,peer:null,conn:null,guestName:'',hn:'',gn:'',send:net.send};}
 function shortCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=c[Math.random()*c.length|0];return s;}
 function openLobby(){go('lobby');
-  document.getElementById('lobbyBody').innerHTML='<div class="lobby-card"><div class="section-h" style="margin-top:0">Your name</div><input class="field" id="nameIn" placeholder="NAME" maxlength="10" style="text-transform:none;letter-spacing:1px" value="'+(save.name||'')+'"><div style="margin-top:18px"><button class="sheet-btn" id="createBtn" style="margin-top:0">Create a duel</button></div><div class="section-h">Or join with a code</div><input class="field" id="codeIn" placeholder="CODE" maxlength="4"><button class="sheet-btn ghost" id="joinBtn">Join duel</button><div class="status" id="lobbyStatus"></div></div><div class="status" style="font-size:12px;color:var(--ink-faint)">Two players, head to head. Both must be online together. The host plays White.</div>';
+  document.getElementById('lobbyBody').innerHTML='<div class="lobby-card"><div class="section-h" style="margin-top:0">Your name</div><input class="field" id="nameIn" placeholder="NAME" maxlength="10" style="text-transform:none;letter-spacing:1px" value="'+defaultPlayerName('')+'"><div style="margin-top:18px"><button class="sheet-btn" id="createBtn" style="margin-top:0">Create a duel</button></div><div class="section-h">Or join with a code</div><input class="field" id="codeIn" placeholder="CODE" maxlength="4"><button class="sheet-btn ghost" id="joinBtn">Join duel</button><div class="status" id="lobbyStatus"></div></div><div class="status" style="font-size:12px;color:var(--ink-faint)">Two players, head to head. Both must be online together. The host plays White.</div>';
   document.getElementById('createBtn').onclick=hostCircle;document.getElementById('joinBtn').onclick=joinCircle;document.getElementById('lobbyBack').onclick=()=>{teardownNet();go('home')};}
 function lobbyStatus(t){const e=document.getElementById('lobbyStatus');if(e)e.textContent=t;}
-function hostCircle(){const name=(document.getElementById('nameIn').value||'Host').trim().slice(0,10)||'Host';save.name=name;store();
+function hostCircle(){const name=(document.getElementById('nameIn').value||defaultPlayerName('Host')).trim().slice(0,10)||'Host';save.name=name;store();
   if(typeof Peer==='undefined'){lobbyStatus('Online needs an internet connection.');return;}
   lobbyStatus('Creating your duel…');const code=shortCode();net={on:true,host:true,peer:null,conn:null,guestName:'',hn:name,gn:'',send:net.send};
   const peer=new Peer('mc-'+code,{debug:0});net.peer=peer;
@@ -561,7 +602,7 @@ function renderHostLobby(code){net.code=code;const body=document.getElementById(
   const sb=body.querySelector('#startOnline');if(sb&&joined)sb.onclick=hostStart;
   document.getElementById('lobbyBack').onclick=()=>{teardownNet();go('home')};}
 function hostStart(){net.send({t:'begin',hn:net.hn,gn:net.gn});sel.mode='online';startGame('w');GAME.names={w:net.hn,b:net.gn};renderRows();updateStatus();}
-function joinCircle(){const name=(document.getElementById('nameIn').value||'Friend').trim().slice(0,10)||'Friend';const code=(document.getElementById('codeIn').value||'').trim().toUpperCase();
+function joinCircle(){const name=(document.getElementById('nameIn').value||defaultPlayerName('Friend')).trim().slice(0,10)||'Friend';const code=(document.getElementById('codeIn').value||'').trim().toUpperCase();
   if(code.length<4){lobbyStatus('Enter the 4-letter code.');return;}save.name=name;store();
   if(typeof Peer==='undefined'){lobbyStatus('Online needs an internet connection.');return;}
   lobbyStatus('Connecting…');net={on:true,host:false,peer:null,conn:null,guestName:'',hn:'',gn:name,send:net.send};

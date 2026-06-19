@@ -8,15 +8,22 @@ Any LLM or builder should read these first, in order:
 
 1. `KINETIK_HANDOFF.md` - current architecture, working features, limits, and next work.
 2. `KINETIK_AGENT_SYSTEM.md` - Buddy, diamonds, `@kin`, cross-app actions, Moment Studio, and the deterministic agent model.
-3. `APP_BUILD_STANDARD.md` - how to build portable `App_*.html` apps that plug back into Kinetik.
-4. `KINETIK_APP_AUDIT.md` - current app list, roles, maturity, gaps, and economy posture.
-5. `KINETIK_APP_HOUSEKEEPING.md` - cleanup order and app maturity matrix.
-6. `Code.gs` - current Google Apps Script backend and Sheets schema.
-7. `index.html` - current shell implementation.
+3. `KINETIK_DIAMOND_ECONOMY.md` - real diamond economy, app mapping, event policy, reward caps, schema.
+4. `APP_BUILD_STANDARD.md` - how to build portable `App_*.html` apps that plug back into Kinetik.
+5. `KINETIK_APP_AUDIT.md` - current app list, roles, maturity, gaps, and economy posture.
+6. `KINETIK_APP_HOUSEKEEPING.md` - cleanup order and app maturity matrix.
+7. `Code.gs` - current Google Apps Script backend and Sheets schema.
+8. `index.html` - current shell implementation.
+
+For business, launch, pitch, or website work, read these after the product docs:
+
+1. `KINETIK_BUSINESS_STRATEGY.md` - category thesis, market map, wedge, moat, monetization, risks.
+2. `KINETIK_BRAND_LAUNCH_PLAYBOOK.md` - brand architecture, voice, web direction, launch film, social strategy.
+3. `KINETIK_PITCH_DECK_SOURCE.md` - slide-by-slide investor deck source, demo script, FAQ, metrics.
 
 ## Hard Rules
 
-- Do not change Buddy, diamonds, `@kin`, agent cards, app rewards, cross-app actions, or Moment Studio without reading `KINETIK_AGENT_SYSTEM.md`.
+- Do not change Buddy, diamonds, `@kin`, agent cards, app rewards, cross-app actions, or Moment Studio without reading `KINETIK_AGENT_SYSTEM.md` and `KINETIK_DIAMOND_ECONOMY.md`.
 - Do not add or port an app without reading `APP_BUILD_STANDARD.md`.
 - Every app should be one `App_<Category><Name>.html` file with its manifest and inline SVG icon inside the HTML.
 - After app manifest changes, run `node build_app_catalog.mjs`.
@@ -27,3 +34,7 @@ Any LLM or builder should read these first, in order:
 Kinetik is a private app world for family and friends. The app system should feel
 like a living home screen: useful apps, shared circles, memories, calendar, chat,
 and one emotional companion that reacts to meaningful progress.
+
+Business positioning: Kinetik is a **Family Companion OS**. Kin is the companion
+mind; Buddy is the visible avatar. The product should feel like a new family
+member: tutor, assistant, pet, memory keeper, and future wellbeing/care navigator.

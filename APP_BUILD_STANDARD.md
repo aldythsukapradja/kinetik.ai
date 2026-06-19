@@ -9,7 +9,9 @@ self-contained experiences that install per circle, open inside the Kinetik shel
 and can also run by themselves during external development.
 
 For Buddy, diamonds, `@kin`, Moment Studio, cross-app actions, and future LLM
-behavior, read `KINETIK_AGENT_SYSTEM.md` before changing app behavior.
+behavior, read `KINETIK_AGENT_SYSTEM.md` before changing app behavior. For
+reward amounts, allowed economy events, app-to-energy mapping, and anti-farming
+rules, read `KINETIK_DIAMOND_ECONOMY.md`.
 
 ## 1. The Non-Negotiables
 
@@ -64,6 +66,7 @@ Place this once in `<head>`, right after `<title>`.
   "name": "Code Clash",
   "shortName": "Clash",
   "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M25 18L13 32l12 14M39 18l12 14-12 14'/><path d='M35 14l-8 36'/></svg>",
+  "homeIcon": "⚔️",
   "gradient": ["#ec4899", "#8b5cf6"],
   "category": "games",
   "tagline": "Crack the hidden code.",
@@ -85,6 +88,7 @@ Field rules:
 | `name` | Required. Human display name. |
 | `shortName` | Recommended. 14 characters or fewer for the Apps grid. |
 | `icon` | Required. Inline SVG only. No emoji, no letters, no external image. |
+| `homeIcon` | Required for polished Apps-tab tiles. One clear emoji. The Store can still use `icon`. |
 | `gradient` | Required. Two hex colors for the app tile and Store surfaces. |
 | `category` | Required. `games`, `sports`, `productivity`, `social`, or `entertainment`. |
 | `tagline` | Required. Short, human, one line. |
@@ -99,7 +103,8 @@ Do not include `rating`, `version`, `manifestUrl`, `iconUrl`, or external asset 
 
 ## 4. Icon Standard
 
-Kinetik app icons are foreground marks placed on shell-painted gradient tiles.
+Kinetik app icons have two layers: a symbolic SVG for Store/detail surfaces and
+a friendly emoji for the Apps home grid.
 
 Rules:
 
@@ -109,9 +114,11 @@ Rules:
 - Use white as the main stroke/fill so the mark works on the tile gradient.
 - Keep the viewBox `0 0 64 64`.
 - Do not include external images, base64 PNGs, or icon font references.
+- Add `homeIcon` as a single emoji for the Apps tab. Keep it emotionally clear
+  and easy to scan at phone-home-screen size.
 
 The Kinetik shell owns the premium PWA icon and loading icon. App files only own
-their own Store/app-grid mark.
+their own Store mark and Apps-tab emoji.
 
 ## 5. Standalone And Embedded Modes
 
@@ -421,12 +428,13 @@ When an app is built outside Kinetik, the builder must deliver:
 1. One complete `App_<Category><Name>.html`.
 2. Manifest block in the head.
 3. Inline SVG icon in the manifest.
-4. Standalone sample data.
-5. Embedded-mode bridge handling.
-6. Storage collections used.
-7. Buddy/diamond events emitted.
-8. Any network dependency disclosed.
-9. A short test note: mobile width, standalone, embedded, empty state, saved state.
+4. `homeIcon` emoji in the manifest.
+5. Standalone sample data.
+6. Embedded-mode bridge handling.
+7. Storage collections used.
+8. Buddy/diamond events emitted.
+9. Any network dependency disclosed.
+10. A short test note: mobile width, standalone, embedded, empty state, saved state.
 
 ## 15. Port-Back Checklist
 
@@ -461,6 +469,7 @@ npm.cmd run check
 - [ ] Correct `App_<Category><Name>.html` filename.
 - [ ] Manifest is valid JSON.
 - [ ] Icon is inline SVG, no text/initials.
+- [ ] `homeIcon` is a clear emoji for the Apps tab.
 - [ ] No external manifest/icon files.
 - [ ] Opens standalone.
 - [ ] Works embedded.

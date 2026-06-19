@@ -6,6 +6,9 @@ Read this document whenever the work mentions agent, Buddy, diamonds, `@kin`,
 cross-app actions, app events, app recommendations, Moment Studio, or future LLM
 behavior.
 
+For concrete reward amounts, app-to-energy mapping, anti-farming rules, wiring
+waves, leaderboards, and schema, also read `KINETIK_DIAMOND_ECONOMY.md`.
+
 ## 1. Core Idea
 
 Kinetik should have one living agent identity across the whole product.
@@ -179,6 +182,42 @@ These are the first capabilities. Each one should be a rule, not an LLM guess.
 | `save_practice` | Save drill/rehearsal/practice session. |
 | `style_moment` | Apply a deterministic Moment Studio template. |
 | `create_story_card` | Create a shareable card/poster from a moment or achievement. |
+
+## 8A. POC Action Spine
+
+The current proof-of-concept spine lives in `index.html` as `KinSpine`.
+
+It is intentionally simple: one reusable layer that sits between surfaces such as
+Ask/Chat and product systems such as Apps, Calendar, Moments, and Buddy.
+
+```text
+User asks Kin
+  -> KinSpine matches a known lane
+  -> read shell context
+  -> render a preview/action card
+  -> user taps a button
+  -> write only through the owning system
+  -> emit a KINETIK_EVENT when needed
+  -> KinEngine/Buddy reacts
+```
+
+First POC lanes:
+
+| Lane | Reads | Prepares | Writes |
+|---|---|---|---|
+| Learning suggestion | circle people, app catalog, Buddy state | next learning app/card | none |
+| Learning schedule | Calendar availability, learner profile, app catalog | 20-minute learning preview | Calendar event after tap |
+| Moment photos | Moments memory lines/stories | latest photo grid, album/story starters | none |
+| App handoff | app catalog, energy balance | suggested app card | opens selected app |
+
+Rules:
+
+- Learning and app suggestions are read-only until the user opens an app.
+- Calendar writes are always preview-first and confirmation-gated.
+- Moment photo extraction means "surface existing Moment media for reuse"; it does
+  not copy, upload, delete, or transform media by itself.
+- Future Chat and app surfaces should call the same spine/action registry rather
+  than creating separate agent logic.
 
 ## 9. Preview Card Pattern
 
@@ -415,6 +454,9 @@ Entertainment -> Story Energy
 ```
 
 ## 16. Reward And Approval Rules
+
+Canonical economy mapping now lives in `KINETIK_DIAMOND_ECONOMY.md`. This section
+is the short behavioral summary for the agent system.
 
 Baseline rules:
 

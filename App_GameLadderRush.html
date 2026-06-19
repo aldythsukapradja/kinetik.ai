@@ -12,7 +12,8 @@
   "appId": "wisdom-trail",
   "name": "Choice Trail",
   "shortName": "Trail",
-  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M18 50c8-3 9-11 14-18s8-12 16-15'/><path d='M16 19h14M20 28h15M24 37h15M28 46h15'/><circle cx='48' cy='17' r='5' fill='white' stroke='none'/><path d='M14 50h38'/></svg>",
+  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><path d='M18 50c8-3 9-11 14-18s8-12 16-15'/><path d='M16 19h14M20 28h15M24 37h15M28 46h15'/><circle cx='48' cy='17' r='5' fill='white' stroke='none'/><path d='M14 50h38'/><\/svg>",
+  "homeIcon": "🎲",
   "gradient": [
     "#6c5ce7",
     "#18b981"
@@ -27,6 +28,10 @@
   ],
   "worksWith": [
     "standalone"
+  ],
+  "emits": [
+    "game.round.completed",
+    "game.win"
   ],
   "status": "live",
   "minMembers": 1
@@ -62,10 +67,11 @@ body{font-family:var(--body);color:var(--ink);
 .screen.on{display:flex}
 @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px;gap:10px}
-.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;overflow:hidden;white-space:nowrap;font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink)}
 .logo{width:34px;height:34px;border-radius:11px;background:linear-gradient(140deg,var(--violet),var(--sky));display:grid;place-items:center;box-shadow:0 8px 18px rgba(108,92,231,.4)}
-.wallet{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);padding:8px 15px;border-radius:99px;font-family:var(--display);font-weight:700;font-size:15px;box-shadow:var(--shadow-sm)}
-.coin{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE9A8,var(--gold) 58%,var(--gold-d));display:grid;place-items:center;font-size:11px;color:#7a5600;box-shadow:0 2px 5px rgba(217,138,14,.45)}
+.wallet{flex:0 0 auto;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);padding:8px 15px;border-radius:99px;font-family:var(--display);font-weight:700;font-size:15px;box-shadow:var(--shadow-sm)}
+.kinctx{flex:0 1 112px;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--card);border:1px solid var(--line);padding:7px 10px;border-radius:99px;font-size:11px;font-weight:800;color:var(--ink-dim);box-shadow:var(--shadow-sm)}
+.diamond{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ecfeff,#67e8f9 55%,#0ea5e9);display:grid;place-items:center;font-size:12px;color:#075985;box-shadow:0 2px 7px rgba(14,165,233,.42)}
 .scroll{flex:1;overflow-y:auto;padding:4px 20px 26px}
 .hero{position:relative;border-radius:28px;padding:24px 22px;overflow:hidden;margin-bottom:22px;box-shadow:var(--shadow);background:linear-gradient(135deg,#7C6CF0,#3FA9F5 70%,#22C7A0)}
 .hero h1{font-family:var(--display);font-weight:800;font-size:33px;line-height:1;color:#fff;letter-spacing:.3px;margin-bottom:7px;position:relative;z-index:2}
@@ -178,7 +184,8 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:60;display:none}
   <section class="screen on" id="home">
     <div class="topbar">
       <div class="brand"><span class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M7 21V5M7 5l4 3M7 11l4 3M7 16l4 3" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M17 4c2.2 1 2.2 4 0 5s-2.2 4 0 5-2.2 4-2 6" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg></span> Wisdom Trail</div>
-      <div class="wallet"><span class="coin">$</span><span id="walletHome">0</span></div>
+      <div class="kinctx" id="kinCtx">Standalone</div>
+      <div class="wallet"><span class="diamond">💎</span><span id="walletHome">0</span></div>
     </div>
     <div class="scroll">
       <div class="hero">
@@ -236,11 +243,28 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:60;display:none}
 <div class="toast" id="toast"></div>
 <script>
 const SAVE_KEY='wisdomtrail_save';
+const APP_ID='wisdom-trail';
+const Bridge={embedded:window.self!==window.top,ctx:{},reqs:{},rid:0,
+  send(type,payload){if(this.embedded)parent.postMessage({type,appId:APP_ID,...(payload||{})},'*')},
+  request(type,payload){return new Promise(res=>{if(!this.embedded)return res(null);const reqId=APP_ID+'_'+(++this.rid);this.reqs[reqId]=res;parent.postMessage({type,appId:APP_ID,reqId,...(payload||{})},'*');setTimeout(()=>{if(this.reqs[reqId]){delete this.reqs[reqId];res(null);}},2200);});}
+};
+if(Bridge.embedded)document.body.classList.add('embedded');
+function contextLabel(){const c=Bridge.ctx||{},who=c.personName||c.userName||'Standalone',circle=c.circleName||'';return c.circleId?[who,circle].filter(Boolean).join(' · '):'Standalone'}
+function defaultPlayerName(fallback){return (Bridge.ctx.personName||Bridge.ctx.userName||save.name||fallback||'Player').slice(0,10)}
+function currentPerson(){const c=Bridge.ctx||{};return {id:c.personId||'local-player',name:(c.personName||c.userName||save.name||'Player').slice(0,32)}}
+function syncKinetikName(){const c=Bridge.ctx||{};if(c.personName&&save._kinetikPersonId!==c.personId){save.name=c.personName.slice(0,10);save._kinetikPersonId=c.personId||'';store()}}
+function scopedPayload(payload){const c=Bridge.ctx||{},p=currentPerson();return Object.assign({appId:APP_ID,circleId:c.circleId||'standalone',circleName:c.circleName||'',personId:p.id,personName:p.name,createdAt:new Date().toISOString()},payload||{})}
+function recordKinetik(collection,payload){Bridge.send('DATA_CREATE',{collection,ownerPersonId:true,payload:scopedPayload(payload)})}
+function emitKinetik(eventType,amount,metadata,sourceRecordId){const c=Bridge.ctx||{},p=currentPerson();return Bridge.request('KINETIK_EVENT',{eventType,amount,sourceRecordId:sourceRecordId||'',circleId:c.circleId||'',personId:p.id,metadata:Object.assign({personName:p.name},metadata||{})})}
+function syncEconomyDiamonds(){const eco=Bridge.ctx&&Bridge.ctx.economy;if(!eco||typeof save==='undefined')return;const v=Number(eco.personDiamonds??eco.circleDiamonds);if(Number.isFinite(v)){save.diamonds=v;store();renderWallet();}}
+function applyDiamondResult(result,fallback){const gained=result&&result.diamond?Number(result.diamond.amount||0):0;const p=currentPerson(),byPerson=result&&result.buddy&&result.buddy.byPerson;const dyn=byPerson&&byPerson[p.id]!=null?Number(byPerson[p.id]):NaN;if(Number.isFinite(dyn))save.diamonds=dyn;else save.diamonds+=gained||fallback||0;store();renderWallet();return gained||fallback||0}
+function applyKinetikContext(){const el=document.getElementById('kinCtx');window.KinetikContext=Bridge.ctx;if(Bridge.ctx&&Bridge.ctx.theme)document.documentElement.setAttribute('data-theme',Bridge.ctx.theme==='dark'?'dark':'light');if(el)el.textContent=contextLabel();syncKinetikName();syncEconomyDiamonds()}
+addEventListener('message',e=>{const m=e.data||{};if(m.type==='INIT_APP'){Bridge.ctx=m.payload||{};applyKinetikContext()}if(m.type==='KINETIK_EVENT_RESULT'&&m.reqId&&Bridge.reqs[m.reqId]){const f=Bridge.reqs[m.reqId];delete Bridge.reqs[m.reqId];f(m.result)}});
 function load(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))||{}}catch(e){return{}}}
 function store(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save))}catch(e){}}
-let save=Object.assign({coins:0,xp:0,wins:0,games:0,correct:0,sound:true,name:''},load());
-function addCoins(n){save.coins+=n;store();renderWallet()}
-function renderWallet(){document.getElementById('walletHome').textContent=save.coins.toLocaleString()}
+let save=Object.assign({diamonds:0,xp:0,wins:0,games:0,correct:0,sound:true,name:''},load());
+if(save.coins&&!save.diamonds){save.diamonds=save.coins;delete save.coins;store();}
+function renderWallet(){document.getElementById('walletHome').textContent=Number(save.diamonds||0).toLocaleString()}
 
 const WORLDS={
   space:{name:'Space',emoji:'🚀',desc:'Planets & stars',c:'#5C6FE0',d:'#3F4FC0',s:'#E1E5FF'},
@@ -393,7 +417,7 @@ function startLocalGame(){applyWorldTheme();let players;
   if(sel.mode==='cpu')players=[mkP('You',true,0),mkP('Bot',false,1)];else players=[mkP('Player 1',true,0),mkP('Player 2',true,1)];
   initGame(players);}
 function mkP(name,human,i){return{name:name,human:human,pos:0,emoji:AVATARS[i],col:PCOL[i]}}
-function initGame(players){state={players:players,turn:0,phase:'await-roll',over:false,correct:0,coinsRound:0};
+function initGame(players){state={players:players,turn:0,phase:'await-roll',over:false,correct:0};
   buildBoard();renderChips();placeTokens();setHint('Tap the dice to roll');updateDiceUI();go('game');
   if(net.on&&net.host)syncState();afterTurnSetup();}
 function renderChips(){const el=document.getElementById('playerChips');el.innerHTML='';
@@ -448,22 +472,31 @@ function showQuestion(type,Q,cb){qCb=cb;const w=WORLDS[sel.world];const sheet=do
   ord.forEach((oi,vi)=>{const b=document.createElement('button');b.className='ans';b.innerHTML='<span class="key">'+keys[vi]+'</span><span>'+Q.a[oi]+'</span>';b.onclick=()=>resolveAns(b,oi===Q.c,Q,list);list.appendChild(b);});
   openScrim('qScrim');}
 function resolveAns(btn,ok,Q,list){list.querySelectorAll('.ans').forEach(a=>a.classList.add('lock'));
-  if(ok){btn.classList.add('correct');sfx('correct');save.correct++;addCoins(10);store();if(state)state.correct++;}
+  if(ok){btn.classList.add('correct');sfx('correct');save.correct++;store();if(state)state.correct++;}
   else{btn.classList.add('wrong');sfx('wrong');list.querySelectorAll('.ans').forEach(a=>{if(a.querySelector('span:last-child').textContent===Q.a[Q.c])a.classList.add('correct');});}
   const fb=document.getElementById('factBox');fb.style.display='block';fb.innerHTML='<b>💡 '+(ok?'Nice!':'Good to know:')+'</b> '+Q.f;
   const cb=document.getElementById('contBtn');cb.style.display='block';cb.onclick=()=>{closeScrim('qScrim');const f=qCb;qCb=null;f&&f(ok);};}
 function factCard(p,after){const local=!net.on||state.turn===net.myIndex;const f=FACTS[Math.random()*FACTS.length|0];
   if(net.on&&!local){const conn=connFor(state.turn);if(conn)conn.send({t:'fact',f:f});state._factAfter=after;setHint(p.name+' found a star ⭐');if(net.host)syncState();return;}
-  showFact(f,()=>{addCoins(15);if(state)state.coinsRound+=15;toast('+15 coins ⭐');if(net.on&&!net.host)net.hostConn.send({t:'factdone'});after&&after();});}
+  showFact(f,()=>{toast('Knowledge star collected ⭐','⭐');if(net.on&&!net.host)net.hostConn.send({t:'factdone'});after&&after();});}
 function showFact(f,after){const sheet=document.getElementById('qSheet');
-  sheet.innerHTML='<span class="result-emoji">⭐</span><div class="q-text" style="text-align:center;font-size:19px">Bonus knowledge star!</div><div class="fact">💡 '+f+'</div><button class="sheet-btn" id="contBtn">Collect +15 coins</button>';
+  sheet.innerHTML='<span class="result-emoji">⭐</span><div class="q-text" style="text-align:center;font-size:19px">Bonus knowledge star!</div><div class="fact">💡 '+f+'</div><button class="sheet-btn" id="contBtn">Collect star</button>';
   sheet.querySelector('#contBtn').onclick=()=>{closeScrim('qScrim');after&&after();};openScrim('qScrim');}
 function doWin(p){state.over=true;state.phase='over';if(net.on&&net.host)broadcast({t:'win',idx:state.players.indexOf(p),name:p.name});showWin(state.players.indexOf(p),p.name);}
-function showWin(idx,name){const iWon=net.on?(idx===net.myIndex):state.players[idx].human;
-  save.games++;if(iWon)save.wins++;const bonus=iWon?100:20;addCoins(bonus);if(state)state.coinsRound+=bonus;save.xp+=50;store();buildHome();sfx('win');if(iWon)confetti();
+async function showWin(idx,name){const iWon=net.on?(idx===net.myIndex):state.players[idx].human;
+  save.games++;if(iWon)save.wins++;save.xp+=50;store();buildHome();sfx('win');if(iWon)confetti();
+  const roundId='choice-trail-'+Date.now(),correct=state?state.correct:0,roundDiamonds=Math.min(8,Math.max(2,Math.round(correct/2)+2)),winDiamonds=iWon?8:0;
+  recordKinetik('game_results',{kind:'choice-trail.round',mode:sel.mode,winnerName:name,won:iWon,correct,diamonds:roundDiamonds+winDiamonds});
+  let awarded=0;
+  const roundResult=await emitKinetik('game.round.completed',roundDiamonds,{title:'Choice Trail round',mode:sel.mode,winnerName:name,correct,diamonds:roundDiamonds},roundId);
+  awarded+=applyDiamondResult(roundResult,Bridge.embedded?0:roundDiamonds);
+  if(winDiamonds){
+    const winResult=await emitKinetik('game.win',winDiamonds,{title:'Choice Trail win',mode:sel.mode,winnerName:name,diamonds:winDiamonds},roundId+'-win');
+    awarded+=applyDiamondResult(winResult,Bridge.embedded?0:winDiamonds);
+  }
   const title=net.on?(iWon?'You win! 🎉':name+' wins'):(sel.mode==='duo'?name+' wins!':(iWon?'You win! 🎉':'Bot wins'));
   const sheet=document.getElementById('winSheet');
-  sheet.innerHTML='<span class="result-emoji">'+(iWon?'🏆':(net.on?'🎈':'🤖'))+'</span><div class="win-title">'+title+'</div><div class="win-sub">Reached square 100 on the Wisdom Trail</div><div class="reward-row"><div class="reward"><div class="rv">+'+(state?state.coinsRound:bonus)+'</div><div class="rl">COINS EARNED</div></div><div class="reward"><div class="rv">'+(state?state.correct:0)+'</div><div class="rl">CORRECT ANSWERS</div></div></div><button class="sheet-btn" id="againBtn">Play again</button><button class="sheet-btn ghost" id="homeBtn">Back to menu</button>';
+  sheet.innerHTML='<span class="result-emoji">'+(iWon?'🏆':(net.on?'🎈':'🤖'))+'</span><div class="win-title">'+title+'</div><div class="win-sub">Reached square 100 on the Wisdom Trail</div><div class="reward-row"><div class="reward"><div class="rv">+'+(awarded||roundDiamonds+winDiamonds)+' 💎</div><div class="rl">DIAMONDS SENT</div></div><div class="reward"><div class="rv">'+(state?state.correct:0)+'</div><div class="rl">CORRECT ANSWERS</div></div></div><button class="sheet-btn" id="againBtn">Play again</button><button class="sheet-btn ghost" id="homeBtn">Back to menu</button>';
   sheet.querySelector('#againBtn').onclick=()=>{closeScrim('winScrim');if(net.on){if(net.host){initGame(state.players.map(p=>Object.assign({},p,{pos:0})));}else toast('Waiting for host to restart…');}else startLocalGame();};
   sheet.querySelector('#homeBtn').onclick=()=>{closeScrim('winScrim');teardownNet();go('home')};
   setTimeout(()=>openScrim('winScrim'),iWon?700:300);}
@@ -473,10 +506,10 @@ function broadcast(msg){net.conns.forEach(c=>{try{c.send(msg)}catch(e){}})}
 function syncState(){if(!net.host)return;broadcast({t:'state',players:state.players.map(p=>({name:p.name,emoji:p.emoji,pos:p.pos,col:p.col})),turn:state.turn,phase:state.phase,over:state.over,hint:document.getElementById('hint').textContent,world:sel.world});}
 function teardownNet(){try{if(net.peer)net.peer.destroy()}catch(e){}net={on:false,host:false,peer:null,conns:[],myIndex:0,hostConn:null};}
 function openLobby(){go('lobby');
-  document.getElementById('lobbyBody').innerHTML='<div class="lobby-card"><div class="section-h" style="margin-top:0">Your name</div><input class="field" id="nameIn" placeholder="NAME" maxlength="10" style="text-transform:none;letter-spacing:1px" value="'+(save.name||'')+'"><div style="margin-top:18px"><button class="sheet-btn" id="createBtn" style="margin-top:0">Create a circle</button></div><div class="section-h">Or join with a code</div><input class="field" id="codeIn" placeholder="CODE" maxlength="4"><button class="sheet-btn ghost" id="joinBtn">Join circle</button><div class="status" id="lobbyStatus"></div></div><div class="status" style="font-size:12px;color:var(--ink-faint)">Everyone must be online at the same time. Best with friends on the same trip or call.</div>';
+  document.getElementById('lobbyBody').innerHTML='<div class="lobby-card"><div class="section-h" style="margin-top:0">Your name</div><input class="field" id="nameIn" placeholder="NAME" maxlength="10" style="text-transform:none;letter-spacing:1px" value="'+defaultPlayerName('')+'"><div style="margin-top:18px"><button class="sheet-btn" id="createBtn" style="margin-top:0">Create a circle</button></div><div class="section-h">Or join with a code</div><input class="field" id="codeIn" placeholder="CODE" maxlength="4"><button class="sheet-btn ghost" id="joinBtn">Join circle</button><div class="status" id="lobbyStatus"></div></div><div class="status" style="font-size:12px;color:var(--ink-faint)">Everyone must be online at the same time. Best with friends on the same trip or call.</div>';
   document.getElementById('createBtn').onclick=hostCircle;document.getElementById('joinBtn').onclick=joinCircle;document.getElementById('lobbyBack').onclick=()=>{teardownNet();go('home')};}
 function lobbyStatus(t){const e=document.getElementById('lobbyStatus');if(e)e.textContent=t;}
-function hostCircle(){const name=(document.getElementById('nameIn').value||'Host').trim().slice(0,10)||'Host';save.name=name;store();
+function hostCircle(){const name=(document.getElementById('nameIn').value||defaultPlayerName('Host')).trim().slice(0,10)||'Host';save.name=name;store();
   if(typeof Peer==='undefined'){lobbyStatus('Online needs an internet connection.');return;}
   lobbyStatus('Creating your circle…');const code=shortCode();net={on:true,host:true,peer:null,conns:[],myIndex:0,hostConn:null};net.lobby=[{name:name,emoji:AVATARS[0],col:PCOL[0]}];net.code=code;
   const peer=new Peer('wt-'+code,{debug:0});net.peer=peer;
@@ -499,7 +532,7 @@ function renderHostLobby(code){net.code=code;const body=document.getElementById(
   document.getElementById('lobbyBack').onclick=()=>{teardownNet();go('home')};}
 function startOnlineGame(){net.started=true;applyWorldTheme();const players=net.lobby.map((p,i)=>({name:p.name,human:true,pos:0,emoji:AVATARS[i],col:PCOL[i]}));
   broadcast({t:'begin',players:players.map(p=>({name:p.name,emoji:p.emoji,pos:0,col:p.col})),world:sel.world});initGame(players);}
-function joinCircle(){const name=(document.getElementById('nameIn').value||'Friend').trim().slice(0,10)||'Friend';const code=(document.getElementById('codeIn').value||'').trim().toUpperCase();
+function joinCircle(){const name=(document.getElementById('nameIn').value||defaultPlayerName('Friend')).trim().slice(0,10)||'Friend';const code=(document.getElementById('codeIn').value||'').trim().toUpperCase();
   if(code.length<4){lobbyStatus('Enter the 4-letter code.');return;}save.name=name;store();
   if(typeof Peer==='undefined'){lobbyStatus('Online needs an internet connection.');return;}
   lobbyStatus('Connecting…');net={on:true,host:false,peer:null,conns:[],myIndex:0,hostConn:null};
@@ -512,11 +545,11 @@ function guestHandle(d){
   if(d.t==='full'){lobbyStatus('That circle is full or already started.');return;}
   if(d.t==='lobby'){renderGuestLobby(d.players);}
   if(d.t==='begin'){sel.world=d.world;applyWorldTheme();const players=d.players.map((p,i)=>({name:p.name,human:false,pos:0,emoji:p.emoji,col:p.col}));net.myIndex=guessMyIndex(d.players);
-    state={players:players,turn:0,phase:'busy',over:false,correct:0,coinsRound:0,_world:d.world};buildBoard();renderChips();placeTokens();go('game');setHint('Game starting…');updateDiceUI();}
+    state={players:players,turn:0,phase:'busy',over:false,correct:0,_world:d.world};buildBoard();renderChips();placeTokens();go('game');setHint('Game starting…');updateDiceUI();}
   if(d.t==='state'){applyGuestState(d);}
   if(d.t==='dice'){showDice(d.v);}
   if(d.t==='ask'){sel.world=d.world;showQuestion(d.kind,d.q,(ok)=>{net.hostConn.send({t:'answered',ok:ok});});}
-  if(d.t==='fact'){showFact(d.f,()=>{addCoins(15);toast('+15 coins ⭐');net.hostConn.send({t:'factdone'});});}
+  if(d.t==='fact'){showFact(d.f,()=>{toast('Knowledge star collected ⭐','⭐');net.hostConn.send({t:'factdone'});});}
   if(d.t==='win'){showWin(d.idx,d.name);}
 }
 function guessMyIndex(players){const n=save.name;const i=players.findIndex(p=>p.name===n);return i<0?players.length-1:i;}

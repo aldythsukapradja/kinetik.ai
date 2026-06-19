@@ -2,7 +2,11 @@
 
 Single source of truth to resume work in a fresh session. The app-author spec lives in
 `APP_BUILD_STANDARD.md`; the current product/app inventory lives in `KINETIK_APP_AUDIT.md`;
-the deterministic Buddy/agent system lives in `KINETIK_AGENT_SYSTEM.md`.
+the deterministic Buddy/agent system lives in `KINETIK_AGENT_SYSTEM.md`; the real
+diamond economy map lives in `KINETIK_DIAMOND_ECONOMY.md`.
+Business, brand, launch, and investor narrative now live in
+`KINETIK_BUSINESS_STRATEGY.md`, `KINETIK_BRAND_LAUNCH_PLAYBOOK.md`, and
+`KINETIK_PITCH_DECK_SOURCE.md`.
 
 > **▶ NEXT STEP:** implement `KINETIK_AGENT_SYSTEM.md` in the shell: shared
 > `KINETIK_EVENT`, diamond ledger, Buddy state, preview cards, and `@kin` actions.
@@ -27,6 +31,10 @@ Per-circle **Chat** opens full-screen from each circle card in Me.
 | `App_*.html` | Standalone mini-apps (one file each, manifest in `<head>`). Every `App_*.html` with a valid manifest is picked up by `build_app_catalog.mjs`, including `App_GameChoreQuest.html`. |
 | `APP_BUILD_STANDARD.md` | The mandatory external app standard: filename, manifest, inline SVG icon, bridge, data flow, Buddy events, and port-back checklist. |
 | `KINETIK_AGENT_SYSTEM.md` | Deterministic Buddy/agent source of truth: category spine, event contract, action map, diamond rules, Moment Studio, and Supabase scale path. |
+| `KINETIK_DIAMOND_ECONOMY.md` | Real diamond economy: event types, reward caps, anti-farming rules, app-to-energy map, leaderboards, schema, and wiring waves. |
+| `KINETIK_BUSINESS_STRATEGY.md` | Category thesis: Family Companion OS, market map, wedge, moat, monetization, risks, health/wellbeing guardrails. |
+| `KINETIK_BRAND_LAUNCH_PLAYBOOK.md` | Brand architecture, voice, visual direction, website structure, launch film, and social strategy. |
+| `KINETIK_PITCH_DECK_SOURCE.md` | Pitch-deck source: slide outline, investor FAQ, demo script, metrics, strategic soundbites. |
 | `build_app_catalog.mjs` | Validates all app manifests and refreshes the baked Store catalog inside `index.html`. No local server required. |
 | `package.json` | Provides `npm run build`, `npm run catalog`, and `npm run check`. Use `npm.cmd` on Windows PowerShell if script execution blocks `npm`. |
 | `.github/workflows/kinetik-catalog.yml` | CI check that fails when manifests are invalid or `index.html` catalog is stale. |
@@ -108,6 +116,11 @@ MemoryLines `title` column, schedule `durationMin`/`endDate`, the time-display f
       `KINETIK_EVENT`; shell `KinEngine` writes local `diamondEvents`,
       `agentActions`, and `buddyState`, then shows a Buddy pulse. Next: make
       Kinetik Buddy consume that shell state.
+- [x] **Done (2026-06-18) — reusable POC action spine.** `index.html` now has
+      `KinSpine` behind the Ask orb: Learning, Schedule, Photos, and Apps lanes.
+      It suggests learning, previews learning Calendar events, pulls existing
+      Moment photos into cards, and opens suggested apps. Calendar writes still
+      require a user tap.
 - [ ] Reinstall the PWA on iPhone (remove from home screen + re-add) to clear the
       cached pre-100dvh nav.
 - [ ] When app files change, run `npm run build` or `node build_app_catalog.mjs` to
@@ -133,9 +146,9 @@ MemoryLines `title` column, schedule `durationMin`/`endDate`, the time-display f
       (2) **No more blink**: removed the per-render GSAP stagger on the app grid (it
       re-fired on every tab visit/EventBus). (3) **App-Store GET/OPEN pill**: fixed iOS
       blue `#0a84ff` (was the circle accent — Aldyth's is rose `#F43F5E`, hence the "red
-      open"). (4) **Inline SVG app icons**: every app manifest owns a symbolic SVG mark;
-      the Kinetik Store tile uses the premium Kinetik icon from `index.html`, and no
-      app-grid icon should rely on text initials. (5) **"Remove from circle"** is now a bordered pill with a
+      open"). (4) **Two-layer app icons**: every app manifest owns a symbolic SVG mark
+      for Store/detail surfaces and a `homeIcon` emoji for the Apps tab; the Kinetik
+      Store tile still uses the premium Kinetik icon from `index.html`. (5) **"Remove from circle"** is now a bordered pill with a
       minus glyph. All glyph sites (grid, store cards, list rows, featured hero, detail)
       route through `iconInner()`.
 - [ ] Video upload (old P6) — code paths exist; picker is image-only. Re-enable after
