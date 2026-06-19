@@ -1041,18 +1041,18 @@ const BUILTIN_APP_CATALOG=[
   {
     "id": "entertainment-cinema",
     "appId": "entertainment-cinema",
-    "name": "Cinema",
+    "name": "Kinetik Cinema",
     "shortName": "Cinema",
     "file": "App_EntertainmentCinema.html",
-    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'><rect x='12' y='16' width='40' height='32' rx='7'/><path d='M22 16l5 9M35 16l5 9M12 26h40'/><path d='M29 32l12 7-12 7z' fill='white' stroke='none'/><\/svg>",
+    "glyph": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><path d='M14 20h28a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H14z' fill='#2f6bff'/><path d='M46 27l8-5v20l-8-5z' fill='#19c3e6'/><circle cx='39' cy='17' r='4' fill='#f3c969'/><\/svg>",
     "avatar": "🎬",
     "homeGlyph": "🎬",
     "gradient": [
-      "#070b18",
-      "#2563eb"
+      "#07090f",
+      "#2f6bff"
     ],
     "category": "entertainment",
-    "tagline": "Your circle video world.",
+    "tagline": "Your moments, directed",
     "status": "live",
     "allowed": [
       "family",
@@ -1061,11 +1061,16 @@ const BUILTIN_APP_CATALOG=[
     "active": true,
     "audience": "all",
     "worksWith": [
-      "standalone"
+      "moments",
+      "media",
+      "offline"
     ],
-    "emits": [],
+    "emits": [
+      "moment.created",
+      "moment.styled"
+    ],
     "minMembers": 1,
-    "desc": "A private circle video and cinematic media space for Kinetik. Today it hosts curated story experiences; later it becomes the YouTube-style home for family, friends, learning clips, and creator channels."
+    "desc": "Turns your circle's photo moments into short cinematic films — played live by a Canvas engine, exportable as video. Ken Burns moves, colour grades, procedural score, no editing skill required."
   },
   {
     "id": "game-chore-quest",

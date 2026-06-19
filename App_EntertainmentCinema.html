@@ -29,6 +29,25 @@ appId: entertainment-cinema
 <title>Kinetik Cinema — your moments, directed</title>
 <meta name="theme-color" content="#07090f">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2307090f'/%3E%3Cpath d='M14 20h28a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H14z' fill='%232f6bff'/%3E%3Cpath d='M46 27l8-5v20l-8-5z' fill='%2319c3e6'/%3E%3Ccircle cx='39' cy='17' r='4' fill='%23f3c969'/%3E%3C/svg%3E">
+<script type="application/kinetik-app+json">
+{
+  "appId": "entertainment-cinema",
+  "name": "Kinetik Cinema",
+  "shortName": "Cinema",
+  "homeIcon": "🎬",
+  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><path d='M14 20h28a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H14z' fill='#2f6bff'\/><path d='M46 27l8-5v20l-8-5z' fill='#19c3e6'\/><circle cx='39' cy='17' r='4' fill='#f3c969'\/><\/svg>",
+  "gradient": ["#07090f", "#2f6bff"],
+  "category": "entertainment",
+  "tagline": "Your moments, directed",
+  "about": "Turns your circle's photo moments into short cinematic films — played live by a Canvas engine, exportable as video. Ken Burns moves, colour grades, procedural score, no editing skill required.",
+  "audience": "all",
+  "circleTypes": ["family", "friends"],
+  "worksWith": ["moments", "media", "offline"],
+  "emits": ["moment.created", "moment.styled"],
+  "minMembers": 1,
+  "status": "live"
+}
+</script>
 <style>
 :root{
   --r-xs:9px;--r-sm:13px;--r-md:18px;--r-lg:26px;--r-xl:34px;
@@ -344,6 +363,36 @@ svg.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;strok
 /* ============================================================
    KINETIK CINEMA — engine + app
    ============================================================ */
+
+/* ---------- Kinetik Bridge (shell ↔ app postMessage) ---------- */
+const CINEMA_APP = {appId:'entertainment-cinema'};
+const Bridge = {
+  embedded: window.self !== window.top,
+  ctx: (()=>{
+    try{
+      const s=JSON.parse(localStorage.getItem('kinetik_session')||'{}');
+      return {personId:s.personId||'anon',circleId:s.circleId||'c_family',role:s.role||'member'};
+    }catch(e){return {personId:'anon',circleId:'c_family',role:'member'};}
+  })(),
+  send(type,payload){
+    if(this.embedded)parent.postMessage({type,appId:CINEMA_APP.appId,...(payload||{})},'*');
+  }
+};
+addEventListener('message',e=>{
+  const m=e.data||{};
+  if(m.type==='INIT_APP'){
+    if(m.personId)Bridge.ctx.personId=m.personId;
+    if(m.circleId){Bridge.ctx.circleId=m.circleId;CFG&&(CFG.circleId=m.circleId);}
+    if(m.role)Bridge.ctx.role=m.role;
+  }
+});
+function emitEvent(eventType,sourceRecordId,amount,metadata){
+  Bridge.send('KINETIK_EVENT',{
+    eventType,personId:Bridge.ctx.personId,
+    circleId:Bridge.ctx.circleId||CFG.circleId,
+    sourceRecordId,amount,metadata:metadata||{}
+  });
+}
 const $=s=>document.querySelector(s);
 const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
@@ -794,9 +843,11 @@ async function buildLiveFilms(){
   recent.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
   if(recent.length>=4){
     const photos=recent.slice(0,8).map((m,i)=>({caption:i===0?"This week, together":"",driveFileId:m.driveFileId,_img:null}));
-    films.unshift(baseFilm({id:"album_week",title:"This week in the circle",author:"Family",date:(recent[0].createdAt||"").slice(0,10),
+    const weekDate=(recent[0].createdAt||"").slice(0,10);
+    films.unshift(baseFilm({id:"album_week",title:"This week in the circle",author:"Family",date:weekDate,
       look:CFG.look==="auto"?"azure":CFG.look,kind:"Album",photos,
       loader:ph=>{if(!ph._img)ph._img=loadDrive(ph.driveFileId);return ph._img;}}));
+    emitEvent('moment.created','cinema-album-week-'+cid+'-'+weekDate,8,{title:'This week in the circle',source:'live',shots:photos.length});
   }
   if(!films.length)toast("No photo moments found for this circle yet");
   return films;
@@ -819,6 +870,7 @@ async function ingestLocal(files){
   LOCAL_FILMS.unshift(film);
   CFG.source="local";saveCfg();updateSrcPill();closeSet();
   await render();toast(imgs.length+" photos directed into a film");
+  emitEvent('moment.created','cinema-local-'+film.id,8,{title:film.title,source:'local',shots:imgs.length});
   openWatch(film.id);
 }
 
@@ -1051,6 +1103,7 @@ function cycleLook(f){
   const i=LOOK_KEYS.indexOf(f.resolvedLook);f.resolvedLook=LOOK_KEYS[(i+1)%LOOK_KEYS.length];
   const was=player.time;player.load(f);player.renderAt(was);player.seek(was);
   toast("Look: "+LOOKS[f.resolvedLook].name);
+  emitEvent('moment.styled','cinema-styled-'+f.id+'-'+f.resolvedLook,5,{title:f.title,look:f.resolvedLook});
   // refresh the look label + grade without rebuilding everything
   openWatch(f.id);
 }
