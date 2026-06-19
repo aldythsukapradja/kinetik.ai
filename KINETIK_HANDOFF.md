@@ -8,8 +8,11 @@ Business, brand, launch, and investor narrative now live in
 `KINETIK_BUSINESS_STRATEGY.md`, `KINETIK_BRAND_LAUNCH_PLAYBOOK.md`, and
 `KINETIK_PITCH_DECK_SOURCE.md`.
 
-> **▶ NEXT STEP:** implement `KINETIK_AGENT_SYSTEM.md` in the shell: shared
-> `KINETIK_EVENT`, diamond ledger, Buddy state, preview cards, and `@kin` actions.
+> **▶ NEXT STEP (prototype):** redeploy `Code.gs` + run `ensureSetup` to activate
+> chat, comments, reactions and the latest columns. Then wire more apps to `KINETIK_EVENT`.
+>
+> **▶ NEXT STEP (product):** start the React + Supabase rebuild using `KINETIK_LESSONS_LEARNED.md`
+> and `KINETIK_KIN_AGENT.md` as the design spec.
 
 ---
 
@@ -26,19 +29,23 @@ Per-circle **Chat** opens full-screen from each circle card in Me.
 ## 2. Files in the folder
 | File | Role |
 |------|------|
-| `index.html` | The whole shell (~2.3k lines): UI, state, CalendarEngine, MomentsService, Chat, AppRegistry, App Store. |
+| `index.html` | The whole shell (~4,900 lines): UI, state, CalendarEngine, MomentsService, Chat, AppRegistry, App Store, KinEngine, @kin agent. |
 | `Code.gs` | Google Apps Script backend (Sheets + Drive). Generic CRUD + Moments media + comments + chat + calendar. |
-| `App_*.html` | Standalone mini-apps (one file each, manifest in `<head>`). Every `App_*.html` with a valid manifest is picked up by `build_app_catalog.mjs`, including `App_GameChoreQuest.html`. |
+| `App_*.html` | **30 standalone mini-apps** (one file each, manifest in `<head>`). Every `App_*.html` with a valid manifest is picked up by `build_app_catalog.mjs`. |
 | `APP_BUILD_STANDARD.md` | The mandatory external app standard: filename, manifest, inline SVG icon, bridge, data flow, Buddy events, and port-back checklist. |
+| `KINETIK_KIN_AGENT.md` | **Full Kin agent spec**: system prompt, 88 tools across 13 domains, 17 skills, 21 proactive triggers, preview card contract, model routing, safety rules, memory architecture. |
 | `KINETIK_AGENT_SYSTEM.md` | Deterministic Buddy/agent source of truth: category spine, event contract, action map, diamond rules, Moment Studio, and Supabase scale path. |
 | `KINETIK_DIAMOND_ECONOMY.md` | Real diamond economy: event types, reward caps, anti-farming rules, app-to-energy map, leaderboards, schema, and wiring waves. |
+| `KINETIK_V2_SCREENS.md` | Full screen-by-screen product concept for all 19 app areas (~2,400 lines). |
+| `KINETIK_LESSONS_LEARNED.md` | Prototype debrief — every architectural, economy, social, and infra lesson for the React/Supabase rebuild. |
 | `KINETIK_BUSINESS_STRATEGY.md` | Category thesis: Family Companion OS, market map, wedge, moat, monetization, risks, health/wellbeing guardrails. |
 | `KINETIK_BRAND_LAUNCH_PLAYBOOK.md` | Brand architecture, voice, visual direction, website structure, launch film, and social strategy. |
 | `KINETIK_PITCH_DECK_SOURCE.md` | Pitch-deck source: slide outline, investor FAQ, demo script, metrics, strategic soundbites. |
 | `build_app_catalog.mjs` | Validates all app manifests and refreshes the baked Store catalog inside `index.html`. No local server required. |
 | `package.json` | Provides `npm run build`, `npm run catalog`, and `npm run check`. Use `npm.cmd` on Windows PowerShell if script execution blocks `npm`. |
 | `.github/workflows/kinetik-catalog.yml` | CI check that fails when manifests are invalid or `index.html` catalog is stale. |
-| `KINETIK_APP_AUDIT.md` | Current app inventory, features, gaps, rename suggestions, and Buddy/diamond strategy. |
+| `KINETIK_APP_AUDIT.md` | Current app inventory (30 apps), features, gaps, economy posture, and next build order. |
+| `KINETIK_APP_HOUSEKEEPING.md` | App maturity matrix — which apps need bridge wiring, diamond events, or Supabase schema. |
 
 ## 3. Architecture (maps 1:1 to future React/TS modules)
 - **State**: `S` (session/tab state), `DB` (localStorage cache `kinetik_live_cache_v1`),
@@ -87,6 +94,16 @@ MemoryLines `title` column, schedule `durationMin`/`endDate`, the time-display f
 - Apps: iPhone grid (manual GET install) + **Apple App Store clone** (manifest-grounded).
 - App autoloader: filename-based categories (Game/Sport/Productivity/Social/
   Entertainment), baked catalog for file://, live manifest reads when served.
+- **Travel Planner** (`App_TravelPlanner.html`) — trip wizard (destination, dates, departure/
+  arrival times, travelers, type/budget), 4 tabs (Trips/Discover/Learn/You), 5 trip sub-tabs
+  (Overview/Itinerary/Packing/Doc Check/Budget), cross-reads Family Vault passport data via
+  `kfv_{circleId}`, emits `ADD_TO_CALENDAR` for depart + return flights, diamond economy
+  (`task.completed` +15💎, `practice.completed` +2💎/phrase, `moment.created` +8💎).
+- **Family Vault** (`App_FamilyVault.html`) — two-tab layout (Vault / Finance), 8 doc
+  categories (Identity/Residence/Medical/Legal/Financial/Travel/Education/Other), expiry
+  alerts (red/amber), file upload via FileReader → base64 thumbnail in localStorage,
+  Finance tab with Budget / Expenses / Subscriptions sub-tabs. Storage is localStorage
+  prototype only; backend wiring parked for Supabase rebuild.
 
 ## 6. Known limitations / gotchas
 - **file:// can't read sibling files** (CORS null origin), so real metadata is baked
@@ -167,10 +184,17 @@ MemoryLines `title` column, schedule `durationMin`/`endDate`, the time-display f
 ### D. App ecosystem roadmap (build per APP_BUILD_STANDARD.md, one HTML each)
 Every external app should be portable back into Kinetik: one `App_*.html`, embedded
 manifest, inline SVG icon, Bridge support, simple JSON app records, and declared
-Buddy/diamond events. Current core tracks: Buddy, Home Quest, Times Quest, Primary
-Quest, Kitchen Buddy, Grocery Run, Loop Coach, Padel Matchday, and the coaching apps.
-Sidecars: Cinema, Strata, World Cup Arena. Categories in the Store are limited to
+Buddy/diamond events. **30 apps are live** as of 2026-06-19. Core tracks built:
+Buddy, Home Quest, Times Quest, Primary Quest, Kitchen Buddy, Grocery Run, Loop Coach,
+Matchday (renamed from Padel Matchday — row 27 in audit), Cinema, Strata, World Cup
+Arena, Travel Planner, Family Vault. Categories in the Store are limited to
 **Game · Sport · Productivity · Social · Entertainment**.
+
+Next build priorities (post-prototype / Supabase era):
+- [ ] Wire Family Vault documents to Supabase Storage (FileReader base64 is prototype-only).
+- [ ] Wire more apps to `KINETIK_EVENT` bridge for economy events.
+- [ ] Add `trip.created` economy event (+5💎) to Travel Planner.
+- [ ] Multi-frame Moment highlights viewer (MomentStories `mediaIdsJson` column).
 
 ## 8. How to run / verify
 - **Best:** open `index.html` directly.

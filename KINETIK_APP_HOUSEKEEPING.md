@@ -1,6 +1,6 @@
 # Kinetik App Housekeeping Matrix
 
-Last updated: 2026-06-18
+Last updated: 2026-06-19
 
 Read `KINETIK_AGENT_SYSTEM.md` before changing Buddy, diamonds, `@kin`,
 Moment Studio, or cross-app behavior. This matrix says what to clean up; the
@@ -46,8 +46,10 @@ agent system doc says how the emotional/product logic should work.
 | 24 | `App_SportBasketball.html` | Basketball Coach | Sport | M3 | Emit practice events |
 | 25 | `App_SportLearnGuitar.html` | Guitar Coach | Coach | M3 | Keep deterministic until audio exists |
 | 26 | `App_SportLearnTennis.html` | Tennis Coach | Sport | M3 | Persist practice plans |
-| 27 | `App_SportPadel.html` | Padel Matchday | Sport/core | M2 | Emit match result and calendar events |
+| 27 | `App_SportPadel.html` | Matchday | Sport/core | M2 | Emit match result and calendar events |
 | 28 | `App_SportPadelAcademy.html` | Padel Academy | Sport/core | M3 | Connect Academy progress to Matchday |
+| 29 | `App_TravelPlanner.html` | Travel Planner | Productivity/core | M3 | Add `trip.created` event; wire Family Vault cross-read in prod; Supabase for trip data |
+| 30 | `App_FamilyVault.html` | Family Vault | Productivity/utility | M2 | Wire documents to Supabase Storage; no economy by design |
 
 ## Core Economy Apps
 
@@ -62,7 +64,9 @@ Start here:
 7. `Kitchen Buddy`
 8. `Grocery Run`
 9. `Loop Coach`
-10. `Padel Matchday`
+10. `Matchday`
+11. `Travel Planner` (calendar + packing economy wired; trip.created pending)
+12. `Family Vault` (utility; no economy by design)
 
 ## Sidecar Apps
 
@@ -88,6 +92,8 @@ should not mint everyday diamonds until deliberately designed.
 | `calendar.created` | Useful plan/schedule created |
 | `reflection.saved` | Wisdom/coaching note saved |
 | `buddy.quest.completed` | Buddy quest completion |
+| `moment.created` | Trip recap posted (+8💎, Travel Planner) |
+| `trip.created` | New trip added (+5💎, planned — not yet emitted) |
 
 ## Cleanup Order
 

@@ -1,12 +1,12 @@
 # Kinetik App Audit
 
-Last updated: 2026-06-18
+Last updated: 2026-06-19
 
 ## Current State
 
-- App files: 28
-- Valid Kinetik manifests: 28
-- Baked Store catalog entries: 28
+- App files: 30
+- Valid Kinetik manifests: 30
+- Baked Store catalog entries: 30
 - Direct launch: `index.html` opens without a helper launcher
 - Catalog command: `node build_app_catalog.mjs`
 - Catalog check: `node build_app_catalog.mjs --check`
@@ -71,8 +71,10 @@ App action
 | 24 | `App_SportBasketball.html` | Basketball Coach | Basketball technique | Practice/streak | Emit practice events |
 | 25 | `App_SportLearnGuitar.html` | Guitar Coach | Guitar practice | Practice/streak | Stay deterministic until audio exists |
 | 26 | `App_SportLearnTennis.html` | Tennis Coach | Tennis technique | Practice/streak | Add practice-plan records |
-| 27 | `App_SportPadel.html` | Padel Matchday | Padel sessions/scoring | Sport results | Emit match/calendar events |
+| 27 | `App_SportPadel.html` | Matchday | Padel sessions/scoring | Sport results | Emit match/calendar events |
 | 28 | `App_SportPadelAcademy.html` | Padel Academy | Padel training path | Practice/mastery | Connect progress to Matchday |
+| 29 | `App_TravelPlanner.html` | Travel Planner | Trip planning, packing, discovery, phrasebook | Calendar + economy | Add `trip.created` +5💎; wire Family Vault cross-read in prod |
+| 30 | `App_FamilyVault.html` | Family Vault | Document storage and family finance tracker | Utility (no economy) | Wire to Supabase Storage for real file persistence |
 
 ## Core Apps
 
@@ -87,7 +89,9 @@ Build Buddy and diamonds around these first:
 7. `Kitchen Buddy`
 8. `Grocery Run`
 9. `Loop Coach`
-10. `Padel Matchday` and `Padel Academy`
+10. `Matchday` and `Padel Academy`
+11. `Travel Planner` (calendar + packing economy wired)
+12. `Family Vault` (utility — no economy by design)
 
 ## Sidecar Apps
 
@@ -115,6 +119,8 @@ Approved event language:
 | `calendar.created` | Useful plan created |
 | `reflection.saved` | Coaching/wisdom note saved |
 | `buddy.quest.completed` | Buddy quest completion |
+| `moment.created` | Trip recap posted (+8💎, Travel Planner) |
+| `trip.created` | New trip added (+5💎, planned — not yet emitted) |
 
 Anti-farming rules:
 
