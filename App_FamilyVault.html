@@ -1,0 +1,901 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#0a1f14">
+<title>Family Vault · Kinetik</title>
+<script type="application/kinetik-app+json">
+{
+  "appId": "family-vault",
+  "name": "Family Vault",
+  "shortName": "Vault",
+  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><path d='M32 10 L14 19 L14 35 C14 47 22 55 32 58 C42 55 50 47 50 35 L50 19 Z' stroke-linejoin='round'/><rect x='23' y='30' width='18' height='14' rx='3' fill='white' stroke='none'/><path d='M26 30 L26 26 C26 22 38 22 38 26 L38 30' fill='none'/><circle cx='32' cy='37' r='2' fill='#059669' stroke='none'/><\/svg>",
+  "homeIcon": "🔐",
+  "gradient": ["#0a1f14","#059669"],
+  "category": "productivity",
+  "tagline": "Every important document, always at hand.",
+  "about": "Secure store for family passports, birth certificates, insurance, finances, and every document that matters.",
+  "audience": "all",
+  "circleTypes": ["family","friends"],
+  "worksWith": ["calendar"],
+  "status": "live",
+  "minMembers": 1
+}
+</script>
+<style>
+:root{
+  --bg:#f0faf5;--bg2:#e4f5ec;--surf:rgba(255,255,255,.88);--surf2:rgba(255,255,255,.6);
+  --line:rgba(5,60,28,.1);--line2:rgba(5,60,28,.16);
+  --text:#071a0d;--muted:#4a7060;--faint:#7a9e8a;
+  --p:#065f46;--p2:#059669;--p3:#34d399;
+  --good:#10b981;--warn:#f59e0b;--danger:#ef4444;
+  --shadow:0 18px 45px rgba(5,150,105,.12);
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+[data-theme="dark"]{
+  --bg:#040d08;--bg2:#071410;--surf:rgba(7,24,14,.9);--surf2:rgba(255,255,255,.05);
+  --line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.14);
+  --text:#e0f0e8;--muted:#6a9880;--faint:#3a6050;
+  --shadow:0 18px 54px rgba(0,0,0,.44);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  color:var(--text);
+  background:radial-gradient(110% 70% at 80% -5%,rgba(5,150,105,.16) 0,transparent 52%),
+             radial-gradient(80% 60% at 0 0,rgba(6,95,70,.12) 0,transparent 44%),
+             linear-gradient(180deg,var(--bg2),var(--bg) 60%);
+  -webkit-font-smoothing:antialiased;overflow:hidden;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{border:0;background:none;cursor:pointer}
+input,select,textarea{border:0;outline:0}
+h1,h2,h3,p{margin:0}
+::-webkit-scrollbar{width:0;height:0}
+
+#app{max-width:520px;height:100dvh;margin:0 auto;display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+
+/* ── Header ── */
+header{
+  padding:calc(var(--safe-t) + 12px) 16px 10px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--bg2) 85%,transparent),transparent);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:10;
+}
+.brandrow{display:flex;align-items:center;gap:10px}
+.logo{width:38px;height:38px;border-radius:13px;display:grid;place-items:center;flex:none;background:linear-gradient(135deg,var(--p),var(--p2));color:white;font-size:21px;box-shadow:0 10px 22px rgba(5,150,105,.26)}
+.brand{min-width:0;flex:1}
+.brand h1{font-size:18px;font-weight:900;letter-spacing:-.02em;line-height:1.05;white-space:nowrap}
+.brand p{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--surf);border:1px solid var(--line);flex:none}
+.iconbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Top tabs ── */
+.top-tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:4px 14px 0;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--surf2)}
+.top-tab{padding:11px 0;font-size:13px;font-weight:800;text-align:center;color:var(--muted)}
+.top-tab.on{background:linear-gradient(135deg,var(--p),var(--p2));color:white}
+
+/* ── Main ── */
+main{min-height:0;overflow:hidden;padding:8px 14px calc(14px + var(--safe-b))}
+.view{display:none;height:100%;overflow-y:auto;animation:fade .2s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* ── Cards ── */
+.card{background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:10px;box-shadow:0 8px 22px rgba(5,150,105,.07)}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 2px 8px}
+.section-head h2{font-size:11.5px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.section-head small{font-size:11px;color:var(--faint);font-weight:800}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:0 16px;border-radius:999px;font-weight:900;font-size:13px;background:var(--surf);border:1px solid var(--line);cursor:pointer}
+.btn.primary{color:#fff;border-color:transparent;background:linear-gradient(135deg,var(--p),var(--p2));box-shadow:0 12px 26px rgba(5,150,105,.2)}
+.btn.sm{min-height:34px;padding:0 12px;font-size:11.5px}
+.btn.danger{color:var(--danger);background:color-mix(in srgb,var(--danger) 8%,var(--surf));border-color:color-mix(in srgb,var(--danger) 18%,transparent)}
+.btn:disabled{opacity:.4;pointer-events:none}
+.btn.full{width:100%}
+
+/* ── Category grid ── */
+.cat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:14px}
+.cat-tile{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  min-height:76px;border-radius:18px;padding:8px 4px;
+  background:var(--surf);border:1px solid var(--line);box-shadow:0 8px 20px rgba(5,150,105,.07);
+  cursor:pointer;transition:transform .13s ease;
+}
+.cat-tile:active{transform:scale(.94)}
+.cat-icon{font-size:26px;line-height:1}
+.cat-name{font-size:10.5px;font-weight:800;text-align:center;line-height:1.2;color:var(--text)}
+.cat-count{font-size:9px;font-weight:800;color:var(--muted)}
+
+/* ── Expiry alert strip ── */
+.alert-strip{border-radius:14px;padding:11px 13px;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:800}
+.alert-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#d97706}
+.alert-danger{background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.18);color:#dc2626}
+
+/* ── Doc list ── */
+.doc-card{
+  display:flex;align-items:center;gap:12px;padding:12px;
+  background:var(--surf);border:1px solid var(--line);border-radius:16px;margin-bottom:7px;
+  cursor:pointer;transition:transform .13s ease;
+}
+.doc-card:active{transform:scale(.98)}
+.doc-thumb{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:var(--surf2);border:1px solid var(--line);flex:none;overflow:hidden}
+.doc-thumb img{width:100%;height:100%;object-fit:cover}
+.doc-info{flex:1;min-width:0}
+.doc-info b{display:block;font-size:13.5px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-info small{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.expiry-badge{flex:none;font-size:10.5px;font-weight:900;padding:4px 9px;border-radius:999px}
+.exp-ok{background:rgba(16,185,129,.12);color:#059669}
+.exp-warn{background:rgba(245,158,11,.12);color:#d97706}
+.exp-danger{background:rgba(239,68,68,.1);color:#dc2626}
+.exp-none{background:var(--surf2);color:var(--faint);border:1px solid var(--line)}
+
+/* ── Doc detail ── */
+.back-btn{display:flex;align-items:center;gap:7px;color:var(--p2);font-size:13px;font-weight:800;margin-bottom:10px;padding:4px 0}
+.back-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.detail-hero{min-height:120px;border-radius:18px;background:linear-gradient(135deg,var(--p),var(--p2));display:flex;align-items:center;justify-content:center;font-size:64px;margin-bottom:14px;position:relative;overflow:hidden}
+.detail-hero img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:18px}
+.meta-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+.meta-row:last-child{border:none}
+.meta-label{font-size:11.5px;font-weight:900;color:var(--muted)}
+.meta-val{font-size:13px;font-weight:800}
+
+/* ── Finance ── */
+.fin-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.fin-tab{flex:none;padding:7px 12px;border-radius:999px;font-size:11.5px;font-weight:800;color:var(--muted);background:var(--surf2);border:1px solid var(--line)}
+.fin-tab.on{color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));border-color:transparent}
+.budget-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.budget-row:last-child{border:none}
+.budget-cat-icon{font-size:18px;width:32px;text-align:center;flex:none}
+.budget-cat-name{flex:1;font-size:13px;font-weight:700}
+.budget-bar-wrap{width:80px;flex:none}
+.budget-bar-track{height:5px;border-radius:3px;background:var(--line2)}
+.budget-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--p),var(--p2));transition:width .4s}
+.budget-bar-fill.over{background:linear-gradient(90deg,#ef4444,#f87171)}
+.budget-amounts{font-size:10px;color:var(--faint);font-weight:800;display:flex;justify-content:space-between;margin-top:2px}
+.exp-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surf);border:1px solid var(--line);border-radius:14px;margin-bottom:6px}
+.exp-icon{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:18px;background:var(--surf2);flex:none}
+.exp-info{flex:1;min-width:0}
+.exp-info b{display:block;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exp-info small{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-top:2px}
+.exp-amount{font-size:14px;font-weight:900;color:var(--p2);flex:none}
+.sub-row{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--surf);border:1px solid var(--line);border-radius:16px;margin-bottom:7px}
+.sub-logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:var(--surf2);flex:none}
+.sub-info{flex:1;min-width:0}
+.sub-info b{display:block;font-size:13px;font-weight:800}
+.sub-info small{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-top:2px}
+.sub-amount{font-size:13px;font-weight:900;color:var(--p2);flex:none;text-align:right}
+.sub-amount small{display:block;font-size:10px;font-weight:700;color:var(--faint)}
+.sub-flag{padding:3px 8px;border-radius:999px;font-size:10px;font-weight:900}
+.sub-active{background:rgba(16,185,129,.12);color:#059669}
+.sub-unused{background:rgba(239,68,68,.09);color:#dc2626}
+
+/* ── Overview summary card ── */
+.ov-card{border-radius:18px;padding:16px;margin-bottom:10px;background:linear-gradient(135deg,var(--p),var(--p2));color:white}
+.ov-main{font-size:28px;font-weight:900;letter-spacing:-.04em}
+.ov-sub{font-size:12px;opacity:.75;margin-top:3px}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.ov-stat{background:rgba(255,255,255,.15);border-radius:12px;padding:10px;text-align:center}
+.ov-stat b{display:block;font-size:18px;font-weight:900}
+.ov-stat small{display:block;font-size:10px;opacity:.8;font-weight:700;margin-top:2px}
+
+/* ── Empty ── */
+.empty{padding:48px 22px;text-align:center;color:var(--muted)}
+.empty .big{font-size:42px;margin-bottom:12px}
+.empty h3{font-size:16px;margin-bottom:6px;color:var(--text)}
+.empty p{font-size:13px;line-height:1.5}
+
+/* ── Sheet / Modal ── */
+.sheet-bg{position:fixed;inset:0;z-index:50;background:rgba(2,10,6,.4);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;align-items:flex-end;justify-content:center;padding:12px}
+.sheet-bg.show{display:flex}
+.sheet{width:min(100%,520px);max-height:92dvh;overflow-y:auto;border-radius:28px 28px 20px 20px;background:var(--bg);border:1px solid var(--line);box-shadow:0 30px 90px rgba(0,0,0,.3);padding:16px;animation:sheetIn .2s ease both}
+@keyframes sheetIn{from{transform:translateY(22px);opacity:.8}to{transform:translateY(0);opacity:1}}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line2);margin:0 auto 14px}
+.sheet h2{font-size:20px;font-weight:900;letter-spacing:-.03em;margin-bottom:4px}
+.sheet p.sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+
+/* ── Form ── */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border-radius:14px;border:1px solid var(--line2);background:var(--surf2);font-size:14px;font-weight:600}
+.field input:focus,.field select:focus{outline:2px solid var(--p2);outline-offset:-1px}
+.person-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px}
+.pchip{padding:7px 12px;border-radius:999px;font-size:12px;font-weight:800;color:var(--muted);background:var(--surf2);border:1px solid var(--line);cursor:pointer}
+.pchip.on{color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));border-color:transparent}
+
+/* ── Upload area ── */
+.upload-area{
+  border:2px dashed var(--line2);border-radius:16px;padding:28px;text-align:center;
+  cursor:pointer;color:var(--muted);font-size:13px;font-weight:700;transition:.2s;
+}
+.upload-area:hover{border-color:var(--p2);color:var(--p2)}
+.upload-area input[type=file]{position:absolute;opacity:0;width:1px;height:1px}
+.upload-preview{width:100%;height:110px;object-fit:cover;border-radius:12px;margin-top:8px}
+
+/* ── Budget input table ── */
+.budget-edit-row{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:9px;margin-bottom:8px}
+.budget-edit-row input{padding:9px 11px;border-radius:12px;border:1px solid var(--line2);background:var(--surf2);font-size:13px;font-weight:700;width:100%}
+
+/* ── Toast ── */
+.toast{position:fixed;left:50%;bottom:calc(14px + var(--safe-b));z-index:60;max-width:88%;transform:translateX(-50%) translateY(14px);opacity:0;pointer-events:none;padding:10px 14px;border-radius:999px;background:#071a0d;color:white;font-size:13px;font-weight:800;box-shadow:0 12px 32px rgba(0,0,0,.26);transition:all .22s ease;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast b{color:var(--p3)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brandrow">
+      <div class="logo">🔐</div>
+      <div class="brand">
+        <h1>Family Vault</h1>
+        <p id="sub">Your secure document store</p>
+      </div>
+      <button class="iconbtn" id="themeBtn" aria-label="Theme">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="top-tabs" style="margin:4px 14px 0">
+    <button class="top-tab on" data-main="vault" id="mainTabVault">🗄️ Vault</button>
+    <button class="top-tab" data-main="finance" id="mainTabFinance">💰 Finance</button>
+  </div>
+
+  <main>
+    <!-- ── VAULT TAB ── -->
+    <section class="view active" id="v-vault">
+      <!-- Category grid (home) -->
+      <div id="vault-home">
+        <div id="expiry-alerts"></div>
+        <div class="section-head"><h2>Categories</h2><button class="btn sm primary" id="addDocBtn">+ Add Document</button></div>
+        <div class="cat-grid" id="cat-grid"></div>
+        <div id="recent-docs-section"></div>
+      </div>
+      <!-- Category view -->
+      <div id="vault-cat" style="display:none">
+        <button class="back-btn" id="backFromCat">
+          <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <div class="section-head"><h2 id="cat-view-title">Documents</h2><button class="btn sm primary" id="addDocBtnCat">+ Add</button></div>
+        <div id="cat-doc-list"></div>
+      </div>
+      <!-- Doc detail -->
+      <div id="vault-detail" style="display:none">
+        <button class="back-btn" id="backFromDetail">
+          <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <div id="doc-detail-inner"></div>
+      </div>
+    </section>
+
+    <!-- ── FINANCE TAB ── -->
+    <section class="view" id="v-finance">
+      <div class="fin-tabs">
+        <button class="fin-tab on" data-ft="overview">Overview</button>
+        <button class="fin-tab" data-ft="budget">Budget</button>
+        <button class="fin-tab" data-ft="expenses">Expenses</button>
+        <button class="fin-tab" data-ft="subscriptions">Subscriptions</button>
+      </div>
+      <div id="ft-overview"></div>
+      <div id="ft-budget" style="display:none"></div>
+      <div id="ft-expenses" style="display:none"></div>
+      <div id="ft-subscriptions" style="display:none"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ── Add Document Sheet ── -->
+<div class="sheet-bg" id="addDocSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Add Document</h2>
+    <p class="sub">Store the details — upload a photo or scan.</p>
+    <div class="field">
+      <label>Document Name</label>
+      <input id="doc-name" placeholder="e.g. Dad's Passport" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <select id="doc-cat">
+        <option value="Identity">🪪 Identity</option>
+        <option value="Residence">🏠 Residence</option>
+        <option value="Medical">🏥 Medical</option>
+        <option value="Legal">⚖️ Legal</option>
+        <option value="Financial">💰 Financial</option>
+        <option value="Travel">✈️ Travel</option>
+        <option value="Education">🎓 Education</option>
+        <option value="Other">📁 Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Person</label>
+      <div class="person-chips" id="doc-person-chips"></div>
+    </div>
+    <div class="field">
+      <label>Expiry Date <span style="font-weight:600;text-transform:none;letter-spacing:0">(if applicable)</span></label>
+      <input id="doc-expiry" type="date">
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <input id="doc-notes" placeholder="e.g. Stored in top drawer" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Document Photo</label>
+      <label class="upload-area" id="upload-area" for="file-input">
+        📎 Tap to upload a photo or scan
+        <input type="file" id="file-input" accept="image/*" style="display:none">
+      </label>
+      <img id="upload-preview" class="upload-preview" style="display:none" alt="Preview">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn" id="docCancel">Cancel</button>
+      <button class="btn primary" id="docSave">Save Document</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Expense Sheet ── -->
+<div class="sheet-bg" id="addExpSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Log Expense</h2>
+    <div class="field"><label>Description</label><input id="exp-desc" placeholder="e.g. Electricity bill" autocomplete="off"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Amount (QAR)</label><input id="exp-amount" type="number" min="0" placeholder="0"></div>
+      <div class="field"><label>Date</label><input id="exp-date" type="date"></div>
+    </div>
+    <div class="field"><label>Category</label>
+      <select id="exp-cat">
+        <option value="Housing">🏠 Housing</option>
+        <option value="Food">🍽️ Food & Dining</option>
+        <option value="Transport">🚗 Transport</option>
+        <option value="Education">🎓 Education</option>
+        <option value="Health">🏥 Health</option>
+        <option value="Entertainment">🎬 Entertainment</option>
+        <option value="Shopping">🛍️ Shopping</option>
+        <option value="Utilities">💡 Utilities</option>
+        <option value="Savings">💰 Savings</option>
+        <option value="Other">📦 Other</option>
+      </select>
+    </div>
+    <div class="field"><label>Paid by</label><select id="exp-by"></select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn" id="expCancel">Cancel</button>
+      <button class="btn primary" id="expSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit Budget Sheet ── -->
+<div class="sheet-bg" id="editBudgetSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Monthly Budget</h2>
+    <p class="sub">Set your monthly limits per category (QAR).</p>
+    <div id="budget-edit-rows"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+      <button class="btn" id="budgetCancel">Cancel</button>
+      <button class="btn primary" id="budgetSave">Save Budget</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Subscription Sheet ── -->
+<div class="sheet-bg" id="addSubSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Add Subscription</h2>
+    <div class="field"><label>Service Name</label><input id="sub-name" placeholder="e.g. Netflix" autocomplete="off"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Monthly Cost (QAR)</label><input id="sub-amount" type="number" min="0" placeholder="0"></div>
+      <div class="field"><label>Billing Day</label><input id="sub-day" type="number" min="1" max="31" placeholder="1–31"></div>
+    </div>
+    <div class="field"><label>Category</label>
+      <select id="sub-cat">
+        <option value="Streaming">🎬 Streaming</option>
+        <option value="Music">🎵 Music</option>
+        <option value="Software">💻 Software</option>
+        <option value="News">📰 News & Reading</option>
+        <option value="Fitness">💪 Fitness</option>
+        <option value="Cloud">☁️ Cloud Storage</option>
+        <option value="Other">📦 Other</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn" id="subCancel">Cancel</button>
+      <button class="btn primary" id="subSave">Add Subscription</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════ CONFIG ═══════════════════════ */
+const CATEGORIES = [
+  {id:"Identity",icon:"🪪",label:"Identity",desc:"Passport, ID, Driver's licence"},
+  {id:"Residence",icon:"🏠",label:"Residence",desc:"Lease, deeds, utility contracts"},
+  {id:"Medical",icon:"🏥",label:"Medical",desc:"Vaccines, insurance, records"},
+  {id:"Legal",icon:"⚖️",label:"Legal",desc:"Birth cert, will, marriage cert"},
+  {id:"Financial",icon:"💰",label:"Financial",desc:"Tax, statements, policies"},
+  {id:"Travel",icon:"✈️",label:"Travel",desc:"Visas, bookings, itineraries"},
+  {id:"Education",icon:"🎓",label:"Education",desc:"Diplomas, report cards"},
+  {id:"Other",icon:"📁",label:"Other",desc:"Everything else"},
+];
+
+const EXP_CATS = [
+  {id:"Housing",icon:"🏠"},{id:"Food",icon:"🍽️"},{id:"Transport",icon:"🚗"},
+  {id:"Education",icon:"🎓"},{id:"Health",icon:"🏥"},{id:"Entertainment",icon:"🎬"},
+  {id:"Shopping",icon:"🛍️"},{id:"Utilities",icon:"💡"},{id:"Savings",icon:"💰"},{id:"Other",icon:"📦"}
+];
+
+const SUB_CAT_ICONS = {Streaming:"🎬",Music:"🎵",Software:"💻",News:"📰",Fitness:"💪",Cloud:"☁️",Other:"📦"};
+
+/* ═══════════════════════ STATE ═══════════════════════ */
+const embedded=(()=>{try{return window.self!==window.top}catch(e){return true}})();
+const state={
+  ctx:{appId:"family-vault",circleId:"standalone",circleName:"Family",personId:"me",personName:"Me",
+       people:[{id:"me",name:"Me",color:"#065f46"}]},
+  documents:[],expenses:[],budget:{},subscriptions:[],
+  mainTab:"vault",finTab:"overview",activeCat:null,activeDoc:null,
+  prevVaultView:"home",uploadData:null,selectedPerson:null,
+};
+
+/* ═══════════════════════ BRIDGE ═══════════════════════ */
+const Bridge=(()=>{
+  window.addEventListener("message",e=>{
+    const m=e.data||{};
+    if(m.type==="INIT_APP"){
+      const p=m.payload||{};
+      Object.assign(state.ctx,{
+        circleId:p.circleId||state.ctx.circleId,circleName:p.circleName||state.ctx.circleName,
+        personId:p.personId||state.ctx.personId,personName:p.personName||p.userName||state.ctx.personName,
+        people:Array.isArray(p.people)&&p.people.length?p.people:state.ctx.people
+      });
+      applyContext();loadAll();
+    }
+  });
+  return {};
+})();
+
+/* ═══════════════════════ STORAGE ═══════════════════════ */
+const SK=()=>"kfv_"+state.ctx.circleId;
+function save(){
+  try{localStorage.setItem(SK(),JSON.stringify({documents:state.documents,expenses:state.expenses,budget:state.budget,subscriptions:state.subscriptions}))}catch(e){toast("Storage full — try removing old photos")}
+}
+function loadAll(){
+  try{
+    const d=JSON.parse(localStorage.getItem(SK())||"{}");
+    state.documents=d.documents||[];state.expenses=d.expenses||[];
+    state.budget=d.budget||{};state.subscriptions=d.subscriptions||[];
+  }catch(e){state.documents=[];state.expenses=[];state.budget={};state.subscriptions=[];}
+  applyContext();renderAll();
+}
+function uid(p){return p+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[m]);
+
+/* ═══════════════════════ HELPERS ═══════════════════════ */
+function applyContext(){
+  document.getElementById("sub").textContent=state.ctx.circleName||"My Documents";
+  state.selectedPerson=state.ctx.personName||"Me";
+}
+function toast(html){const t=document.getElementById("toast");t.innerHTML=html;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2200)}
+function dateStr(d){if(!d)return"";const dt=new Date(d);return dt.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})}
+function today(){return new Date().toISOString().slice(0,10)}
+function monthLabel(){return new Date().toLocaleDateString(undefined,{month:"long",year:"numeric"})}
+function personColor(name){
+  const p=state.ctx.people.find(x=>x.name===name||x.id===name);
+  if(p&&p.color)return p.color;
+  const colors=["#065f46","#059669","#d97706","#7c3aed","#0369a1"];
+  let h=0;for(let i=0;i<(name||"").length;i++)h=(h*31+name.charCodeAt(i))&0xffff;
+  return colors[h%colors.length];
+}
+function initials(n){return String(n||"?").trim().slice(0,2).toUpperCase()}
+function expiryClass(expiry){
+  if(!expiry)return"exp-none";
+  const now=Date.now(),exp=new Date(expiry).getTime(),diff=exp-now;
+  if(diff<0)return"exp-danger";
+  if(diff<7776000000)return"exp-warn"; // 90 days
+  return"exp-ok";
+}
+function expiryLabel(expiry){
+  if(!expiry)return"No expiry";
+  const now=Date.now(),exp=new Date(expiry).getTime(),diff=exp-now;
+  if(diff<0)return"Expired";
+  if(diff<2592000000){const days=Math.ceil(diff/86400000);return days+"d left";}
+  return dateStr(expiry);
+}
+function catInfo(id){return CATEGORIES.find(c=>c.id===id)||{icon:"📁",label:id}}
+function expIcon(cat){return (EXP_CATS.find(c=>c.id===cat)||{icon:"📦"}).icon}
+function currentMonthExpenses(){
+  const now=new Date(),m=now.getMonth(),y=now.getFullYear();
+  return state.expenses.filter(e=>{const d=new Date(e.date||e.ts);return d.getMonth()===m&&d.getFullYear()===y;});
+}
+
+/* ═══════════════════════ RENDER ALL ═══════════════════════ */
+function renderAll(){renderVault();renderFinance();}
+
+/* ═══════════════════════ VAULT ═══════════════════════ */
+function showVaultView(view){
+  ["vault-home","vault-cat","vault-detail"].forEach(id=>{
+    document.getElementById(id).style.display=id===("vault-"+view)?"block":"none";
+  });
+  state.prevVaultView=view==="cat"?"home":"cat";
+}
+
+function renderVault(){
+  if(state.activeDoc){showVaultView("detail");renderDocDetail();return;}
+  if(state.activeCat){showVaultView("cat");renderCatView();return;}
+  showVaultView("home");renderVaultHome();
+}
+
+function renderVaultHome(){
+  // Expiry alerts
+  const soon=state.documents.filter(d=>{
+    if(!d.expiry)return false;
+    const diff=new Date(d.expiry)-Date.now();
+    return diff<7776000000&&diff>0; // 90 days
+  });
+  const expired=state.documents.filter(d=>{if(!d.expiry)return false;return new Date(d.expiry)<Date.now();});
+  let alertHtml="";
+  if(expired.length)alertHtml+=`<div class="alert-strip alert-danger">⚠️ ${expired.length} document${expired.length>1?"s":""} expired — check your Identity and Travel categories.</div>`;
+  if(soon.length)alertHtml+=`<div class="alert-strip alert-warn">📅 ${soon.length} document${soon.length>1?"s":""} expiring within 90 days.</div>`;
+  document.getElementById("expiry-alerts").innerHTML=alertHtml;
+
+  // Category grid
+  const grid=document.getElementById("cat-grid");
+  grid.innerHTML=CATEGORIES.map(cat=>{
+    const count=state.documents.filter(d=>d.category===cat.id).length;
+    const hasExpired=state.documents.some(d=>d.category===cat.id&&d.expiry&&new Date(d.expiry)<Date.now());
+    return`<button class="cat-tile" data-cat="${cat.id}">
+      <div class="cat-icon">${cat.icon}${hasExpired?"<sup style='font-size:9px'>⚠️</sup>":""}</div>
+      <div class="cat-name">${cat.label}</div>
+      <div class="cat-count">${count} doc${count!==1?"s":""}</div>
+    </button>`;
+  }).join("");
+  document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{state.activeCat=b.dataset.cat;renderVault();});
+
+  // Recent docs
+  const recent=[...state.documents].sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,5);
+  const section=document.getElementById("recent-docs-section");
+  if(!recent.length){section.innerHTML="";return;}
+  section.innerHTML=`<div class="section-head"><h2>Recently Added</h2></div>`+recent.map(doc=>docCardHtml(doc)).join("");
+  section.querySelectorAll("[data-docid]").forEach(el=>el.onclick=()=>{state.activeDoc=state.documents.find(d=>d.id===el.dataset.docid)||null;renderVault();});
+}
+
+function renderCatView(){
+  const cat=catInfo(state.activeCat);
+  document.getElementById("cat-view-title").textContent=cat.icon+" "+cat.label;
+  const docs=state.documents.filter(d=>d.category===state.activeCat);
+  document.getElementById("cat-doc-list").innerHTML=docs.length
+    ?docs.map(d=>docCardHtml(d)).join("")
+    :`<div class="empty"><div class="big">${cat.icon}</div><h3>No ${cat.label} documents</h3><p>Tap <b>+ Add</b> to store your first one.</p></div>`;
+  document.querySelectorAll("[data-docid]").forEach(el=>el.onclick=()=>{state.activeDoc=state.documents.find(d=>d.id===el.dataset.docid)||null;renderVault();});
+}
+
+function docCardHtml(doc){
+  const cls=expiryClass(doc.expiry);
+  const lbl=expiryLabel(doc.expiry);
+  const cat=catInfo(doc.category);
+  const personColor_=personColor(doc.personName||"");
+  return`<div class="doc-card" data-docid="${doc.id}">
+    <div class="doc-thumb">${doc.thumbDataUrl?`<img src="${doc.thumbDataUrl}" alt="">`:`<span>${cat.icon}</span>`}</div>
+    <div class="doc-info">
+      <b>${esc(doc.name)}</b>
+      <small>${doc.personName||"Family"} · ${cat.label}</small>
+    </div>
+    <span class="expiry-badge ${cls}">${lbl}</span>
+  </div>`;
+}
+
+function renderDocDetail(){
+  const doc=state.activeDoc;if(!doc)return;
+  const cat=catInfo(doc.category);
+  const cls=expiryClass(doc.expiry);
+  const lbl=expiryLabel(doc.expiry);
+  document.getElementById("doc-detail-inner").innerHTML=`
+    <div class="detail-hero">
+      ${doc.thumbDataUrl?`<img src="${doc.thumbDataUrl}" alt="Document photo">`:`<span>${cat.icon}</span>`}
+    </div>
+    <div class="card">
+      <div style="font-size:18px;font-weight:900;letter-spacing:-.02em;margin-bottom:14px">${esc(doc.name)}</div>
+      <div class="meta-row"><span class="meta-label">Category</span><span class="meta-val">${cat.icon} ${cat.label}</span></div>
+      <div class="meta-row"><span class="meta-label">Person</span><span class="meta-val">${esc(doc.personName||"Family")}</span></div>
+      <div class="meta-row"><span class="meta-label">Expiry</span><span class="meta-val"><span class="expiry-badge ${cls}" style="margin-left:0">${doc.expiry?dateStr(doc.expiry):"Not set"}</span> ${doc.expiry&&cls!=="exp-none"?"· "+lbl:""}</span></div>
+      ${doc.notes?`<div class="meta-row"><span class="meta-label">Notes</span><span class="meta-val">${esc(doc.notes)}</span></div>`:""}
+      <div class="meta-row"><span class="meta-label">Added</span><span class="meta-val">${dateStr(doc.ts)}</span></div>
+    </div>
+    <button class="btn danger full" id="deleteDoc" style="margin-top:4px">Delete Document</button>
+  `;
+  document.getElementById("deleteDoc").onclick=()=>{
+    if(!confirm("Delete this document?"))return;
+    state.documents=state.documents.filter(d=>d.id!==doc.id);
+    state.activeDoc=null;save();toast("Document deleted");renderVault();
+  };
+}
+
+/* ═══════════════════════ FINANCE ═══════════════════════ */
+function renderFinance(){
+  document.querySelectorAll("[data-ft]").forEach(b=>b.classList.toggle("on",b.dataset.ft===state.finTab));
+  ["overview","budget","expenses","subscriptions"].forEach(k=>{
+    document.getElementById("ft-"+k).style.display=k===state.finTab?"block":"none";
+  });
+  if(state.finTab==="overview")renderFinOverview();
+  if(state.finTab==="budget")renderFinBudget();
+  if(state.finTab==="expenses")renderFinExpenses();
+  if(state.finTab==="subscriptions")renderFinSubs();
+}
+
+function renderFinOverview(){
+  const monthExps=currentMonthExpenses();
+  const total=monthExps.reduce((s,e)=>s+Number(e.amount||0),0);
+  const totalBudget=Object.values(state.budget).reduce((s,v)=>s+Number(v||0),0);
+  const pct=totalBudget?Math.min(100,Math.round(total/totalBudget*100)):0;
+  const subTotal=state.subscriptions.reduce((s,x)=>s+Number(x.amount||0),0);
+  const byCat={};monthExps.forEach(e=>{byCat[e.cat]=(byCat[e.cat]||0)+Number(e.amount||0);});
+  const top3=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  let html=`<div class="ov-card">
+    <div class="ov-sub">${monthLabel()} spending</div>
+    <div class="ov-main">${total.toLocaleString()} <span style="font-size:16px;opacity:.75">QAR</span></div>
+    ${totalBudget?`<div style="background:rgba(255,255,255,.2);border-radius:4px;height:6px;margin:10px 0 4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:rgba(255,255,255,.8);border-radius:4px;transition:width .4s"></div></div>
+    <div style="font-size:11.5px;opacity:.8">${pct}% of ${totalBudget.toLocaleString()} QAR budget</div>`:""}
+    <div class="ov-grid">
+      <div class="ov-stat"><b>${monthExps.length}</b><small>Transactions</small></div>
+      <div class="ov-stat"><b>${subTotal.toLocaleString()}</b><small>Subscriptions/mo</small></div>
+    </div>
+  </div>`;
+
+  if(top3.length){
+    html+=`<div class="section-head"><h2>Top Spending</h2></div>`;
+    html+=top3.map(([cat,amt])=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surf);border:1px solid var(--line);border-radius:14px;margin-bottom:7px">
+      <span style="font-size:18px">${expIcon(cat)}</span>
+      <span style="flex:1;font-size:13px;font-weight:700">${esc(cat)}</span>
+      <span style="font-size:13px;font-weight:900;color:var(--p2)">${amt.toLocaleString()} QAR</span>
+    </div>`).join("");
+  }
+
+  html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+    <button class="btn primary" id="ovAddExp">+ Log Expense</button>
+    <button class="btn" id="ovEditBudget">Edit Budget</button>
+  </div>`;
+
+  document.getElementById("ft-overview").innerHTML=html;
+  document.getElementById("ovAddExp").onclick=()=>openExpSheet();
+  document.getElementById("ovEditBudget").onclick=()=>openBudgetSheet();
+}
+
+function renderFinBudget(){
+  const monthExps=currentMonthExpenses();
+  const byCat={};monthExps.forEach(e=>{byCat[e.cat]=(byCat[e.cat]||0)+Number(e.amount||0);});
+  const hasBudget=Object.keys(state.budget).length>0;
+  let html="";
+  if(!hasBudget){
+    html=`<div class="empty"><div class="big">💰</div><h3>No budget set</h3><p>Set monthly limits per category to track your spending.</p></div>
+    <button class="btn primary full" id="budgetSetBtn">Set Monthly Budget</button>`;
+    document.getElementById("ft-budget").innerHTML=html;
+    document.getElementById("budgetSetBtn").onclick=()=>openBudgetSheet();
+    return;
+  }
+  const allCats=new Set([...Object.keys(state.budget),...Object.keys(byCat)]);
+  html=`<button class="btn sm" id="editBudBtn" style="margin-bottom:12px">Edit Budget</button>`;
+  html+=`<div class="card">`;
+  allCats.forEach(cat=>{
+    const limit=Number(state.budget[cat]||0),spent=Number(byCat[cat]||0);
+    const pct=limit?Math.min(100,Math.round(spent/limit*100)):0;
+    const over=limit&&spent>limit;
+    html+=`<div class="budget-row">
+      <span class="budget-cat-icon">${expIcon(cat)}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700">${esc(cat)}</div>
+        <div class="budget-bar-wrap" style="width:100%;margin-top:4px">
+          <div class="budget-bar-track"><div class="budget-bar-fill ${over?"over":""}" style="width:${limit?pct:0}%"></div></div>
+          <div class="budget-amounts"><span>${spent.toLocaleString()}</span><span>${limit?limit.toLocaleString()+"  budget":""}</span></div>
+        </div>
+      </div>
+      ${over?`<span style="font-size:10px;font-weight:900;color:#dc2626;flex:none">+${(spent-limit).toLocaleString()}</span>`:""}
+    </div>`;
+  });
+  html+="</div>";
+  document.getElementById("ft-budget").innerHTML=html;
+  document.getElementById("editBudBtn").onclick=()=>openBudgetSheet();
+}
+
+function renderFinExpenses(){
+  const exps=[...state.expenses].sort((a,b)=>(b.ts||0)-(a.ts||0));
+  const monthExps=currentMonthExpenses();
+  const monthTotal=monthExps.reduce((s,e)=>s+Number(e.amount||0),0);
+  let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div><div style="font-size:12px;color:var(--muted);font-weight:700">This month</div><div style="font-size:20px;font-weight:900;color:var(--p2)">${monthTotal.toLocaleString()} QAR</div></div>
+    <button class="btn sm primary" id="addExpBtnExp">+ Log Expense</button>
+  </div>`;
+  if(!exps.length){
+    html+=`<div class="empty"><div class="big">🧾</div><h3>No expenses yet</h3><p>Start logging expenses to track your family spending.</p></div>`;
+  }else{
+    html+=exps.map(e=>`<div class="exp-row">
+      <div class="exp-icon">${expIcon(e.cat)}</div>
+      <div class="exp-info"><b>${esc(e.desc)}</b><small>${esc(e.cat)} · ${dateStr(e.date||e.ts)}</small></div>
+      <span class="exp-amount">${Number(e.amount).toLocaleString()} QAR</span>
+    </div>`).join("");
+  }
+  document.getElementById("ft-expenses").innerHTML=html;
+  const btn=document.getElementById("addExpBtnExp");
+  if(btn)btn.onclick=()=>openExpSheet();
+}
+
+function renderFinSubs(){
+  const subs=state.subscriptions;
+  const total=subs.reduce((s,x)=>s+Number(x.amount||0),0);
+  let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div><div style="font-size:12px;color:var(--muted);font-weight:700">Monthly total</div><div style="font-size:20px;font-weight:900;color:var(--p2)">${total.toLocaleString()} QAR</div></div>
+    <button class="btn sm primary" id="addSubBtnSubs">+ Add</button>
+  </div>`;
+  if(!subs.length){
+    html+=`<div class="empty"><div class="big">📺</div><h3>No subscriptions</h3><p>Track your recurring payments — Netflix, Spotify, cloud storage, and more.</p></div>`;
+  }else{
+    html+=subs.map(s=>`<div class="sub-row" data-subid="${s.id}">
+      <div class="sub-logo">${SUB_CAT_ICONS[s.cat]||"📦"}</div>
+      <div class="sub-info"><b>${esc(s.name)}</b><small>${esc(s.cat)} · bills day ${s.billingDay||"?"}</small></div>
+      <div class="sub-amount">${Number(s.amount).toLocaleString()}<small>QAR/mo</small></div>
+    </div>`).join("");
+  }
+  document.getElementById("ft-subscriptions").innerHTML=html;
+  const btn=document.getElementById("addSubBtnSubs");
+  if(btn)btn.onclick=()=>showSheet("addSubSheet");
+  document.querySelectorAll("[data-subid]").forEach(el=>el.onclick=()=>{
+    if(confirm("Remove this subscription?"))state.subscriptions=state.subscriptions.filter(s=>s.id!==el.dataset.subid),save(),renderFinance();
+  });
+}
+
+/* ═══════════════════════ ADD DOCUMENT ═══════════════════════ */
+function openAddDoc(presetCat){
+  state.uploadData=null;
+  document.getElementById("doc-name").value="";
+  document.getElementById("doc-expiry").value="";
+  document.getElementById("doc-notes").value="";
+  document.getElementById("upload-preview").style.display="none";
+  document.getElementById("upload-area").style.display="flex";
+  const catSel=document.getElementById("doc-cat");
+  if(presetCat)catSel.value=presetCat;
+  renderPersonChips();
+  showSheet("addDocSheet");
+}
+
+function renderPersonChips(){
+  const people=state.ctx.people.length?state.ctx.people:[{id:"me",name:state.ctx.personName||"Me"}];
+  document.getElementById("doc-person-chips").innerHTML=people.map(p=>`
+    <div class="pchip ${p.name===state.selectedPerson||p.id===state.selectedPerson?"on":""}" data-pname="${esc(p.name)}">${esc(p.name)}</div>
+  `).join("")+`<div class="pchip ${state.selectedPerson==="Family"?"on":""}" data-pname="Family">Family</div>`;
+  document.querySelectorAll("[data-pname]").forEach(c=>c.onclick=()=>{
+    state.selectedPerson=c.dataset.pname;renderPersonChips();
+  });
+}
+
+document.getElementById("file-input").onchange=e=>{
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    state.uploadData=ev.target.result;
+    const img=document.getElementById("upload-preview");
+    img.src=ev.target.result;img.style.display="block";
+    document.getElementById("upload-area").style.display="none";
+  };
+  reader.readAsDataURL(file);
+};
+
+document.getElementById("docSave").onclick=()=>{
+  const name=document.getElementById("doc-name").value.trim();
+  if(!name){toast("Enter a document name");return;}
+  const doc={
+    id:uid("doc"),name,category:document.getElementById("doc-cat").value,
+    personName:state.selectedPerson||state.ctx.personName||"Me",
+    expiry:document.getElementById("doc-expiry").value||null,
+    notes:document.getElementById("doc-notes").value.trim(),
+    thumbDataUrl:state.uploadData||null,ts:Date.now()
+  };
+  state.documents.push(doc);save();
+  hideSheet("addDocSheet");toast(`🗂️ <b>${esc(name)}</b> saved`);renderVault();
+};
+document.getElementById("docCancel").onclick=()=>hideSheet("addDocSheet");
+document.getElementById("addDocBtn").onclick=()=>openAddDoc(null);
+document.getElementById("addDocBtnCat").onclick=()=>openAddDoc(state.activeCat);
+
+/* ═══════════════════════ EXPENSE ═══════════════════════ */
+function openExpSheet(){
+  document.getElementById("exp-desc").value="";
+  document.getElementById("exp-amount").value="";
+  document.getElementById("exp-date").value=today();
+  const bySel=document.getElementById("exp-by");
+  const people=state.ctx.people.length?state.ctx.people:[{name:state.ctx.personName||"Me"}];
+  bySel.innerHTML=people.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("");
+  showSheet("addExpSheet");
+}
+document.getElementById("expSave").onclick=()=>{
+  const desc=document.getElementById("exp-desc").value.trim();
+  const amount=document.getElementById("exp-amount").value;
+  if(!desc||!amount){toast("Fill in description and amount");return;}
+  state.expenses.push({
+    id:uid("exp"),desc,amount:Number(amount),cat:document.getElementById("exp-cat").value,
+    date:document.getElementById("exp-date").value,paidBy:document.getElementById("exp-by").value,ts:Date.now()
+  });
+  save();hideSheet("addExpSheet");toast(`💰 ${esc(desc)} logged`);renderFinance();
+};
+document.getElementById("expCancel").onclick=()=>hideSheet("addExpSheet");
+
+/* ═══════════════════════ BUDGET ═══════════════════════ */
+function openBudgetSheet(){
+  const cats=EXP_CATS.map(c=>c.id);
+  document.getElementById("budget-edit-rows").innerHTML=cats.map(cat=>`
+    <div class="budget-edit-row">
+      <span>${expIcon(cat)}</span>
+      <span style="font-size:13px;font-weight:700">${cat}</span>
+      <input type="number" min="0" placeholder="0" value="${state.budget[cat]||""}" data-bcat="${esc(cat)}" style="width:90px;text-align:right">
+    </div>`).join("");
+  showSheet("editBudgetSheet");
+}
+document.getElementById("budgetSave").onclick=()=>{
+  document.querySelectorAll("[data-bcat]").forEach(inp=>{
+    const v=Number(inp.value);if(v>0)state.budget[inp.dataset.bcat]=v;else delete state.budget[inp.dataset.bcat];
+  });
+  save();hideSheet("editBudgetSheet");toast("Budget saved");renderFinance();
+};
+document.getElementById("budgetCancel").onclick=()=>hideSheet("editBudgetSheet");
+
+/* ═══════════════════════ SUBSCRIPTIONS ═══════════════════════ */
+document.getElementById("subSave").onclick=()=>{
+  const name=document.getElementById("sub-name").value.trim();
+  const amount=document.getElementById("sub-amount").value;
+  if(!name||!amount){toast("Fill in name and amount");return;}
+  state.subscriptions.push({
+    id:uid("sub"),name,amount:Number(amount),cat:document.getElementById("sub-cat").value,
+    billingDay:Number(document.getElementById("sub-day").value)||1,ts:Date.now()
+  });
+  save();hideSheet("addSubSheet");toast(`📺 <b>${esc(name)}</b> added`);renderFinance();
+};
+document.getElementById("subCancel").onclick=()=>hideSheet("addSubSheet");
+
+/* ═══════════════════════ NAV ═══════════════════════ */
+function showSheet(id){document.getElementById(id).classList.add("show")}
+function hideSheet(id){document.getElementById(id).classList.remove("show")}
+
+document.getElementById("mainTabVault").onclick=()=>{
+  state.mainTab="vault";
+  document.getElementById("v-vault").classList.add("active");
+  document.getElementById("v-finance").classList.remove("active");
+  document.getElementById("mainTabVault").classList.add("on");
+  document.getElementById("mainTabFinance").classList.remove("on");
+};
+document.getElementById("mainTabFinance").onclick=()=>{
+  state.mainTab="finance";
+  document.getElementById("v-finance").classList.add("active");
+  document.getElementById("v-vault").classList.remove("active");
+  document.getElementById("mainTabFinance").classList.add("on");
+  document.getElementById("mainTabVault").classList.remove("on");
+  renderFinance();
+};
+
+document.getElementById("backFromCat").onclick=()=>{state.activeCat=null;renderVault();};
+document.getElementById("backFromDetail").onclick=()=>{
+  state.activeDoc=null;
+  if(state.activeCat)renderVault();else{renderVault();}
+};
+
+document.querySelectorAll("[data-ft]").forEach(b=>b.onclick=()=>{state.finTab=b.dataset.ft;renderFinance();});
+document.querySelectorAll(".sheet-bg").forEach(bg=>bg.onclick=e=>{if(e.target===bg)bg.classList.remove("show");});
+
+/* ═══════════════════════ THEME ═══════════════════════ */
+function applyTheme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem("kfv_theme",t)}catch(e){}}
+document.getElementById("themeBtn").onclick=()=>applyTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
+try{const t=localStorage.getItem("kfv_theme");if(t)applyTheme(t)}catch(e){}
+
+/* ═══════════════════════ BOOT ═══════════════════════ */
+if(!embedded)loadAll();
+</script>
+</body>
+</html>

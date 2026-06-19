@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#0c1a3a">
+<title>Travel Planner · Kinetik</title>
+<script type="application/kinetik-app+json">
+{
+  "appId": "travel-planner",
+  "name": "Travel Planner",
+  "shortName": "Travel",
+  "icon": "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><circle cx='30' cy='36' r='18'/><ellipse cx='30' cy='36' rx='7' ry='18'/><line x1='12' y1='36' x2='48' y2='36'/><line x1='14' y1='27' x2='46' y2='27'/><line x1='14' y1='45' x2='46' y2='45'/><circle cx='46' cy='14' r='4' fill='white' stroke='none'/><path d='M43 18 l9 4-5 8' stroke='#fbbf24' stroke-width='3'/><\/svg>",
+  "homeIcon": "✈️",
+  "gradient": ["#0c1a3a","#0ea5e9"],
+  "category": "productivity",
+  "tagline": "Plan trips, pack smart, discover more.",
+  "about": "All-in-one trip planner: itinerary builder, smart packing lists, destination guide, language phrases, and family document checks.",
+  "audience": "all",
+  "circleTypes": ["family","friends"],
+  "worksWith": ["calendar"],
+  "status": "live",
+  "minMembers": 1
+}
+</script>
+<style>
+:root{
+  --bg:#f0f6ff;--bg2:#e6f0fa;--surf:rgba(255,255,255,.88);--surf2:rgba(255,255,255,.6);
+  --line:rgba(14,30,64,.1);--line2:rgba(14,30,64,.16);
+  --text:#070f1e;--muted:#536080;--faint:#8ea0bc;
+  --p:#0369a1;--p2:#0ea5e9;--p3:#38bdf8;
+  --good:#10b981;--warn:#f59e0b;--danger:#ef4444;
+  --shadow:0 18px 45px rgba(3,105,161,.14);
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+[data-theme="dark"]{
+  --bg:#060d1a;--bg2:#0a1424;--surf:rgba(10,20,40,.88);--surf2:rgba(255,255,255,.06);
+  --line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.14);
+  --text:#e8f0ff;--muted:#7a95b8;--faint:#4a6080;
+  --shadow:0 18px 54px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  color:var(--text);
+  background:radial-gradient(120% 80% at 90% -8%,rgba(14,165,233,.18) 0,transparent 52%),
+             radial-gradient(90% 70% at 0 0,rgba(3,105,161,.14) 0,transparent 44%),
+             linear-gradient(180deg,var(--bg2),var(--bg) 60%);
+  -webkit-font-smoothing:antialiased;overflow:hidden;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{border:0;background:none;cursor:pointer}
+input,select,textarea{border:0;outline:0}
+h1,h2,h3,p{margin:0}
+::-webkit-scrollbar{width:0;height:0}
+
+#app{max-width:520px;height:100dvh;margin:0 auto;display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+
+/* ── Header ── */
+header{
+  padding:calc(var(--safe-t) + 12px) 16px 10px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--bg2) 85%,transparent),transparent);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);z-index:10;
+}
+.brandrow{display:flex;align-items:center;gap:10px}
+.logo{
+  width:38px;height:38px;border-radius:13px;display:grid;place-items:center;flex:none;
+  background:linear-gradient(135deg,var(--p),var(--p2));color:white;font-size:21px;
+  box-shadow:0 10px 22px rgba(3,105,161,.28);
+}
+.brand{min-width:0;flex:1}
+.brand h1{font-size:18px;font-weight:900;letter-spacing:-.02em;line-height:1.05;white-space:nowrap}
+.brand p{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gem-pill{
+  min-width:52px;height:34px;padding:0 10px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:4px;
+  background:var(--surf);border:1px solid var(--line);font-size:13px;font-weight:900;flex:none;
+}
+.gem-pill b{color:var(--p2)}
+.iconbtn{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--surf);border:1px solid var(--line);flex:none}
+.iconbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Main / Views ── */
+main{min-height:0;overflow:hidden;padding:6px 14px calc(74px + var(--safe-b))}
+.view{display:none;height:100%;overflow-y:auto;animation:fade .2s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* ── Nav ── */
+nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;max-width:520px;margin:0 auto;
+  display:flex;padding:7px 10px calc(7px + var(--safe-b));
+  background:color-mix(in srgb,var(--surf) 90%,transparent);border-top:1px solid var(--line);
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;color:var(--muted);font-size:10px;font-weight:800}
+.tab svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:var(--p2)}
+
+/* ── Cards / Tiles ── */
+.card{background:var(--surf);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 26px rgba(3,105,161,.08);padding:14px;margin-bottom:10px}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 2px 8px}
+.section-head h2{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.section-head small{font-size:11px;color:var(--faint);font-weight:800}
+
+/* ── Buttons ── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:42px;padding:0 16px;border-radius:999px;font-weight:900;font-size:13px;
+  background:var(--surf);border:1px solid var(--line);cursor:pointer;
+}
+.btn.primary{color:#fff;border-color:transparent;background:linear-gradient(135deg,var(--p),var(--p2));box-shadow:0 12px 26px rgba(3,105,161,.22)}
+.btn.sm{min-height:34px;padding:0 12px;font-size:11.5px}
+.btn.danger{color:var(--danger);background:color-mix(in srgb,var(--danger) 8%,var(--surf));border-color:color-mix(in srgb,var(--danger) 18%,transparent)}
+.btn:disabled{opacity:.42;pointer-events:none}
+.btn.full{width:100%}
+.pill-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;background:var(--surf2);border:1px solid var(--line);color:var(--muted)}
+.pill.on{color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));border-color:transparent}
+
+/* ── Status badges ── */
+.status-badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.04em}
+.s-planning{background:rgba(245,158,11,.12);color:#d97706}
+.s-ready{background:rgba(16,185,129,.12);color:#059669}
+.s-active{background:rgba(14,165,233,.15);color:var(--p)}
+.s-done{background:rgba(100,116,139,.12);color:#64748b}
+
+/* ── Trip card ── */
+.trip-card{
+  background:var(--surf);border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 10px 26px rgba(3,105,161,.08);padding:14px;margin-bottom:10px;
+  cursor:pointer;transition:transform .14s ease;text-align:left;width:100%;
+}
+.trip-card:active{transform:scale(.98)}
+.trip-hero{
+  height:80px;border-radius:14px;margin-bottom:10px;display:flex;align-items:flex-end;padding:8px 10px;
+  background:linear-gradient(135deg,var(--p),var(--p2));position:relative;overflow:hidden;
+}
+.trip-hero .dest-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:36px;opacity:.55}
+.trip-hero b{color:white;font-size:17px;font-weight:900;letter-spacing:-.02em;text-shadow:0 2px 8px rgba(0,0,0,.3)}
+.trip-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.trip-date{font-size:11.5px;color:var(--muted);font-weight:700}
+.trip-travelers{font-size:11px;color:var(--faint);font-weight:700;margin-left:auto}
+.pack-bar{margin-top:8px}
+.pack-bar-track{height:5px;border-radius:3px;background:var(--line2);overflow:hidden;margin-top:4px}
+.pack-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--p),var(--p2));transition:width .4s ease}
+.pack-label{font-size:10px;color:var(--muted);font-weight:800;display:flex;justify-content:space-between}
+
+/* ── Empty state ── */
+.empty{padding:52px 22px;text-align:center;color:var(--muted)}
+.empty .big{font-size:42px;margin-bottom:12px}
+.empty h3{font-size:16px;margin-bottom:6px;color:var(--text)}
+.empty p{font-size:13px;line-height:1.5}
+
+/* ── Sub-tabs (trip detail) ── */
+.sub-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.sub-tab{flex:none;padding:7px 12px;border-radius:999px;font-size:11.5px;font-weight:800;color:var(--muted);background:var(--surf2);border:1px solid var(--line)}
+.sub-tab.on{color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));border-color:transparent}
+
+/* ── Itinerary ── */
+.day-block{margin-bottom:14px}
+.day-header{font-size:12px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:6px 10px;background:var(--surf2);border-radius:10px}
+.slot{display:flex;gap:10px;margin-bottom:6px}
+.slot-time{font-size:10px;font-weight:900;color:var(--p2);min-width:54px;padding-top:2px}
+.slot-card{flex:1;background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:10px 12px;cursor:pointer}
+.slot-card:empty{border-style:dashed;min-height:38px;display:grid;place-items:center;color:var(--faint);font-size:11px}
+.slot-card:empty::after{content:"+ Add activity"}
+.activity-item{font-size:13px;font-weight:700;line-height:1.3}
+.activity-meta{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── Packing ── */
+.pack-person{margin-bottom:14px}
+.pack-person-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:white;font-size:11px;font-weight:900;flex:none}
+.pack-person-head b{font-size:13px;font-weight:800}
+.pack-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:var(--surf);border:1px solid var(--line);border-radius:14px;margin-bottom:6px;cursor:pointer;
+}
+.pack-check{width:22px;height:22px;border-radius:7px;border:2px solid var(--line2);display:grid;place-items:center;flex:none;transition:.14s}
+.pack-check.done{background:linear-gradient(135deg,var(--p),var(--p2));border-color:transparent}
+.pack-check.done svg{display:block}
+.pack-check svg{display:none;width:14px;height:14px;stroke:white;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.pack-item-name{flex:1;font-size:13px;font-weight:700}
+.pack-item-name.done{text-decoration:line-through;color:var(--faint)}
+.pack-cat{font-size:10px;color:var(--faint);font-weight:800}
+
+/* ── Discover ── */
+.discover-cat-strip{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.disc-cat{flex:none;padding:7px 12px;border-radius:999px;font-size:11.5px;font-weight:800;color:var(--muted);background:var(--surf2);border:1px solid var(--line)}
+.disc-cat.on{color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));border-color:transparent}
+.place-card{
+  display:flex;gap:12px;background:var(--surf);border:1px solid var(--line);border-radius:18px;
+  padding:12px;margin-bottom:9px;box-shadow:0 8px 20px rgba(3,105,161,.07);
+}
+.place-icon{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:28px;flex:none;background:var(--surf2)}
+.place-info{flex:1;min-width:0}
+.place-info b{display:block;font-size:14px;font-weight:800;letter-spacing:-.01em}
+.place-info small{display:block;font-size:11.5px;color:var(--muted);font-weight:700;margin-top:2px;line-height:1.35}
+.place-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:10px;font-weight:800;padding:3px 7px;border-radius:999px;background:rgba(14,165,233,.1);color:var(--p)}
+
+/* ── Learn ── */
+.lang-card{
+  background:var(--surf);border:1px solid var(--line);border-radius:18px;
+  padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;
+}
+.lang-card .phrase{flex:1;min-width:0}
+.lang-card .phrase b{display:block;font-size:14px;font-weight:800}
+.lang-card .phrase small{display:block;font-size:11.5px;color:var(--muted);font-weight:700;margin-top:2px}
+.lang-card .translation{font-size:13px;font-weight:700;color:var(--p2)}
+.lang-check{width:30px;height:30px;border-radius:10px;border:2px solid var(--line2);display:grid;place-items:center;flex:none}
+.lang-check.done{background:linear-gradient(135deg,var(--good),#34d399);border-color:transparent}
+.lang-check.done svg{display:block}
+.lang-check svg{display:none;width:16px;height:16px;stroke:white;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.culture-block{background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:10px}
+.culture-block h3{font-size:14px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.culture-block p{font-size:13px;line-height:1.55;color:var(--muted)}
+
+/* ── Sheet / Modal ── */
+.sheet-bg{position:fixed;inset:0;z-index:50;background:rgba(4,12,28,.38);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;align-items:flex-end;justify-content:center;padding:12px}
+.sheet-bg.show{display:flex}
+.sheet{width:min(100%,520px);max-height:90dvh;overflow-y:auto;border-radius:28px 28px 20px 20px;background:var(--bg);border:1px solid var(--line);box-shadow:0 30px 90px rgba(0,0,0,.26);padding:16px;animation:sheetIn .2s ease both}
+@keyframes sheetIn{from{transform:translateY(22px);opacity:.8}to{transform:translateY(0);opacity:1}}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line2);margin:0 auto 14px}
+.sheet h2{font-size:20px;font-weight:900;letter-spacing:-.03em;margin-bottom:4px}
+.sheet p.sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+
+/* ── Form ── */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:5px}
+.field input,.field select,.field textarea{
+  width:100%;padding:11px 13px;border-radius:14px;border:1px solid var(--line2);
+  background:var(--surf2);font-size:14px;font-weight:600;
+}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--p2);outline-offset:-1px}
+.field textarea{min-height:80px;resize:vertical}
+.stepper{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.step-btn{min-height:44px;border-radius:14px;background:var(--surf2);border:1px solid var(--line);font-size:13px;font-weight:800;color:var(--muted)}
+.step-btn.on{color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));border-color:transparent}
+.wizard-steps{display:flex;gap:6px;margin-bottom:16px}
+.wstep{height:4px;flex:1;border-radius:2px;background:var(--line2)}
+.wstep.done{background:linear-gradient(90deg,var(--p),var(--p2))}
+
+/* ── Doc check ── */
+.doc-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surf);border:1px solid var(--line);border-radius:14px;margin-bottom:6px}
+.doc-icon{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:20px;background:var(--surf2);flex:none}
+.doc-info{flex:1;min-width:0}
+.doc-info b{display:block;font-size:13px;font-weight:800}
+.doc-info small{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-top:2px}
+.doc-status{font-size:11px;font-weight:900;padding:4px 9px;border-radius:999px}
+.doc-ok{background:rgba(16,185,129,.12);color:#059669}
+.doc-warn{background:rgba(245,158,11,.12);color:#d97706}
+.doc-missing{background:rgba(239,68,68,.1);color:#dc2626}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;left:50%;bottom:calc(82px + var(--safe-b));z-index:60;max-width:88%;
+  transform:translateX(-50%) translateY(14px);opacity:0;pointer-events:none;
+  padding:10px 14px;border-radius:999px;background:#0a1628;color:white;font-size:13px;font-weight:800;
+  box-shadow:0 12px 32px rgba(0,0,0,.26);transition:all .22s ease;text-align:center;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast b{color:var(--p3)}
+
+/* ── Back button ── */
+.back-btn{display:flex;align-items:center;gap:7px;color:var(--p2);font-size:13px;font-weight:800;margin-bottom:10px;padding:4px 0}
+.back-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brandrow">
+      <div class="logo">✈️</div>
+      <div class="brand">
+        <h1>Travel Planner</h1>
+        <p id="sub">Plan your next adventure</p>
+      </div>
+      <div class="gem-pill">💎 <b id="gemVal">0</b></div>
+      <button class="iconbtn" id="themeBtn" aria-label="Theme">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ── Trips Hub ── -->
+    <section class="view active" id="v-trips">
+      <div id="trips-hub">
+        <div class="section-head">
+          <h2>Your Trips</h2>
+          <button class="btn sm primary" id="newTripBtn">+ New Trip</button>
+        </div>
+        <div id="trips-list"></div>
+      </div>
+
+      <!-- Trip Detail (replaces hub) -->
+      <div id="trip-detail" style="display:none">
+        <button class="back-btn" id="backToTrips">
+          <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          All Trips
+        </button>
+        <div class="sub-tabs" id="detail-tabs">
+          <button class="sub-tab on" data-st="overview">Overview</button>
+          <button class="sub-tab" data-st="itinerary">Itinerary</button>
+          <button class="sub-tab" data-st="packing">Packing</button>
+          <button class="sub-tab" data-st="doccheck">Doc Check</button>
+          <button class="sub-tab" data-st="budget">Budget</button>
+        </div>
+        <div id="st-overview"></div>
+        <div id="st-itinerary" style="display:none"></div>
+        <div id="st-packing" style="display:none"></div>
+        <div id="st-doccheck" style="display:none"></div>
+        <div id="st-budget" style="display:none"></div>
+      </div>
+    </section>
+
+    <!-- ── Discover ── -->
+    <section class="view" id="v-discover">
+      <div class="discover-cat-strip" id="discCats"></div>
+      <div id="discList"></div>
+    </section>
+
+    <!-- ── Learn ── -->
+    <section class="view" id="v-learn">
+      <div class="field">
+        <label>Select Destination</label>
+        <select id="learnDest"></select>
+      </div>
+      <div id="learnTabs" class="sub-tabs" style="margin-bottom:12px">
+        <button class="sub-tab on" data-lt="phrases">Phrases</button>
+        <button class="sub-tab" data-lt="culture">Culture</button>
+        <button class="sub-tab" data-lt="practical">Practical</button>
+      </div>
+      <div id="lt-phrases"></div>
+      <div id="lt-culture" style="display:none"></div>
+      <div id="lt-practical" style="display:none"></div>
+    </section>
+
+    <!-- ── You ── -->
+    <section class="view" id="v-you">
+      <div class="section-head"><h2>My Travel Stats</h2></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px" id="you-stats"></div>
+      <div id="you-trips"></div>
+    </section>
+  </main>
+
+  <nav>
+    <button class="tab on" data-v="trips" aria-label="Trips">
+      <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h12"/><circle cx="19" cy="18" r="2"/></svg>
+      <span>Trips</span>
+    </button>
+    <button class="tab" data-v="discover" aria-label="Discover">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 2C12 2 8 7 8 12s4 10 4 10"/><path d="M2 12h20"/><path d="M12 2C16 7 16 12 16 17"/></svg>
+      <span>Discover</span>
+    </button>
+    <button class="tab" data-v="learn" aria-label="Learn">
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Learn</span>
+    </button>
+    <button class="tab" data-v="you" aria-label="You">
+      <svg viewBox="0 0 24 24"><path d="M12 3 9.2 8.8 3 9.7l4.5 4.4L6.4 20.1 12 17l5.6 3.1-1.1-6L21 9.7l-6.2-.9z"/></svg>
+      <span>You</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ── New Trip Sheet ── -->
+<div class="sheet-bg" id="newTripSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>New Trip</h2>
+    <div class="wizard-steps" id="wzSteps">
+      <div class="wstep done" id="wz0"></div>
+      <div class="wstep" id="wz1"></div>
+      <div class="wstep" id="wz2"></div>
+    </div>
+    <!-- Step 0: Basics -->
+    <div id="wzp-0">
+      <p class="sub">Where are you going?</p>
+      <div class="field"><label>Destination</label><input id="wz-dest" placeholder="e.g. Bali, Indonesia" autocomplete="off"></div>
+      <div class="field"><label>Nickname (optional)</label><input id="wz-nick" placeholder="e.g. Family Summer 2025"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="field"><label>Departure</label><input id="wz-start" type="date"></div>
+        <div class="field"><label>Return</label><input id="wz-end" type="date"></div>
+      </div>
+      <button class="btn primary full" id="wzNext0">Next</button>
+    </div>
+    <!-- Step 1: Travelers -->
+    <div id="wzp-1" style="display:none">
+      <p class="sub">Who's going?</p>
+      <div id="wz-traveler-list" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <input id="wz-traveler-input" placeholder="Add traveler name" style="flex:1;padding:10px 12px;border-radius:14px;border:1px solid var(--line2);background:var(--surf2);font-size:14px">
+        <button class="btn sm primary" id="wz-traveler-add">Add</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn" id="wzBack1">Back</button>
+        <button class="btn primary" id="wzNext1">Next</button>
+      </div>
+    </div>
+    <!-- Step 2: Type & Budget -->
+    <div id="wzp-2" style="display:none">
+      <p class="sub">Trip type and budget</p>
+      <div class="field"><label>Trip Type</label>
+        <div class="stepper" id="wz-type-btns">
+          <button class="step-btn on" data-type="leisure">🏖️ Leisure</button>
+          <button class="step-btn" data-type="adventure">🏔️ Adventure</button>
+          <button class="step-btn" data-type="family">👨‍👩‍👧 Family</button>
+          <button class="step-btn" data-type="business">💼 Business</button>
+        </div>
+      </div>
+      <div class="field"><label>Budget (QAR)</label><input id="wz-budget" type="number" placeholder="e.g. 8000" min="0"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn" id="wzBack2">Back</button>
+        <button class="btn primary" id="wzCreate">Create Trip ✈️</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Activity Sheet ── -->
+<div class="sheet-bg" id="addActSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Add Activity</h2>
+    <p class="sub" id="actSlotLabel">Morning slot</p>
+    <div class="field"><label>Activity</label><input id="act-name" placeholder="e.g. Visit Uluwatu Temple" autocomplete="off"></div>
+    <div class="field"><label>Notes</label><input id="act-note" placeholder="e.g. Bring sarong, 9am tour"></div>
+    <div class="field"><label>Emoji</label>
+      <div class="stepper">
+        <button class="step-btn on" data-emoji="🏛️">🏛️ Sight</button>
+        <button class="step-btn" data-emoji="🍽️">🍽️ Food</button>
+        <button class="step-btn" data-emoji="🏖️">🏖️ Beach</button>
+        <button class="step-btn" data-emoji="🚗">🚗 Transfer</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button class="btn" id="actCancel">Cancel</button>
+      <button class="btn primary" id="actSave">Add Activity</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Pack Item Sheet ── -->
+<div class="sheet-bg" id="addPackSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Add Packing Item</h2>
+    <div class="field"><label>Item</label><input id="pack-item-name" placeholder="e.g. Sunscreen SPF 50" autocomplete="off"></div>
+    <div class="field"><label>Category</label>
+      <select id="pack-item-cat">
+        <option value="Clothing">👕 Clothing</option>
+        <option value="Toiletries">🧴 Toiletries</option>
+        <option value="Documents">🪪 Documents</option>
+        <option value="Electronics">📱 Electronics</option>
+        <option value="Health">💊 Health</option>
+        <option value="Entertainment">🎮 Entertainment</option>
+        <option value="Other">📦 Other</option>
+      </select>
+    </div>
+    <div class="field"><label>For</label><select id="pack-item-person"></select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn" id="packCancel">Cancel</button>
+      <button class="btn primary" id="packSave">Add Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Expense Sheet ── -->
+<div class="sheet-bg" id="addExpSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Log Expense</h2>
+    <div class="field"><label>Description</label><input id="exp-desc" placeholder="e.g. Hotel night 1" autocomplete="off"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Amount (QAR)</label><input id="exp-amount" type="number" placeholder="0" min="0"></div>
+      <div class="field"><label>Category</label>
+        <select id="exp-cat">
+          <option value="Accommodation">🏨 Stay</option>
+          <option value="Food">🍽️ Food</option>
+          <option value="Transport">✈️ Transport</option>
+          <option value="Activities">🎡 Activities</option>
+          <option value="Shopping">🛍️ Shopping</option>
+          <option value="Other">📦 Other</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn" id="expCancel">Cancel</button>
+      <button class="btn primary" id="expSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════ DATA ═══════════════════════ */
+const DESTINATIONS = {
+  "Bali":{flag:"🇮🇩",icon:"🌺",region:"Southeast Asia",phrases:[
+    {en:"Hello",local:"Halo",pron:"hah-loh"},
+    {en:"Thank you",local:"Terima kasih",pron:"teh-ree-mah kah-see"},
+    {en:"How much?",local:"Berapa harganya?",pron:"beh-rah-pah har-gah-nyah"},
+    {en:"Where is...?",local:"Di mana...?",pron:"dee mah-nah"},
+    {en:"Delicious!",local:"Enak sekali!",pron:"eh-nak seh-kah-lee"},
+    {en:"Excuse me",local:"Permisi",pron:"per-mee-see"},
+  ],culture:{
+    customs:"Remove shoes before entering temples. Dress modestly — sarong required at major temples.",
+    religion:"Majority Hindu. Offerings (canang sari) on the ground — step around, not over them.",
+    tipping:"Not mandatory but appreciated. 5–10% at restaurants if no service charge.",
+    food:"Try nasi goreng (fried rice), satay, and babi guling. Vegetarian options widely available."
+  },practical:{currency:"Indonesian Rupiah (IDR). USD/card widely accepted in tourist areas.",weather:"Dry season May–Oct is best. Nov–Apr is wet season with heavy afternoon rain.",health:"No malaria in Bali. Drink bottled water only. Sunscreen essential.",safety:"Safe for families. Use Grab app for rides — avoid unlicensed taxis."}},
+  "Paris":{flag:"🇫🇷",icon:"🗼",region:"Europe",phrases:[
+    {en:"Hello",local:"Bonjour",pron:"bon-zhoor"},
+    {en:"Thank you",local:"Merci",pron:"mair-see"},
+    {en:"Please",local:"S'il vous plaît",pron:"seel voo play"},
+    {en:"Do you speak English?",local:"Parlez-vous anglais?",pron:"par-lay voo ahn-glay"},
+    {en:"Where is...?",local:"Où est...?",pron:"oo ay"},
+    {en:"The bill please",local:"L'addition s'il vous plaît",pron:"lah-dee-syohn seel voo play"},
+  ],culture:{
+    customs:"Greet with 'Bonjour' before any interaction — skipping this is considered rude.",
+    religion:"Majority Catholic. Dress modestly in churches.",
+    tipping:"Service is included by law. Small tip (1–2€) for good service is appreciated.",
+    food:"Try croissants, crêpes, croque monsieur, and macarons. Most restaurants close 2–7pm."
+  },practical:{currency:"Euro (€). Cards accepted everywhere. ATMs widely available.",weather:"Spring (Apr–Jun) and autumn (Sep–Oct) are best. Summer is warm but crowded.",health:"Excellent healthcare. European Health Insurance Card (EHIC) for EU visitors.",safety:"Beware pickpockets near Eiffel Tower and metro. Keep bags in front."}},
+  "Tokyo":{flag:"🇯🇵",icon:"⛩️",region:"East Asia",phrases:[
+    {en:"Hello",local:"Konnichiwa",pron:"kon-nee-chee-wah"},
+    {en:"Thank you",local:"Arigatou gozaimasu",pron:"ah-ree-gah-toh goh-zah-ee-mah-ss"},
+    {en:"Excuse me",local:"Sumimasen",pron:"soo-mee-mah-sen"},
+    {en:"Where is...?",local:"...wa doko desu ka?",pron:"...wah doh-koh deh-ss-kah"},
+    {en:"How much?",local:"Ikura desu ka?",pron:"ee-koo-rah deh-ss-kah"},
+    {en:"Delicious!",local:"Oishii!",pron:"oh-ee-shee"},
+  ],culture:{
+    customs:"Bow when greeting. Remove shoes when indicated (look for entryways with slippers). No tipping — it can be offensive.",
+    religion:"Mix of Shinto and Buddhist. Always wash hands at temple entrance fountains.",
+    tipping:"Never tip in Japan. It is considered rude.",
+    food:"Try ramen, sushi, tempura, tonkatsu, and takoyaki. Convenience store food (7-Eleven) is genuinely excellent."
+  },practical:{currency:"Japanese Yen (JPY). Japan is still largely cash-based — bring cash.",weather:"Cherry blossom (late Mar–Apr) and autumn leaves (Nov) are peak seasons.",health:"Very safe, clean water. Buy travel insurance with medical coverage.",safety:"Extremely safe. One of the safest countries in the world. Keep belongings with you."}},
+  "Dubai":{flag:"🇦🇪",icon:"🌆",region:"Middle East",phrases:[
+    {en:"Hello",local:"Marhaba",pron:"mar-hah-bah"},
+    {en:"Thank you",local:"Shukran",pron:"shook-ran"},
+    {en:"Please",local:"Min fadlak",pron:"min fad-lak"},
+    {en:"How much?",local:"Bikam?",pron:"bee-kam"},
+    {en:"Where is...?",local:"Wayn...?",pron:"wayn"},
+    {en:"Good",local:"Zein",pron:"zayn"},
+  ],culture:{
+    customs:"Dress modestly in public. No public displays of affection. Ramadan: no eating or drinking in public during daylight.",
+    religion:"Majority Muslim. Respect prayer times. Many places close or have reduced hours on Fridays.",
+    tipping:"10–15% at restaurants is standard if service not included. Taxi drivers appreciate rounding up.",
+    food:"Try Al Harees, shawarma, mezze, and luqaimat. Halal food everywhere."
+  },practical:{currency:"UAE Dirham (AED). Cards widely accepted. Currency pegged to USD.",weather:"Oct–Apr is pleasant (20–30°C). Summer (Jun–Sep) is extremely hot (40°C+).",health:"Excellent healthcare. Many medications need prescription — bring enough.",safety:"Very safe. Zero tolerance for drugs. Laws are strict — research beforehand."}}
+};
+
+const DISCOVER_DATA = {
+  Highlights:[
+    {icon:"🏛️",name:"Must-See Sights",desc:"Top-rated landmarks and iconic locations every visitor should experience.",tags:["Top rated","Cultural"]},
+    {icon:"🍽️",name:"Local Cuisine",desc:"Best spots to eat like a local — from street food to upscale dining.",tags:["Food","Local"]},
+    {icon:"🏖️",name:"Beaches & Nature",desc:"Natural wonders, parks, and beaches for outdoor exploration.",tags:["Nature","Relaxing"]},
+    {icon:"🛍️",name:"Shopping & Markets",desc:"Local markets, malls, and unique shops for souvenirs and more.",tags:["Shopping"]},
+  ],
+  "With Kids":[
+    {icon:"🎡",name:"Theme Parks",desc:"Family-friendly parks and entertainment complexes with rides and shows.",tags:["Kids","Fun"]},
+    {icon:"🐠",name:"Aquariums & Zoos",desc:"Interactive wildlife experiences perfect for children of all ages.",tags:["Kids","Educational"]},
+    {icon:"🎭",name:"Interactive Museums",desc:"Hands-on science and art museums where learning is an adventure.",tags:["Kids","Educational"]},
+    {icon:"⛺",name:"Outdoor Activities",desc:"Cycling trails, nature walks, and outdoor sports suitable for families.",tags:["Kids","Active"]},
+  ],
+  "Hidden Gems":[
+    {icon:"☕",name:"Local Cafés",desc:"Off-the-beaten-path coffee spots and bakeries loved by residents.",tags:["Local","Quiet"]},
+    {icon:"🎨",name:"Street Art & Culture",desc:"Murals, galleries, and cultural spaces away from the tourist crowds.",tags:["Cultural","Free"]},
+    {icon:"🌳",name:"Neighborhood Parks",desc:"Peaceful green spaces where locals spend their weekends.",tags:["Local","Free"]},
+    {icon:"🌙",name:"Night Markets",desc:"Evening markets that come alive after dark with food and crafts.",tags:["Food","Evening"]},
+  ],
+  Practical:[
+    {icon:"🚇",name:"Getting Around",desc:"Metro, bus, taxi, and ride-hailing options — tips for smooth travel.",tags:["Transport","Essential"]},
+    {icon:"💱",name:"Money & ATMs",desc:"Currency tips, exchange rates, and where to find reliable ATMs.",tags:["Essential"]},
+    {icon:"📡",name:"SIM & Wi-Fi",desc:"Best options for staying connected: local SIMs, eSIMs, and hotspots.",tags:["Essential"]},
+    {icon:"🏥",name:"Health & Safety",desc:"Hospitals, pharmacies, and safety tips for your destination.",tags:["Essential","Safety"]},
+  ]
+};
+
+const PACK_TEMPLATES = {
+  leisure:["Passport","Travel insurance docs","Flight printouts","Sunscreen SPF 50","Swimwear","Flip-flops","Casual clothes (x5)","Hat","Sunglasses","Camera","Power bank","Adaptor","Medications","First aid kit","Hand sanitiser"],
+  adventure:["Passport","Travel insurance docs","Hiking boots","Waterproof jacket","Quick-dry tops (x4)","Trekking trousers","Thermal layer","First aid kit","Water bottle","Headlamp","Sunscreen","Insect repellent","Medications","Power bank"],
+  family:["Passports (all)","Travel insurance docs","Kids snacks","Stroller/carrier","Sunscreen (family)","First aid kit","Wet wipes","Change of clothes (kids x3)","Kids medications","Entertainment (tablets/books)","Reusable water bottles","Adaptor","Power bank"],
+  business:["Passport","Business cards","Laptop","Chargers","Smart clothes (x3)","Formal shoes","Presentation materials","Adaptor","Medications","Toiletries kit"]
+};
+
+const PACK_CATS = ["Clothing","Toiletries","Documents","Electronics","Health","Entertainment","Other"];
+
+/* ═══════════════════════ STATE ═══════════════════════ */
+const embedded = (()=>{try{return window.self!==window.top}catch(e){return true}})();
+const state = {
+  ctx:{appId:"travel-planner",circleId:"standalone",circleName:"Family",personId:"me",personName:"Me",people:[{id:"me",name:"Me",color:"#0369a1"}]},
+  trips:[],gems:0,activeTrip:null,activeSt:"overview",wizStep:0,wizData:{},
+  wizTravelers:["Me"],actSlot:null,learnDest:Object.keys(DESTINATIONS)[0],learnTab:"phrases",learnDone:{},discCat:"Highlights"
+};
+
+/* ═══════════════════════ BRIDGE ═══════════════════════ */
+const Bridge = (()=>{
+  function send(type,payload){if(!embedded)return;try{window.parent.postMessage({type,appId:state.ctx.appId,...payload},"*")}catch(e){}}
+  window.addEventListener("message",e=>{
+    const m=e.data||{};
+    if(m.type==="INIT_APP"){
+      const p=m.payload||{};
+      Object.assign(state.ctx,{
+        circleId:p.circleId||state.ctx.circleId,circleName:p.circleName||state.ctx.circleName,
+        personId:p.personId||state.ctx.personId,personName:p.personName||p.userName||state.ctx.personName,
+        people:Array.isArray(p.people)&&p.people.length?p.people:state.ctx.people
+      });
+      applyContext();loadAll();
+    }
+  });
+  return {send};
+})();
+
+function emitEvent(event,amount,meta={}){
+  Bridge.send("KINETIK_EVENT",{event,amount,personId:state.ctx.personId,personName:state.ctx.personName,...meta});
+  state.gems+=amount;
+  document.getElementById("gemVal").textContent=state.gems;
+}
+
+/* ═══════════════════════ STORAGE ═══════════════════════ */
+const SK = ()=>"ktp_"+state.ctx.circleId;
+function save(){try{localStorage.setItem(SK(),JSON.stringify({trips:state.trips,gems:state.gems}))}catch(e){}}
+function loadAll(){
+  try{
+    const d=JSON.parse(localStorage.getItem(SK())||"{}");
+    state.trips=d.trips||[];state.gems=d.gems||0;
+  }catch(e){state.trips=[];state.gems=0;}
+  document.getElementById("gemVal").textContent=state.gems;
+  applyContext();renderTrips();renderYou();
+}
+function uid(p){return p+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[m]);
+
+/* ═══════════════════════ HELPERS ═══════════════════════ */
+function applyContext(){
+  document.getElementById("sub").textContent=state.ctx.circleName||"My Trips";
+  state.wizTravelers=[state.ctx.personName||"Me"];
+  const people=state.ctx.people;
+  if(people.length>1) people.forEach(p=>{if(p.id!==state.ctx.personId&&!state.wizTravelers.includes(p.name))state.wizTravelers.push(p.name);});
+}
+function toast(html){const t=document.getElementById("toast");t.innerHTML=html;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2200)}
+function days(trip){
+  const s=new Date(trip.startDate),e=new Date(trip.endDate);
+  return Math.max(1,Math.round((e-s)/(86400000))+1);
+}
+function packPct(trip){
+  const items=trip.packing||[];if(!items.length)return 0;
+  return Math.round(items.filter(i=>i.done).length/items.length*100);
+}
+function tripStatus(trip){
+  const now=Date.now(),s=new Date(trip.startDate).getTime(),e=new Date(trip.endDate).getTime();
+  if(now>e)return{key:"done",label:"Completed",cls:"s-done"};
+  if(now>=s)return{key:"active",label:"In Progress",cls:"s-active"};
+  const pct=packPct(trip);
+  if(pct>=80)return{key:"ready",label:"Ready",cls:"s-ready"};
+  return{key:"planning",label:"Planning",cls:"s-planning"};
+}
+function personColor(name){
+  const p=state.ctx.people.find(x=>x.name===name||x.id===name);
+  if(p&&p.color)return p.color;
+  const colors=["#0369a1","#059669","#d97706","#7c3aed","#db2777"];
+  let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))&0xffff;
+  return colors[h%colors.length];
+}
+function initials(n){return String(n||"?").trim().slice(0,2).toUpperCase()}
+function dateStr(d){if(!d)return "";const dt=new Date(d);return dt.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})}
+
+/* ═══════════════════════ RENDER TRIPS HUB ═══════════════════════ */
+function renderTrips(){
+  const hub=document.getElementById("trips-hub");
+  const det=document.getElementById("trip-detail");
+  if(state.activeTrip){hub.style.display="none";det.style.display="block";renderDetail();}
+  else{hub.style.display="block";det.style.display="none";}
+  if(!state.activeTrip){
+    const list=document.getElementById("trips-list");
+    if(!state.trips.length){
+      list.innerHTML=`<div class="empty"><div class="big">✈️</div><h3>No trips yet</h3><p>Tap <b>New Trip</b> to start planning your next adventure.</p></div>`;return;
+    }
+    const sorted=[...state.trips].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+    list.innerHTML=sorted.map(t=>{
+      const st=tripStatus(t),pct=packPct(t),d=DESTINATIONS[t.destination];
+      return`<button class="trip-card" data-tid="${t.id}">
+        <div class="trip-hero" style="background:linear-gradient(135deg,${t.color||"#0369a1"},${t.color2||"#0ea5e9"})">
+          <span class="dest-icon">${d?d.icon:"🌍"}</span>
+          <b>${esc(t.nickname||t.destination)}</b>
+        </div>
+        <div class="trip-meta">
+          <span class="status-badge ${st.cls}">${st.label}</span>
+          <span class="trip-date">📅 ${dateStr(t.startDate)} – ${dateStr(t.endDate)}</span>
+          <span class="trip-travelers">👥 ${(t.travelers||[]).length}</span>
+        </div>
+        ${(t.packing||[]).length?`<div class="pack-bar"><div class="pack-label"><span>Packing</span><span>${pct}%</span></div><div class="pack-bar-track"><div class="pack-bar-fill" style="width:${pct}%"></div></div></div>`:""}
+      </button>`;
+    }).join("");
+    document.querySelectorAll("[data-tid]").forEach(b=>b.onclick=()=>{
+      state.activeTrip=state.trips.find(t=>t.id===b.dataset.tid)||null;
+      state.activeSt="overview";renderTrips();
+    });
+  }
+  renderYou();
+}
+
+/* ═══════════════════════ RENDER TRIP DETAIL ═══════════════════════ */
+function renderDetail(){
+  // activate sub-tabs
+  document.querySelectorAll("[data-st]").forEach(b=>b.classList.toggle("on",b.dataset.st===state.activeSt));
+  ["overview","itinerary","packing","doccheck","budget"].forEach(k=>{
+    document.getElementById("st-"+k).style.display=k===state.activeSt?"block":"none";
+  });
+  const t=state.activeTrip;if(!t)return;
+  if(state.activeSt==="overview")renderOverview(t);
+  if(state.activeSt==="itinerary")renderItinerary(t);
+  if(state.activeSt==="packing")renderPacking(t);
+  if(state.activeSt==="doccheck")renderDocCheck(t);
+  if(state.activeSt==="budget")renderBudget(t);
+}
+
+function renderOverview(t){
+  const st=tripStatus(t),pct=packPct(t),d=DESTINATIONS[t.destination],n=days(t);
+  document.getElementById("st-overview").innerHTML=`
+    <div class="card" style="background:linear-gradient(135deg,${t.color||"#0369a1"},${t.color2||"#0ea5e9"});border:none;color:white;margin-bottom:12px">
+      <div style="font-size:32px;margin-bottom:6px">${d?d.icon:"🌍"}</div>
+      <div style="font-size:22px;font-weight:900;letter-spacing:-.03em">${esc(t.destination)}</div>
+      ${t.nickname?`<div style="font-size:13px;opacity:.75;margin-top:2px">${esc(t.nickname)}</div>`:""}
+      <div style="font-size:12px;opacity:.8;margin-top:8px">📅 ${dateStr(t.startDate)} – ${dateStr(t.endDate)} · ${n} day${n!==1?"s":""}</div>
+      <div style="margin-top:6px"><span style="background:rgba(255,255,255,.2);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:800">${st.label}</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div class="card" style="margin:0;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--p2)">${pct}%</div><div style="font-size:11px;color:var(--muted);font-weight:700;margin-top:2px">Packed</div></div>
+      <div class="card" style="margin:0;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--p2)">${(t.itinerary||[]).reduce((s,d)=>s+d.slots.filter(s=>s.activity).length,0)}</div><div style="font-size:11px;color:var(--muted);font-weight:700;margin-top:2px">Activities</div></div>
+      <div class="card" style="margin:0;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--p2)">${(t.expenses||[]).reduce((s,e)=>s+Number(e.amount||0),0).toLocaleString()} <span style="font-size:12px">QAR</span></div><div style="font-size:11px;color:var(--muted);font-weight:700;margin-top:2px">Spent</div></div>
+      <div class="card" style="margin:0;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--p2)">${(t.travelers||[]).length}</div><div style="font-size:11px;color:var(--muted);font-weight:700;margin-top:2px">Travelers</div></div>
+    </div>
+    <div class="section-head"><h2>Travelers</h2></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      ${(t.travelers||[]).map(tr=>`<div style="display:flex;align-items:center;gap:7px;background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:7px 11px"><div class="avatar" style="background:${personColor(tr)};width:26px;height:26px;font-size:10px">${initials(tr)}</div><span style="font-size:13px;font-weight:700">${esc(tr)}</span></div>`).join("")}
+    </div>
+    ${(t.packing||[]).length?`<div class="pack-bar"><div class="pack-label"><span>Packing progress</span><span>${pct}%</span></div><div class="pack-bar-track"><div class="pack-bar-fill" style="width:${pct}%"></div></div></div>`:""}
+    <button class="btn danger full" style="margin-top:14px" id="deleteTrip">Delete Trip</button>
+  `;
+  document.getElementById("deleteTrip").onclick=()=>{
+    if(!confirm("Delete this trip?"))return;
+    state.trips=state.trips.filter(x=>x.id!==t.id);
+    state.activeTrip=null;save();renderTrips();toast("Trip deleted");
+  };
+}
+
+function renderItinerary(t){
+  const d=days(t),start=new Date(t.startDate);
+  if(!t.itinerary||t.itinerary.length!==d){
+    t.itinerary=Array.from({length:d},(_,i)=>{
+      const dt=new Date(start);dt.setDate(dt.getDate()+i);
+      return{date:dt.toISOString().slice(0,10),slots:[{time:"Morning",activity:null},{time:"Afternoon",activity:null},{time:"Evening",activity:null}]};
+    });
+    save();
+  }
+  const html=t.itinerary.map((day,di)=>`
+    <div class="day-block">
+      <div class="day-header">Day ${di+1} — ${dateStr(day.date)}</div>
+      ${day.slots.map((slot,si)=>`
+        <div class="slot">
+          <div class="slot-time">${slot.time}</div>
+          <div class="slot-card" data-di="${di}" data-si="${si}">
+            ${slot.activity?`<div class="activity-item">${slot.activity.emoji} ${esc(slot.activity.name)}</div>${slot.activity.note?`<div class="activity-meta">${esc(slot.activity.note)}</div>`:""}`:``}
+          </div>
+        </div>`).join("")}
+    </div>`).join("");
+  document.getElementById("st-itinerary").innerHTML=html;
+  document.querySelectorAll(".slot-card").forEach(el=>{
+    el.onclick=()=>{
+      const di=Number(el.dataset.di),si=Number(el.dataset.si);
+      if(t.itinerary[di].slots[si].activity){
+        if(confirm("Remove this activity?"))t.itinerary[di].slots[si].activity=null,save(),renderDetail();
+      }else{
+        state.actSlot={di,si};
+        document.getElementById("actSlotLabel").textContent=t.itinerary[di].slots[si].time+" slot — Day "+(di+1);
+        document.getElementById("act-name").value="";document.getElementById("act-note").value="";
+        document.querySelectorAll("[data-emoji]").forEach(b=>b.classList.toggle("on",b.dataset.emoji==="🏛️"));
+        showSheet("addActSheet");
+      }
+    };
+  });
+}
+
+function renderPacking(t){
+  if(!(t.packing||[]).length){
+    document.getElementById("st-packing").innerHTML=`
+      <div style="margin-bottom:12px">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Start with a smart template based on your trip type, or add items manually.</p>
+        <button class="btn primary full" id="genPackBtn">✨ Generate Smart List</button>
+      </div>
+      <button class="btn full" id="addPackBtn">+ Add Item Manually</button>`;
+    document.getElementById("genPackBtn").onclick=()=>{
+      const tmpl=PACK_TEMPLATES[t.tripType||"leisure"]||PACK_TEMPLATES.leisure;
+      t.packing=(t.travelers||["Me"]).flatMap(tr=>tmpl.map(name=>({id:uid("pi"),name,cat:"Other",person:tr,done:false})));
+      save();toast("Packing list generated!");renderDetail();
+    };
+    document.getElementById("addPackBtn").onclick=()=>openAddPackSheet();
+    return;
+  }
+  const pct=packPct(t);
+  const allDone=pct===100;
+  const byCat={};
+  t.packing.forEach(item=>{const k=item.cat||"Other";(byCat[k]=byCat[k]||[]).push(item);});
+  let html=`
+    <div style="margin-bottom:12px">
+      <div class="pack-label"><span>Overall progress</span><span>${pct}%</span></div>
+      <div class="pack-bar-track" style="margin-top:5px"><div class="pack-bar-fill" style="width:${pct}%"></div></div>
+      ${allDone?`<div style="margin-top:8px;padding:10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:12px;text-align:center;color:#059669;font-weight:800;font-size:13px">🎉 All packed! +15💎 earned</div>`:""}
+    </div>`;
+  PACK_CATS.filter(c=>byCat[c]).forEach(cat=>{
+    html+=`<div class="section-head"><h2>${cat}</h2><small>${byCat[cat].filter(i=>i.done).length}/${byCat[cat].length}</small></div>`;
+    html+=byCat[cat].map(item=>`
+      <div class="pack-item" data-pid="${item.id}">
+        <div class="pack-check ${item.done?"done":""}">
+          <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="pack-item-name ${item.done?"done":""}">${esc(item.name)}</div>
+          <div class="pack-cat">${esc(item.person)}</div>
+        </div>
+        <button class="btn sm danger" data-del="${item.id}" style="min-height:28px;padding:0 8px;font-size:11px">×</button>
+      </div>`).join("");
+  });
+  html+=`<button class="btn full" id="addPackBtn" style="margin-top:6px">+ Add Item</button>`;
+  document.getElementById("st-packing").innerHTML=html;
+  let wasAllDone=allDone;
+  document.querySelectorAll("[data-pid]").forEach(el=>{
+    el.onclick=e=>{
+      if(e.target.dataset.del)return;
+      const item=t.packing.find(i=>i.id===el.dataset.pid);
+      if(!item)return;
+      item.done=!item.done;
+      const newPct=packPct(t);
+      if(!wasAllDone&&newPct===100){emitEvent("task.completed",15,{context:"All packed for "+t.destination});toast("🎉 All packed! <b>+15💎</b>")}
+      wasAllDone=newPct===100;
+      save();renderDetail();
+    };
+  });
+  document.querySelectorAll("[data-del]").forEach(b=>{
+    b.onclick=e=>{e.stopPropagation();t.packing=t.packing.filter(i=>i.id!==b.dataset.del);save();renderDetail();};
+  });
+  document.getElementById("addPackBtn").onclick=()=>openAddPackSheet();
+}
+
+function renderDocCheck(t){
+  const vaultRaw=()=>{try{return JSON.parse(localStorage.getItem("kfv_"+state.ctx.circleId)||"{}")}catch(e){return {}}};
+  const vault=vaultRaw();
+  const docs=vault.documents||[];
+  const now=Date.now(),sixMonths=15778800000;
+  let html=`<p style="font-size:13px;color:var(--muted);margin-bottom:12px">Checking Family Vault passports for all ${(t.travelers||[]).length} traveler(s).</p>`;
+  const tripEnd=t.endDate?new Date(t.endDate).getTime():now;
+  (t.travelers||[]).forEach(tr=>{
+    const passport=docs.find(d=>d.personName===tr&&d.category==="Identity"&&(d.name||"").toLowerCase().includes("passport"));
+    let statusHtml;
+    if(!passport){
+      statusHtml=`<span class="doc-status doc-missing">Missing</span>`;
+    }else if(!passport.expiry){
+      statusHtml=`<span class="doc-status doc-warn">No expiry</span>`;
+    }else{
+      const exp=new Date(passport.expiry).getTime();
+      if(exp<tripEnd+sixMonths){
+        statusHtml=`<span class="doc-status doc-warn">Expires ${dateStr(passport.expiry)}</span>`;
+      }else{
+        statusHtml=`<span class="doc-status doc-ok">Valid ✓</span>`;
+      }
+    }
+    html+=`<div class="doc-row">
+      <div class="doc-icon">🛂</div>
+      <div class="doc-info"><b>${esc(tr)}</b><small>Passport</small></div>
+      ${statusHtml}
+    </div>`;
+  });
+  if(!docs.length)html+=`<div style="margin-top:12px;padding:12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:14px;font-size:12px;color:#d97706;font-weight:700">No documents found in Family Vault. Add passports in the Family Vault app.</div>`;
+  document.getElementById("st-doccheck").innerHTML=html;
+}
+
+function renderBudget(t){
+  const exps=t.expenses||[];
+  const total=exps.reduce((s,e)=>s+Number(e.amount||0),0);
+  const budget=Number(t.budget||0);
+  const remaining=budget-total;
+  const pct=budget?Math.min(100,Math.round(total/budget*100)):0;
+  const byCat={};exps.forEach(e=>{(byCat[e.cat]=byCat[e.cat]||[]).push(e);});
+  let html=`
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <div><div style="font-size:12px;color:var(--muted);font-weight:700">Spent</div><div style="font-size:22px;font-weight:900;color:var(--p2)">${total.toLocaleString()} QAR</div></div>
+        <div style="text-align:right"><div style="font-size:12px;color:var(--muted);font-weight:700">Budget</div><div style="font-size:22px;font-weight:900">${budget?budget.toLocaleString():"—"} ${budget?"QAR":""}</div></div>
+      </div>
+      ${budget?`<div class="pack-bar-track"><div class="pack-bar-fill" style="width:${pct}%;background:${pct>90?"linear-gradient(90deg,#ef4444,#f87171)":""}"></div></div>
+        <div style="margin-top:5px;font-size:11px;font-weight:800;color:${remaining<0?"var(--danger)":"var(--good)"}">${remaining>=0?remaining.toLocaleString()+" QAR remaining":Math.abs(remaining).toLocaleString()+" QAR over budget"}</div>`:""}
+    </div>`;
+  if(Object.keys(byCat).length){
+    html+=`<div class="section-head"><h2>By Category</h2></div>`;
+    Object.entries(byCat).forEach(([cat,items])=>{
+      const sum=items.reduce((s,e)=>s+Number(e.amount||0),0);
+      html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surf);border:1px solid var(--line);border-radius:14px;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:700">${esc(cat)}</span>
+        <span style="font-size:13px;font-weight:900;color:var(--p2)">${sum.toLocaleString()} QAR</span>
+      </div>`;
+    });
+    html+=`<div class="section-head"><h2>All Expenses</h2></div>`;
+    [...exps].reverse().forEach(e=>{
+      html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--surf);border:1px solid var(--line);border-radius:12px;margin-bottom:5px">
+        <div><div style="font-size:13px;font-weight:700">${esc(e.desc)}</div><div style="font-size:10.5px;color:var(--muted);font-weight:700">${esc(e.cat)}</div></div>
+        <span style="font-size:13px;font-weight:900">${Number(e.amount).toLocaleString()} QAR</span>
+      </div>`;
+    });
+  }else{
+    html+=`<div class="empty" style="padding:32px 22px"><div class="big">💰</div><p>No expenses logged yet.</p></div>`;
+  }
+  html+=`<button class="btn primary full" id="addExpBtn" style="margin-top:10px">+ Log Expense</button>`;
+  document.getElementById("st-budget").innerHTML=html;
+  document.getElementById("addExpBtn").onclick=()=>showSheet("addExpSheet");
+}
+
+/* ═══════════════════════ DISCOVER ═══════════════════════ */
+function renderDiscover(){
+  const cats=Object.keys(DISCOVER_DATA);
+  document.getElementById("discCats").innerHTML=cats.map(c=>`<button class="disc-cat ${c===state.discCat?"on":""}" data-dc="${esc(c)}">${esc(c)}</button>`).join("");
+  document.querySelectorAll("[data-dc]").forEach(b=>b.onclick=()=>{state.discCat=b.dataset.dc;renderDiscover();});
+  const places=DISCOVER_DATA[state.discCat]||[];
+  document.getElementById("discList").innerHTML=places.map(p=>`
+    <div class="place-card">
+      <div class="place-icon">${p.icon}</div>
+      <div class="place-info">
+        <b>${esc(p.name)}</b>
+        <small>${esc(p.desc)}</small>
+        <div class="place-tags">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
+      </div>
+    </div>`).join("");
+}
+
+/* ═══════════════════════ LEARN ═══════════════════════ */
+function renderLearn(){
+  const destNames=Object.keys(DESTINATIONS);
+  const sel=document.getElementById("learnDest");
+  if(!sel.options.length){
+    sel.innerHTML=destNames.map(d=>`<option value="${d}">${DESTINATIONS[d].flag} ${d}</option>`).join("");
+    sel.value=state.learnDest;
+    sel.onchange=()=>{state.learnDest=sel.value;state.learnDone={};renderLearnContent();};
+  }
+  document.querySelectorAll("[data-lt]").forEach(b=>b.classList.toggle("on",b.dataset.lt===state.learnTab));
+  renderLearnContent();
+}
+
+function renderLearnContent(){
+  ["phrases","culture","practical"].forEach(k=>document.getElementById("lt-"+k).style.display=k===state.learnTab?"block":"none");
+  const dest=DESTINATIONS[state.learnDest];if(!dest)return;
+  if(state.learnTab==="phrases"){
+    const doneCt=Object.keys(state.learnDone).filter(k=>state.learnDone[k]).length;
+    document.getElementById("lt-phrases").innerHTML=
+      `<div style="margin-bottom:10px;font-size:12px;font-weight:800;color:var(--muted)">${doneCt} / ${dest.phrases.length} phrases practised — +2💎 per phrase (cap 20💎/trip)</div>`+
+      dest.phrases.map((ph,i)=>`
+        <div class="lang-card" data-ph="${i}">
+          <div class="phrase"><b>${esc(ph.en)}</b><small>${esc(ph.local)} · <em>${esc(ph.pron)}</em></small></div>
+          <span class="translation">${esc(ph.local)}</span>
+          <div class="lang-check ${state.learnDone[i]?"done":""}"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+        </div>`).join("");
+    document.querySelectorAll("[data-ph]").forEach(el=>el.onclick=()=>{
+      const i=Number(el.dataset.ph);
+      if(!state.learnDone[i]){
+        state.learnDone[i]=true;
+        const earned=Object.values(state.learnDone).filter(Boolean).length;
+        if(earned<=10){emitEvent("practice.completed",2,{context:"Phrase: "+dest.phrases[i].en});toast(`💎 <b>+2</b> Practice — "${esc(dest.phrases[i].en)}"`);}
+        else toast(`✅ "${esc(dest.phrases[i].en)}" marked done (cap reached)`);
+      }else{state.learnDone[i]=false;}
+      renderLearnContent();
+    });
+  }
+  if(state.learnTab==="culture"&&dest.culture){
+    document.getElementById("lt-culture").innerHTML=[
+      {emoji:"🙏",title:"Customs & Etiquette",key:"customs"},
+      {emoji:"⛩️",title:"Religion & Respect",key:"religion"},
+      {emoji:"💵",title:"Tipping",key:"tipping"},
+      {emoji:"🍽️",title:"Food & Dining",key:"food"},
+    ].map(c=>`<div class="culture-block"><h3>${c.emoji} ${c.title}</h3><p>${esc(dest.culture[c.key]||"—")}</p></div>`).join("");
+  }
+  if(state.learnTab==="practical"&&dest.practical){
+    document.getElementById("lt-practical").innerHTML=[
+      {emoji:"💱",title:"Currency & Money",key:"currency"},
+      {emoji:"🌤️",title:"Weather",key:"weather"},
+      {emoji:"🏥",title:"Health",key:"health"},
+      {emoji:"🔒",title:"Safety",key:"safety"},
+    ].map(c=>`<div class="culture-block"><h3>${c.emoji} ${c.title}</h3><p>${esc(dest.practical[c.key]||"—")}</p></div>`).join("");
+  }
+}
+
+/* ═══════════════════════ YOU ═══════════════════════ */
+function renderYou(){
+  const trips=state.trips;
+  const completed=trips.filter(t=>tripStatus(t).key==="done").length;
+  const destinations=new Set(trips.map(t=>t.destination)).size;
+  document.getElementById("you-stats").innerHTML=`
+    <div class="card" style="margin:0;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--p2)">${trips.length}</div><div style="font-size:11px;color:var(--muted);font-weight:700;margin-top:2px">Total Trips</div></div>
+    <div class="card" style="margin:0;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--p2)">${completed}</div><div style="font-size:11px;color:var(--muted);font-weight:700;margin-top:2px">Completed</div></div>
+    <div class="card" style="margin:0;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--p2)">${destinations}</div><div style="font-size:11px;color:var(--muted);font-weight:700;margin-top:2px">Destinations</div></div>
+    <div class="card" style="margin:0;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--p2)">${state.gems}</div><div style="font-size:11px;color:var(--muted);font-weight:700;margin-top:2px">Gems Earned</div></div>`;
+  document.getElementById("you-trips").innerHTML=trips.length?
+    `<div class="section-head"><h2>All Trips</h2></div>`+
+    [...trips].sort((a,b)=>new Date(b.startDate)-new Date(a.startDate)).map(t=>{
+      const st=tripStatus(t),d=DESTINATIONS[t.destination];
+      return`<div style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--surf);border:1px solid var(--line);border-radius:16px;margin-bottom:7px">
+        <span style="font-size:24px">${d?d.icon:"🌍"}</span>
+        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:800">${esc(t.nickname||t.destination)}</div><div style="font-size:11px;color:var(--muted);font-weight:700;margin-top:2px">${dateStr(t.startDate)}</div></div>
+        <span class="status-badge ${st.cls}">${st.label}</span>
+      </div>`;}).join("")
+    :"<div class='empty'><div class='big'>🌍</div><p>Plan your first trip to get started.</p></div>";
+}
+
+/* ═══════════════════════ SHEETS ═══════════════════════ */
+function showSheet(id){document.getElementById(id).classList.add("show")}
+function hideSheet(id){document.getElementById(id).classList.remove("show")}
+
+function openAddPackSheet(){
+  const t=state.activeTrip;if(!t)return;
+  document.getElementById("pack-item-name").value="";
+  const sel=document.getElementById("pack-item-person");
+  sel.innerHTML=(t.travelers||["Me"]).map(tr=>`<option value="${esc(tr)}">${esc(tr)}</option>`).join("");
+  showSheet("addPackSheet");
+}
+
+/* ═══════════════════════ WIZARD ═══════════════════════ */
+function wzGo(step){
+  [0,1,2].forEach(i=>{
+    document.getElementById("wzp-"+i).style.display=i===step?"block":"none";
+    document.getElementById("wz"+i).className="wstep "+(i<=step?"done":"");
+  });
+  state.wizStep=step;
+}
+
+document.getElementById("wzNext0").onclick=()=>{
+  const dest=document.getElementById("wz-dest").value.trim();
+  const start=document.getElementById("wz-start").value;
+  const end=document.getElementById("wz-end").value;
+  if(!dest){toast("Enter a destination");return;}
+  if(!start||!end){toast("Select travel dates");return;}
+  if(new Date(end)<new Date(start)){toast("Return must be after departure");return;}
+  state.wizData={destination:dest,nickname:document.getElementById("wz-nick").value.trim(),startDate:start,endDate:end};
+  state.wizTravelers=[state.ctx.personName||"Me"];
+  state.ctx.people.forEach(p=>{if(p.id!==state.ctx.personId&&!state.wizTravelers.includes(p.name))state.wizTravelers.push(p.name);});
+  renderWzTravelers();wzGo(1);
+};
+document.getElementById("wzBack1").onclick=()=>wzGo(0);
+document.getElementById("wzNext1").onclick=()=>wzGo(2);
+document.getElementById("wzBack2").onclick=()=>wzGo(1);
+
+function renderWzTravelers(){
+  document.getElementById("wz-traveler-list").innerHTML=state.wizTravelers.map((tr,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surf2);border:1px solid var(--line);border-radius:12px;margin-bottom:6px">
+      <div class="avatar" style="background:${personColor(tr)};width:24px;height:24px;font-size:10px">${initials(tr)}</div>
+      <span style="flex:1;font-size:13px;font-weight:700">${esc(tr)}</span>
+      ${i>0?`<button class="btn sm danger" style="min-height:26px;padding:0 8px" data-rmtr="${i}">×</button>`:""}
+    </div>`).join("");
+  document.querySelectorAll("[data-rmtr]").forEach(b=>b.onclick=()=>{state.wizTravelers.splice(Number(b.dataset.rmtr),1);renderWzTravelers();});
+}
+document.getElementById("wz-traveler-add").onclick=()=>{
+  const v=document.getElementById("wz-traveler-input").value.trim();
+  if(!v)return;if(state.wizTravelers.includes(v)){toast("Already added");return;}
+  state.wizTravelers.push(v);document.getElementById("wz-traveler-input").value="";renderWzTravelers();
+};
+document.getElementById("wz-traveler-input").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("wz-traveler-add").click();});
+
+document.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("[data-type]").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");state.wizData.tripType=b.dataset.type;
+});
+
+document.getElementById("wzCreate").onclick=()=>{
+  const type=document.querySelector("[data-type].on")?.dataset.type||"leisure";
+  const budget=document.getElementById("wz-budget").value;
+  const colors={leisure:["#0c3a6b","#0ea5e9"],adventure:["#064e3b","#10b981"],family:["#4c0519","#f43f5e"],business:["#1e1b4b","#6366f1"]};
+  const [c1,c2]=colors[type]||colors.leisure;
+  const trip={
+    id:uid("trip"),destination:state.wizData.destination,nickname:state.wizData.nickname||"",
+    startDate:state.wizData.startDate,endDate:state.wizData.endDate,
+    travelers:state.wizTravelers,tripType:type,budget:Number(budget)||0,
+    color:c1,color2:c2,createdAt:Date.now(),itinerary:null,packing:null,expenses:[]
+  };
+  state.trips.push(trip);save();
+  hideSheet("newTripSheet");state.activeTrip=trip;state.activeSt="overview";
+  renderTrips();toast(`✈️ <b>${esc(trip.nickname||trip.destination)}</b> created!`);
+};
+
+/* ═══════════════════════ ADD ACTIVITY ═══════════════════════ */
+document.getElementById("actSave").onclick=()=>{
+  const name=document.getElementById("act-name").value.trim();if(!name)return;
+  const emoji=document.querySelector("[data-emoji].on")?.dataset.emoji||"🏛️";
+  const note=document.getElementById("act-note").value.trim();
+  const t=state.activeTrip;if(!t||!state.actSlot)return;
+  t.itinerary[state.actSlot.di].slots[state.actSlot.si].activity={name,emoji,note};
+  save();hideSheet("addActSheet");renderDetail();toast("Activity added");
+};
+document.getElementById("actCancel").onclick=()=>hideSheet("addActSheet");
+document.querySelectorAll("[data-emoji]").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("[data-emoji]").forEach(x=>x.classList.remove("on"));b.classList.add("on");
+});
+
+/* ═══════════════════════ ADD PACK ITEM ═══════════════════════ */
+document.getElementById("packSave").onclick=()=>{
+  const name=document.getElementById("pack-item-name").value.trim();if(!name)return;
+  const cat=document.getElementById("pack-item-cat").value;
+  const person=document.getElementById("pack-item-person").value;
+  const t=state.activeTrip;if(!t)return;
+  if(!t.packing)t.packing=[];
+  t.packing.push({id:uid("pi"),name,cat,person,done:false});
+  save();hideSheet("addPackSheet");renderDetail();toast("Item added");
+};
+document.getElementById("packCancel").onclick=()=>hideSheet("addPackSheet");
+
+/* ═══════════════════════ ADD EXPENSE ═══════════════════════ */
+document.getElementById("expSave").onclick=()=>{
+  const desc=document.getElementById("exp-desc").value.trim();
+  const amount=document.getElementById("exp-amount").value;
+  if(!desc||!amount)return;
+  const cat=document.getElementById("exp-cat").value;
+  const t=state.activeTrip;if(!t)return;
+  if(!t.expenses)t.expenses=[];
+  t.expenses.push({id:uid("exp"),desc,amount:Number(amount),cat,ts:Date.now()});
+  save();hideSheet("addExpSheet");renderDetail();toast(`💰 ${esc(desc)} logged`);
+};
+document.getElementById("expCancel").onclick=()=>hideSheet("addExpSheet");
+
+/* ═══════════════════════ NAV ═══════════════════════ */
+document.getElementById("newTripBtn").onclick=()=>{
+  wzGo(0);document.getElementById("wz-dest").value="";document.getElementById("wz-nick").value="";
+  document.getElementById("wz-start").value="";document.getElementById("wz-end").value="";
+  document.getElementById("wz-budget").value="";
+  document.querySelectorAll("[data-type]").forEach(b=>b.classList.toggle("on",b.dataset.type==="leisure"));
+  showSheet("newTripSheet");
+};
+document.getElementById("backToTrips").onclick=()=>{state.activeTrip=null;renderTrips();};
+document.querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>{state.activeSt=b.dataset.st;renderDetail();});
+document.querySelectorAll("[data-lt]").forEach(b=>b.onclick=()=>{state.learnTab=b.dataset.lt;renderLearn();});
+
+document.querySelectorAll("nav .tab").forEach(t=>t.onclick=()=>{
+  const v=t.dataset.v;
+  document.querySelectorAll(".view").forEach(s=>s.classList.toggle("active",s.id==="v-"+v));
+  document.querySelectorAll("nav .tab").forEach(x=>x.classList.toggle("on",x===t));
+  if(v==="trips")renderTrips();
+  if(v==="discover")renderDiscover();
+  if(v==="learn")renderLearn();
+  if(v==="you")renderYou();
+});
+
+// Close sheets on backdrop click
+document.querySelectorAll(".sheet-bg").forEach(bg=>bg.onclick=e=>{if(e.target===bg)bg.classList.remove("show");});
+
+/* ═══════════════════════ THEME ═══════════════════════ */
+function applyTheme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem("ktp_theme",t)}catch(e){}}
+document.getElementById("themeBtn").onclick=()=>applyTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
+try{const t=localStorage.getItem("ktp_theme");if(t)applyTheme(t)}catch(e){}
+
+/* ═══════════════════════ BOOT ═══════════════════════ */
+if(!embedded)loadAll();
+renderDiscover();
+renderLearn();
+</script>
+</body>
+</html>
